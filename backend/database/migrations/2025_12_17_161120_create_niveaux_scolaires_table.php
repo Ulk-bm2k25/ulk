@@ -12,6 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('niveaux_scolaires', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+
+            
             $table->id();
             $table->string('nom')->unique();
             $table->text('description')->nullable();
