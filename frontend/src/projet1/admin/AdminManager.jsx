@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import LoginPage from './pages/admin/LoginPage';
-import DashboardPage from './pages/admin/DashboardPage';
+import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
 import AdminLayout from './layout/AdminLayout';
-import PlaceholderPage from './pages/admin/PlaceholderPage';
-import InscriptionsList from './pages/admin/inscriptions/InscriptionsList';
+import PlaceholderPage from './pages/PlaceholderPage';
+import InscriptionsList from './pages/inscriptions/InscriptionsList';
 import { FileText, Users, School, FileCheck, Bell, Settings } from 'lucide-react';
 
-// App principal
-const App = () => {
+// Admin principal management component
+const AdminManager = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false); // Initialisé à true pour le développement
   const [currentPage, setCurrentPage] = useState('dashboard');
 
@@ -60,4 +60,4 @@ const App = () => {
   );
 };
 
-export default App
+export default AdminManager;
