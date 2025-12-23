@@ -234,7 +234,7 @@ const Registration = ({ mode = 'new', initialData = null, onComplete }) => {
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 text-white">
             <header>
                 <h1 className="text-3xl font-bold">
                     {mode === 're-enrollment' ? 'Réinscription de l\'élève' : 'Inscription en ligne'}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import '../styles/theme.css';
+import paintedHands from '../assets/painted_handprints.png';
 
 const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
     const [email, setEmail] = useState('');
@@ -86,7 +87,7 @@ const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
                 {/* Right Side: Image/Decor */}
                 <div className="hidden md:block w-1/2 relative">
                     <img
-                        src="https://images.unsplash.com/photo-1543269865-cbf427effbad?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+                        src={paintedHands}
                         alt="School life"
                         className="absolute inset-0 w-full h-full object-cover"
                     />
