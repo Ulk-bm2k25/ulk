@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ParentLayout from './layout/ParentLayout';
 import ParentLogin from './pages/ParentLogin';
+import ParentRegister from './pages/ParentRegister';
 import Dashboard from './pages/Dashboard';
 import Registration from './pages/Registration';
 import Notifications from './pages/Notifications';
@@ -26,11 +27,13 @@ const PlaceholderPage = ({ title, icon: Icon }) => (
 
 const ParentManager = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
     const [currentPage, setCurrentPage] = useState('dashboard');
 
     const handleLogin = () => setIsAuthenticated(true);
     const handleLogout = () => {
         setIsAuthenticated(false);
+        setAuthMode('login');
         setCurrentPage('dashboard');
     };
 
@@ -58,7 +61,9 @@ const ParentManager = () => {
     };
 
     if (!isAuthenticated) {
-        return <ParentLogin onLogin={handleLogin} />;
+        return authMode === 'login'
+            ? <ParentLogin onLogin={handleLogin} onNavigateToRegister={() => setAuthMode('register')} />
+            : <ParentRegister onRegister={handleLogin} onNavigateToLogin={() => setAuthMode('login')} />;
     }
 
     return (

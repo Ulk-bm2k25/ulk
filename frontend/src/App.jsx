@@ -1,6 +1,6 @@
-// 1. AJOUTER 'Link' DANS LES IMPORTS
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
-import projet1Routes from './projet1/projet1Routes'
+import projet1Routes from './projet1/projet1Routes.jsx';
+
 
 // Simple Landing Page for development
 const Home = () => (
@@ -39,10 +39,14 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Route d'accueil globale (optionnelle) */}
         <Route path="/" element={<Home />} />
-        
-        {/* Injection des routes du projet 1 */}
         {projet1Routes}
+
+
+        {/* Les routes des projets seront montées ici */}
+        {/* {projet1Routes} */}
+        {/* {projet2Routes} */}
       </Routes>
     </BrowserRouter>
   )

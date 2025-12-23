@@ -1,6 +1,6 @@
 import { Route } from 'react-router-dom'
-import AdminManager from './admin/AdminManager'
-import ParentManager from './parent/ParentManager'
+import AdminManager from './AdminManager'
+import ParentManager from '../parent/ParentManager'
 
 const projet1Routes = (
   <>
