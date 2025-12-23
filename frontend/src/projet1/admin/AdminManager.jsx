@@ -44,7 +44,7 @@ const AdminManager = () => {
     const renderPage = () => {
         switch (currentPage) {
             case 'dashboard':
-                return <DashboardPage />;
+                return <DashboardPage onNavigate={handleNavigate} />;
 
             case 'inscriptions':
                 // Logique conditionnelle ici :

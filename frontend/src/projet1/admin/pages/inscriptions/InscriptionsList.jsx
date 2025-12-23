@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search, Filter, Eye, MoreHorizontal, Download,
   CheckCircle, XCircle, Clock, Calendar, FileText,
-  Trash2, Mail, Send
+  Trash2, Mail, Loader2
 } from 'lucide-react';
 
-// 1. AJOUT DE LA PROP ICI ↓
 const InscriptionsList = ({ onViewDetails }) => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Données simulées
+  // Simulation chargement API
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
   const mockInscriptions = [
     {
       id: 'INS-2025-042',
@@ -70,7 +75,6 @@ const InscriptionsList = ({ onViewDetails }) => {
     },
   ];
 
-  // Filtrage
   const filteredData = mockInscriptions.filter(item => {
     const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
     const matchesSearch =
@@ -81,11 +85,10 @@ const InscriptionsList = ({ onViewDetails }) => {
   });
 
   const toggleMenu = (id, e) => {
-    e.stopPropagation(); // Empêche le clic de traverser vers la ligne
+    e.stopPropagation();
     setOpenMenuId(openMenuId === id ? null : id);
   };
 
-  // Badge Status
   const StatusBadge = ({ status }) => {
     const styles = {
       pending: { bg: 'bg-orange-100', text: 'text-orange-700', icon: Clock, label: 'En attente' },
@@ -103,10 +106,19 @@ const InscriptionsList = ({ onViewDetails }) => {
     );
   };
 
+  if (isLoading) {
+    return (
+      <div className="h-[calc(100vh-150px)] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-slate-400">
+          <Loader2 size={40} className="animate-spin text-brand-primary" />
+          <p className="text-sm font-medium">Chargement des inscriptions...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Gestion des Inscriptions</h1>
@@ -126,7 +138,6 @@ const InscriptionsList = ({ onViewDetails }) => {
         </div>
       </div>
 
-      {/* Filtres */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="flex bg-slate-100 p-1 rounded-lg w-full md:w-auto">
           {['all', 'pending', 'validated', 'rejected'].map((tab) => (
@@ -134,8 +145,8 @@ const InscriptionsList = ({ onViewDetails }) => {
               key={tab}
               onClick={() => setFilterStatus(tab)}
               className={`flex-1 md:flex-none px-4 py-1.5 text-sm font-medium rounded-md transition-all ${filterStatus === tab
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
+                ? 'bg-white text-slate-800 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
                 }`}
             >
               {tab === 'all' && 'Tout voir'}
@@ -163,8 +174,7 @@ const InscriptionsList = ({ onViewDetails }) => {
         </div>
       </div>
 
-      {/* Tableau */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden relative">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -230,8 +240,6 @@ const InscriptionsList = ({ onViewDetails }) => {
                     </td>
                     <td className="px-6 py-4 text-right relative">
                       <div className="flex items-center justify-end gap-2">
-
-                        {/* Bouton Oeil (Détails) */}
                         <button
                           onClick={() => onViewDetails(item)}
                           className="p-1.5 text-slate-400 hover:text-brand-primary hover:bg-orange-50 rounded transition-colors"
@@ -240,22 +248,19 @@ const InscriptionsList = ({ onViewDetails }) => {
                           <Eye size={18} />
                         </button>
 
-                        {/* Bouton 3 points (Menu) */}
                         <div className="relative">
                           <button
                             onClick={(e) => toggleMenu(item.id, e)}
                             className={`p-1.5 rounded transition-colors ${openMenuId === item.id
-                                ? 'bg-brand-primary text-white'
-                                : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
+                              ? 'bg-brand-primary text-white'
+                              : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
                               }`}
                           >
                             <MoreHorizontal size={18} />
                           </button>
 
-                          {/* Le Menu Déroulant (Dropdown) */}
                           {openMenuId === item.id && (
                             <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-
                               <div className="py-1">
                                 <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                                   <CheckCircle size={16} className="text-green-600" />
@@ -270,14 +275,12 @@ const InscriptionsList = ({ onViewDetails }) => {
                                   Télécharger PDF
                                 </button>
                               </div>
-
                               <div className="border-t border-slate-100 py-1">
                                 <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
                                   <Trash2 size={16} />
                                   Supprimer
                                 </button>
                               </div>
-
                             </div>
                           )}
                         </div>
@@ -300,16 +303,8 @@ const InscriptionsList = ({ onViewDetails }) => {
               )}
             </tbody>
           </table>
-          {/* Overlay invisible pour fermer le menu au clic extérieur */}
-          {openMenuId && (
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setOpenMenuId(null)}
-            ></div>
-          )}
         </div>
 
-        {/* Pagination */}
         <div className="bg-slate-50 border-t border-slate-200 px-6 py-4 flex items-center justify-between">
           <p className="text-sm text-slate-500">
             Affichage de <span className="font-medium text-slate-900">{filteredData.length}</span> sur <span className="font-medium text-slate-900">{mockInscriptions.length}</span> résultats
@@ -320,6 +315,13 @@ const InscriptionsList = ({ onViewDetails }) => {
           </div>
         </div>
       </div>
+
+      {openMenuId && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setOpenMenuId(null)}
+        ></div>
+      )}
     </div>
   );
 };

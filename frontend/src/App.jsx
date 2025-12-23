@@ -1,10 +1,12 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
-import adminRoutes from './projet1/admin/adminRoutes'
+import projet1Routes from './projet1/projet1Routes.jsx';
+
 
 // Simple Landing Page for development
 const Home = () => (
   <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-[#1a2035] text-white">
     <div className="max-w-md w-full glass-card p-10 text-center space-y-8">
+      {/* ... Le reste du contenu Home est parfait ... */}
       <div className="w-20 h-20 bg-[#eb8e3a] rounded-2xl flex items-center justify-center mx-auto text-[#1a2035]">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
@@ -15,6 +17,7 @@ const Home = () => (
       <p className="text-white/40">Bienvenue sur la plateforme de gestion scolaire.</p>
 
       <div className="space-y-4 pt-4">
+        {/* Ces Links fonctionneront maintenant */}
         <Link
           to="/projet1-parent"
           className="block w-full py-4 px-6 bg-[#eb8e3a] text-[#1a2035] font-bold rounded-2xl hover:opacity-90 transition-all shadow-lg shadow-orange-950/20"
@@ -38,7 +41,7 @@ function App() {
       <Routes>
         {/* Route d'accueil globale (optionnelle) */}
         <Route path="/" element={<Home />} />
-        {adminRoutes}
+        {projet1Routes}
 
 
         {/* Les routes des projets seront montées ici */}
