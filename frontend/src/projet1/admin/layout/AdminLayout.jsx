@@ -11,7 +11,7 @@ const AdminLayout = ({ children, currentPage, onNavigate, onLogout }) => {
     { id: 'eleves', label: 'Élèves', icon: Users, available: true },
     { id: 'classes', label: 'Classes', icon: School, available: true },
     { id: 'notifications', label: 'Notifications', icon: Bell, available: true },
-    { id: 'parametres', label: 'Paramètres', icon: Settings, available: true }
+    { id: 'parametres', label: 'Paramètres', icon: Settings, available: false }
   ];
 
   const SidebarContent = () => (
@@ -98,7 +98,7 @@ const AdminLayout = ({ children, currentPage, onNavigate, onLogout }) => {
                 <ChevronRight size={14} />
                 <span>Admin</span>
                 <ChevronRight size={14} />
-                <span className="font-medium text-slate-800">Tableau de bord</span>
+                <span className="font-medium text-slate-800">{currentPage}</span>
             </div>
           </div>
 

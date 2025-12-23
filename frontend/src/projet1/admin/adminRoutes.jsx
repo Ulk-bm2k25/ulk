@@ -3,7 +3,7 @@ import App from './App'
 // Import des pages du projet 1 (à venir)
 // import HomePage from './pages/HomePage'
 
-const projet1Routes = (
+const adminRoutes = (
   <>
     <Route path="/projet1/*" element={<App />} />
     {/* <Route path="/projet1" element={<HomePage />} /> */}
@@ -11,4 +11,4 @@ const projet1Routes = (
   </>
 )
 
-export default projet1Routes
+export default adminRoutes;

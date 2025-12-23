@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import projet1Routes from './projet1/projet1Routes'
+import adminRoutes from './projet1/admin/adminRoutes'
 
 // Import futur des routes par projet
 // import projet1Routes from './projet1/routes'
@@ -12,7 +12,7 @@ function App() {
       <Routes>
         {/* Route d'accueil globale (optionnelle) */}
         <Route path="/" element={<div>Accueil plateforme</div>} />
-        {projet1Routes}
+        {adminRoutes}
 
         
         {/* Les routes des projets seront montées ici */}

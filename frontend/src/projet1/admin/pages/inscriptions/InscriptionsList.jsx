@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { 
   Search, Filter, Eye, MoreHorizontal, Download, 
-  CheckCircle, XCircle, Clock, Calendar, FileText, ChevronDown 
+  CheckCircle, XCircle, Clock, Calendar, FileText, 
+  Trash2, Mail, Send
 } from 'lucide-react';
 
-const InscriptionsList = () => {
-  const [filterStatus, setFilterStatus] = useState('all'); // all, pending, validated, rejected
+// 1. AJOUT DE LA PROP ICI ↓
+const InscriptionsList = ({ onViewDetails }) => {
+  const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [openMenuId, setOpenMenuId] = useState(null);
 
-  // Données simulées (Mock Data)
+  // Données simulées
   const mockInscriptions = [
     { 
       id: 'INS-2025-042', 
@@ -17,8 +20,8 @@ const InscriptionsList = () => {
       class: 'Seconde C', 
       date: '19 Déc 2025', 
       status: 'pending', 
-      payment: 'partial', // paid, partial, unpaid
-      docs: 'complete',   // complete, missing
+      payment: 'partial',
+      docs: 'complete',
       email: 'p.dupont@email.com'
     },
     { 
@@ -65,42 +68,9 @@ const InscriptionsList = () => {
       docs: 'complete',
       email: 'marc.e@email.com'
     },
-    { 
-      id: 'INS-2025-023', 
-      firstName: 'Marcus', 
-      lastName: 'Charles', 
-      class: '3ème', 
-      date: '01 Déc 2025', 
-      status: 'validated', 
-      payment: 'paid', 
-      docs: 'complete',
-      email: 'marcus.c@email.com'
-    },
-    { 
-      id: 'INS-2025-039', 
-      firstName: 'Marcelo', 
-      lastName: 'Zyan', 
-      class: '1ère', 
-      date: '10 Déc 2025', 
-      status: 'rejected', 
-      payment: 'unpaid', 
-      docs: 'missing',
-      email: 'marcelo.z@email.com'
-    },
-    { 
-      id: 'INS-2025-035', 
-      firstName: 'André', 
-      lastName: 'Jonh', 
-      class: '5ème', 
-      date: '10 Déc 2025', 
-      status: 'validated', 
-      payment: 'paid', 
-      docs: 'complete',
-      email: 'andre.j@email.com'
-    },
   ];
 
-  // Filtrage des données
+  // Filtrage
   const filteredData = mockInscriptions.filter(item => {
     const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
     const matchesSearch = 
@@ -110,7 +80,12 @@ const InscriptionsList = () => {
     return matchesStatus && matchesSearch;
   });
 
-  // Composant Badge pour le statut
+  const toggleMenu = (id, e) => {
+    e.stopPropagation(); // Empêche le clic de traverser vers la ligne
+    setOpenMenuId(openMenuId === id ? null : id);
+  };
+
+  // Badge Status
   const StatusBadge = ({ status }) => {
     const styles = {
       pending: { bg: 'bg-orange-100', text: 'text-orange-700', icon: Clock, label: 'En attente' },
@@ -131,7 +106,7 @@ const InscriptionsList = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       
-      {/* 1. En-tête et Actions Globales */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Gestion des Inscriptions</h1>
@@ -151,10 +126,8 @@ const InscriptionsList = () => {
         </div>
       </div>
 
-      {/* 2. Barre d'outils (Filtres & Recherche) */}
+      {/* Filtres */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
-        
-        {/* Onglets de filtres */}
         <div className="flex bg-slate-100 p-1 rounded-lg w-full md:w-auto">
           {['all', 'pending', 'validated', 'rejected'].map((tab) => (
             <button
@@ -174,7 +147,6 @@ const InscriptionsList = () => {
           ))}
         </div>
 
-        {/* Recherche et Filtres Avancés */}
         <div className="flex gap-3 w-full md:w-auto">
           <div className="relative flex-1 md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -192,7 +164,7 @@ const InscriptionsList = () => {
         </div>
       </div>
 
-      {/* 3. Tableau des Inscriptions */}
+      {/* Tableau */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -257,14 +229,60 @@ const InscriptionsList = () => {
                     <td className="px-6 py-4">
                       <StatusBadge status={item.status} />
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right relative">
                       <div className="flex items-center justify-end gap-2">
-                         <button className="p-1.5 text-slate-400 hover:text-brand-primary hover:bg-orange-50 rounded transition-colors" title="Voir détails">
-                            <Eye size={18} />
-                         </button>
-                         <button className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors">
+                        
+                        {/* Bouton Oeil (Détails) */}
+                        <button 
+                          onClick={() => onViewDetails(item)}
+                          className="p-1.5 text-slate-400 hover:text-brand-primary hover:bg-orange-50 rounded transition-colors" 
+                          title="Voir détails"
+                        >
+                          <Eye size={18} />
+                        </button>
+
+                        {/* Bouton 3 points (Menu) */}
+                        <div className="relative">
+                          <button 
+                            onClick={(e) => toggleMenu(item.id, e)}
+                            className={`p-1.5 rounded transition-colors ${
+                              openMenuId === item.id 
+                                ? 'bg-brand-primary text-white' 
+                                : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
                             <MoreHorizontal size={18} />
-                         </button>
+                          </button>
+
+                          {/* Le Menu Déroulant (Dropdown) */}
+                          {openMenuId === item.id && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                              
+                              <div className="py-1">
+                                <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                  <CheckCircle size={16} className="text-green-600"/>
+                                  Valider rapidement
+                                </button>
+                                <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                  <Mail size={16} className="text-blue-600"/>
+                                  Relancer parent
+                                </button>
+                                <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                  <Download size={16} className="text-slate-500"/>
+                                  Télécharger PDF
+                                </button>
+                              </div>
+                              
+                              <div className="border-t border-slate-100 py-1">
+                                <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                  <Trash2 size={16} />
+                                  Supprimer
+                                </button>
+                              </div>
+
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -284,9 +302,16 @@ const InscriptionsList = () => {
               )}
             </tbody>
           </table>
+          {/* Overlay invisible pour fermer le menu au clic extérieur */}
+          {openMenuId && (
+            <div 
+              className="fixed inset-0 z-40" 
+              onClick={() => setOpenMenuId(null)}
+            ></div>
+          )}
         </div>
         
-        {/* Pagination simple (Footer du tableau) */}
+        {/* Pagination */}
         <div className="bg-slate-50 border-t border-slate-200 px-6 py-4 flex items-center justify-between">
           <p className="text-sm text-slate-500">
             Affichage de <span className="font-medium text-slate-900">{filteredData.length}</span> sur <span className="font-medium text-slate-900">{mockInscriptions.length}</span> résultats

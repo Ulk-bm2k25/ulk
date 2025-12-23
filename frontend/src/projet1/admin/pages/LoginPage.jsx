@@ -45,7 +45,7 @@ const LoginPage = ({ onLogin }) => {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-brand-dark tracking-tight">
-            École<span className="text-brand-primary">+</span>
+            School-hub Admin
           </h1>
           <p className="text-slate-500 mt-2">Connectez-vous à votre espace d'administration</p>
         </div>
