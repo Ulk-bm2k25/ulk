@@ -143,7 +143,7 @@ function SchoolHub() {
   const [permissionRequests, setPermissionRequests] = useState([]);
   const [notifications, setNotifications] = useState([]);
 
-  // Données simulées pour les étudiants béninois
+  // Données simulées pour les élèves
   const initialStudents = [
     { id: 1, name: 'Koffi Agbéssi', present: true, absences: 1, parentEmail: 'parent1@email.bj', parentPhone: '+229 60 12 34 56' },
     { id: 2, name: 'Amina Adékambi', present: true, absences: 0, parentEmail: 'parent2@email.bj', parentPhone: '+229 61 23 45 67' },
