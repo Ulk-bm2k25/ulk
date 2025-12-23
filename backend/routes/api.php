@@ -7,6 +7,14 @@ use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\TwoFactorAuthController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\ClasseController;
+use App\Http\Controllers\Api\CourseController;
+use App\Http\Controllers\Api\EleveController;
+use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\PresenceController;
+use App\Http\Controllers\Api\SeanceController;
+use App\Http\Controllers\Api\ProgrammeController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -228,4 +236,19 @@ Route::fallback(function () {
         'success' => false,
         'message' => 'Route API non trouvée',
     ], 404);
+});
+
+
+
+
+// Routes protégées par auth:sanctum
+Route::middleware('auth:sanctum')->group(function() {
+
+    Route::apiResource('classes', ClasseController::class);
+    Route::apiResource('courses', CourseController::class);
+    Route::apiResource('eleves', EleveController::class);
+    Route::apiResource('permissions', PermissionController::class);
+    Route::apiResource('presences', PresenceController::class);
+    Route::apiResource('seances', SeanceController::class)->only(['index','store','show']);
+    Route::apiResource('programmes', ProgrammeController::class)->only(['index','store']);
 });

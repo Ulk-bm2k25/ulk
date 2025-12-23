@@ -6,27 +6,26 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('permission', function (Blueprint $table) {
+        Schema::create('permissions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->text('objet');
-            $table->text('desc')->nullable();
-            $table->string('statut')->default('en_attente');
+            $table->foreignId('eleve_id')->constrained('eleves')->onDelete('cascade');
+            $table->foreignId('course_id')->constrained('cours')->onDelete('cascade');
+            $table->enum('status', ['en_attente', 'approuvee', 'rejetee'])->default('en_attente');
+            $table->text('raison')->nullable();
+            $table->text('commentaire')->nullable();
+            $table->date('date_demande')->nullable();
             $table->timestamps();
-            $table->index('user_id');
+
+            $table->index('eleve_id');
+            $table->index('course_id');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('permission');
+        Schema::dropIfExists('permissions');
     }
 };
+
