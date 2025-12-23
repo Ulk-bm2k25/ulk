@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import '../styles/theme.css';
 
 const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
@@ -11,7 +13,17 @@ const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-parent-bg-dark text-white">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-parent-bg-dark text-white relative">
+            {/* Bouton Retour à l'accueil */}
+            <Link
+                to="/"
+                className="absolute top-6 left-6 flex items-center gap-2 text-white/40 hover:text-white transition-colors group z-50"
+            >
+                <div className="p-2 rounded-full group-hover:bg-white/10 transition-colors">
+                    <ArrowLeft size={20} />
+                </div>
+                <span className="font-medium text-sm hidden sm:inline">Retour à l'accueil</span>
+            </Link>
             <div className="max-w-4xl w-full flex glass-card overflow-hidden shadow-2xl">
                 {/* Left Side: Login Form */}
                 <div className="w-full md:w-1/2 p-12 flex flex-col justify-center">
