@@ -2,7 +2,7 @@ import React from 'react';
 import { User, GraduationCap, Calendar, ChevronRight, Download, FileText, UserPlus } from 'lucide-react';
 import '../styles/theme.css';
 
-const MyChildren = () => {
+const MyChildren = ({ onNavigate }) => {
     const children = [
         {
             id: 1,
@@ -10,7 +10,9 @@ const MyChildren = () => {
             grade: '6ème A',
             birthDate: '12/05/2012',
             gender: 'Masculin',
-            avatar: 'https://i.pravatar.cc/150?u=jean'
+            avatar: 'https://i.pravatar.cc/150?u=jean',
+            registrationValidated: true,
+            cardDelivered: true
         },
         {
             id: 2,
@@ -18,23 +20,33 @@ const MyChildren = () => {
             grade: 'CM2',
             birthDate: '08/11/2014',
             gender: 'Féminin',
-            avatar: 'https://i.pravatar.cc/150?u=marie'
+            avatar: 'https://i.pravatar.cc/150?u=marie',
+            registrationValidated: false,
+            cardDelivered: false
         },
     ];
 
-    const ActionButton = ({ icon: Icon, label, onClick, primary = false }) => (
+    const ActionButton = ({ icon: Icon, label, onClick, primary = false, disabled = false, badge = null }) => (
         <button
             onClick={(e) => {
                 e.stopPropagation();
-                onClick && onClick();
+                if (!disabled && onClick) onClick();
             }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${primary
-                ? 'bg-[#eb8e3a] text-white hover:bg-[#d67d2e] shadow-lg shadow-orange-950/20'
-                : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white border border-white/5'
+            disabled={disabled}
+            className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${disabled
+                    ? 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed opacity-50'
+                    : primary
+                        ? 'bg-[#eb8e3a] text-white hover:bg-[#d67d2e] shadow-lg shadow-orange-950/20'
+                        : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white border border-white/5'
                 }`}
         >
             <Icon size={14} />
             <span>{label}</span>
+            {badge && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-tighter shadow-sm animate-pulse">
+                    {badge}
+                </span>
+            )}
         </button>
     );
 
@@ -79,16 +91,18 @@ const MyChildren = () => {
                                 icon={UserPlus}
                                 label="Réinscrire l'enfant"
                                 primary
-                                onClick={() => console.log('Reinscrire', child.id)}
+                                onClick={() => onNavigate('registration', { mode: 're-enrollment', childData: child })}
                             />
                             <ActionButton
                                 icon={Download}
                                 label="Carte Scolaire"
+                                disabled={!child.cardDelivered}
                                 onClick={() => console.log('Download Card', child.id)}
                             />
                             <ActionButton
                                 icon={FileText}
-                                label="Document d'inscription"
+                                label="Fiche d'inscription"
+                                disabled={!child.registrationValidated}
                                 onClick={() => console.log('Download Doc', child.id)}
                             />
                         </div>
@@ -96,7 +110,10 @@ const MyChildren = () => {
                 ))}
 
                 {/* Add Child Placeholder */}
-                <div className="border-2 border-dashed border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-6 hover:border-[#eb8e3a]/40 hover:bg-[#eb8e3a]/5 transition-all cursor-pointer group">
+                <div
+                    onClick={() => onNavigate('registration', { mode: 'new', childData: null })}
+                    className="border-2 border-dashed border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-6 hover:border-[#eb8e3a]/40 hover:bg-[#eb8e3a]/5 transition-all cursor-pointer group"
+                >
                     <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-white/20 group-hover:text-[#eb8e3a] transition-all">
                         <UserPlus size={32} />
                     </div>

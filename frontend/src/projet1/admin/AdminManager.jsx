@@ -131,17 +131,17 @@ const AdminManager = () => {
     }
   };
 
-  if (!isAuthenticated) return <LoginPage onLogin={handleLogin} />;
+    if (!isAuthenticated) return <LoginPage onLogin={handleLogin} />;
 
-  return (
-    <AdminLayout
-      currentPage={currentPage}
-      onNavigate={handleNavigate}
-      onLogout={handleLogout}
-    >
-      {renderPage()}
-    </AdminLayout>
-  );
+    return (
+        <AdminLayout
+            currentPage={currentPage}
+            onNavigate={handleNavigate}
+            onLogout={handleLogout}
+        >
+            {renderPage()}
+        </AdminLayout>
+    );
 };
 
 export default AdminManager;

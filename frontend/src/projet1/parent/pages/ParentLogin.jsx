@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import '../styles/theme.css';
+import paintedHands from '../assets/painted_handprints.png';
 
 const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -11,7 +15,17 @@ const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-parent-bg-dark text-white">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-parent-bg-dark text-white relative">
+            {/* Bouton Retour à l'accueil */}
+            <Link
+                to="/"
+                className="absolute top-6 left-6 flex items-center gap-2 text-white/40 hover:text-white transition-colors group z-50"
+            >
+                <div className="p-2 rounded-full group-hover:bg-white/10 transition-colors">
+                    <ArrowLeft size={20} />
+                </div>
+                <span className="font-medium text-sm hidden sm:inline">Retour à l'accueil</span>
+            </Link>
             <div className="max-w-4xl w-full flex glass-card overflow-hidden shadow-2xl">
                 {/* Left Side: Login Form */}
                 <div className="w-full md:w-1/2 p-12 flex flex-col justify-center">
@@ -38,14 +52,23 @@ const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
                                 <label className="block text-sm font-semibold text-white/60">Mot de passe</label>
                                 <a href="#" className="text-xs text-orange-400 hover:underline">Mot de passe oublié ?</a>
                             </div>
-                            <input
-                                type="password"
-                                className="parent-input"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
+                            <div className="relative group">
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    className="parent-input pr-12"
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-white/40 hover:text-white transition-colors"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -74,7 +97,7 @@ const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
                 {/* Right Side: Image/Decor */}
                 <div className="hidden md:block w-1/2 relative">
                     <img
-                        src="https://images.unsplash.com/photo-1543269865-cbf427effbad?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+                        src={paintedHands}
                         alt="School life"
                         className="absolute inset-0 w-full h-full object-cover"
                     />

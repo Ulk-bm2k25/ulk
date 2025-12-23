@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  ArrowLeft, Calendar, MapPin, User, Phone, Mail, FileText, 
+import {
+  ArrowLeft, Calendar, MapPin, User, Phone, Mail, FileText,
   CheckCircle, XCircle, AlertTriangle, Download, Printer, Loader2
 } from 'lucide-react';
 
@@ -16,26 +16,22 @@ const InscriptionDetail = ({ data, onBack }) => {
   if (!data) return null;
 
   // 2. Simulation de "Hydratation" des données
-  // Dans le futur, ceci viendra d'un fetch('/api/inscriptions/' + data.id)
-  // Mapping Backend Laravel :
-  // - parent -> table `parents_tuteurs`
-  // - documents -> table `documents_eleves`
   const fullData = {
-    ...data, // On garde les infos de base (nom, id, statut)
-    birthDate: '12 Mai 2010', // Champ à prévoir dans table `eleves` ou `users`
+    ...data,
+    birthDate: '12 Mai 2010',
     birthPlace: 'Cotonou, Bénin',
     gender: 'Masculin',
     previousSchool: 'Collège Père Aupiais',
-    parent: { // Correspondance table `parents_tuteurs`
-        name: 'M. Paul Dupont',
-        job: 'Comptable',
-        phone: '+229 97 00 00 00',
-        email: data.email // On utilise l'email de la liste
+    parent: {
+      name: 'M. Paul Dupont',
+      job: 'Comptable',
+      phone: '+229 97 00 00 00',
+      email: data.email
     },
-    documents: [ // Correspondance table `documents_eleves`
-        { id: 1, name: 'Acte de naissance', size: '1.2 MB', type: 'PDF' },
-        { id: 2, name: 'Dernier Bulletin', size: '850 KB', type: 'JPG' },
-        { id: 3, name: 'Photo identité', size: '2.4 MB', type: 'PNG' },
+    documents: [
+      { id: 1, name: 'Acte de naissance', size: '1.2 MB', type: 'PDF' },
+      { id: 2, name: 'Dernier Bulletin', size: '850 KB', type: 'JPG' },
+      { id: 3, name: 'Photo identité', size: '2.4 MB', type: 'PNG' },
     ]
   };
 
@@ -55,7 +51,6 @@ const InscriptionDetail = ({ data, onBack }) => {
     }
   };
 
-  // Affichage du Loader pendant le chargement des détails
   if (isLoading) {
     return (
       <div className="h-[calc(100vh-150px)] flex items-center justify-center">
@@ -69,10 +64,9 @@ const InscriptionDetail = ({ data, onBack }) => {
 
   return (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-      
       {/* 1. Header & Navigation */}
       <div className="flex items-center justify-between">
-        <button 
+        <button
           onClick={onBack}
           className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors group"
         >
@@ -91,16 +85,14 @@ const InscriptionDetail = ({ data, onBack }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
         {/* COLONNE GAUCHE : Informations (2/3) */}
         <div className="lg:col-span-2 space-y-6">
-          
           {/* Carte Identité Élève */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex justify-between items-start">
               <div className="flex gap-4">
                 <div className="w-20 h-20 bg-slate-100 rounded-xl flex items-center justify-center text-2xl font-bold text-slate-400 border border-slate-200">
-                    {fullData.firstName[0]}{fullData.lastName[0]}
+                  {fullData.firstName[0]}{fullData.lastName[0]}
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-slate-800">{fullData.firstName} {fullData.lastName}</h1>
@@ -120,139 +112,135 @@ const InscriptionDetail = ({ data, onBack }) => {
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-500 uppercase">Date de naissance</label>
                 <div className="flex items-center gap-2 text-slate-800 font-medium">
-                  <Calendar size={16} className="text-slate-400"/>
+                  <Calendar size={16} className="text-slate-400" />
                   {fullData.birthDate}
                 </div>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-500 uppercase">Lieu de naissance</label>
                 <div className="flex items-center gap-2 text-slate-800 font-medium">
-                  <MapPin size={16} className="text-slate-400"/>
+                  <MapPin size={16} className="text-slate-400" />
                   {fullData.birthPlace}
                 </div>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-500 uppercase">Genre</label>
                 <div className="flex items-center gap-2 text-slate-800 font-medium">
-                  <User size={16} className="text-slate-400"/>
+                  <User size={16} className="text-slate-400" />
                   {fullData.gender}
                 </div>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-500 uppercase">Ancienne École</label>
                 <div className="flex items-center gap-2 text-slate-800 font-medium">
-                  <MapPin size={16} className="text-slate-400"/>
+                  <MapPin size={16} className="text-slate-400" />
                   {fullData.previousSchool}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Carte Parents / Tuteurs (Dynamique) */}
+          {/* Carte Parents / Tuteurs */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
-             <div className="px-6 py-4 border-b border-slate-100">
-                <h3 className="font-bold text-slate-800">Informations Responsable</h3>
-             </div>
-             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Nom complet</label>
-                    <div className="text-slate-800 font-medium">{fullData.parent.name}</div>
+            <div className="px-6 py-4 border-b border-slate-100">
+              <h3 className="font-bold text-slate-800">Informations Responsable</h3>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-500 uppercase">Nom complet</label>
+                <div className="text-slate-800 font-medium">{fullData.parent.name}</div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-500 uppercase">Profession</label>
+                <div className="text-slate-800 font-medium">{fullData.parent.job}</div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-500 uppercase">Téléphone</label>
+                <div className="flex items-center gap-2 text-slate-800 font-medium">
+                  <Phone size={16} className="text-slate-400" />
+                  {fullData.parent.phone}
                 </div>
-                <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Profession</label>
-                    <div className="text-slate-800 font-medium">{fullData.parent.job}</div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-500 uppercase">Email</label>
+                <div className="flex items-center gap-2 text-slate-800 font-medium">
+                  <Mail size={16} className="text-slate-400" />
+                  {fullData.parent.email}
                 </div>
-                <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Téléphone</label>
-                    <div className="flex items-center gap-2 text-slate-800 font-medium">
-                        <Phone size={16} className="text-slate-400"/>
-                        {fullData.parent.phone}
-                    </div>
-                </div>
-                <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Email</label>
-                    <div className="flex items-center gap-2 text-slate-800 font-medium">
-                        <Mail size={16} className="text-slate-400"/>
-                        {fullData.parent.email}
-                    </div>
-                </div>
-             </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* COLONNE DROITE : Actions & Documents (1/3) */}
+        {/* COLONNE DROITE : Actions & Documents */}
         <div className="space-y-6">
-            
-            {/* Panneau d'action INTELLIGENT */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-                <h3 className="font-bold text-slate-800 mb-4">Traitement du dossier</h3>
-                
-                {/* Message contextuel */}
-                {fullData.status === 'validated' && (
-                  <div className="mb-4 p-3 bg-green-50 text-green-700 text-sm rounded-lg border border-green-100 flex items-center gap-2">
-                    <CheckCircle size={16} />
-                    <span>Ce dossier est déjà validé.</span>
-                  </div>
-                )}
-                {fullData.status === 'rejected' && (
-                  <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100 flex items-center gap-2">
-                    <XCircle size={16} />
-                    <span>Ce dossier a été rejeté.</span>
-                  </div>
-                )}
+          {/* Panneau d'action INTELLIGENT */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+            <h3 className="font-bold text-slate-800 mb-4">Traitement du dossier</h3>
 
-                <div className="space-y-3">
-                    
-                    {/* Actions Conditionnelles */}
-                    {(fullData.status === 'pending' || fullData.status === 'rejected') && (
-                        <button className="w-full flex items-center justify-center gap-2 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold shadow-sm shadow-green-500/20 transition-all">
-                            <CheckCircle size={18} />
-                            {fullData.status === 'rejected' ? 'Reconsidérer et Valider' : "Valider l'inscription"}
-                        </button>
-                    )}
-                    
-                    {fullData.status === 'pending' && (
-                        <button className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-lg font-bold transition-all">
-                            <XCircle size={18} />
-                            Rejeter le dossier
-                        </button>
-                    )}
+            {fullData.status === 'validated' && (
+              <div className="mb-4 p-3 bg-green-50 text-green-700 text-sm rounded-lg border border-green-100 flex items-center gap-2">
+                <CheckCircle size={16} />
+                <span>Ce dossier est déjà validé.</span>
+              </div>
+            )}
+            {fullData.status === 'rejected' && (
+              <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100 flex items-center gap-2">
+                <XCircle size={16} />
+                <span>Ce dossier a été rejeté.</span>
+              </div>
+            )}
 
-                    <button className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-orange-200 text-orange-600 hover:bg-orange-50 rounded-lg font-medium text-sm transition-all">
-                        <AlertTriangle size={18} />
-                        {fullData.status === 'validated' ? 'Demander un document supplémentaire' : 'Demander complément'}
-                    </button>
+            <div className="space-y-3">
+              {(fullData.status === 'pending' || fullData.status === 'rejected') && (
+                <button
+                  onClick={() => alert(`Dossier de ${fullData.firstName} validé avec succès !`)}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold shadow-sm shadow-green-500/20 transition-all"
+                >
+                  <CheckCircle size={18} />
+                  {fullData.status === 'rejected' ? 'Reconsidérer et Valider' : "Valider l'inscription"}
+                </button>
+              )}
 
-                </div>
+              {fullData.status === 'pending' && (
+                <button className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-lg font-bold transition-all">
+                  <XCircle size={18} />
+                  Rejeter le dossier
+                </button>
+              )}
+
+              <button className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-orange-200 text-orange-600 hover:bg-orange-50 rounded-lg font-medium text-sm transition-all">
+                <AlertTriangle size={18} />
+                {fullData.status === 'validated' ? 'Demander un document supplémentaire' : 'Demander complément'}
+              </button>
             </div>
+          </div>
 
-            {/* Liste des documents (Dynamique) */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-slate-800">Pièces jointes</h3>
-                    <span className="text-xs bg-slate-100 px-2 py-1 rounded font-medium text-slate-600">{fullData.documents.length} fichiers</span>
-                </div>
-                
-                <div className="space-y-3">
-                    {fullData.documents.map((doc, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3 border border-slate-100 rounded-lg hover:bg-slate-50 group cursor-pointer transition-colors">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-blue-50 text-blue-600 rounded">
-                                    <FileText size={16} />
-                                </div>
-                                <div>
-                                    <div className="text-sm font-medium text-slate-800">{doc.name}</div>
-                                    <div className="text-xs text-slate-500">{doc.size} • {doc.type}</div>
-                                </div>
-                            </div>
-                            <button className="text-slate-300 hover:text-brand-primary">
-                                <Download size={16} />
-                            </button>
-                        </div>
-                    ))}
-                </div>
+          {/* Liste des documents */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-slate-800">Pièces jointes</h3>
+              <span className="text-xs bg-slate-100 px-2 py-1 rounded font-medium text-slate-600">{fullData.documents.length} fichiers</span>
             </div>
-
+            <div className="space-y-3">
+              {fullData.documents.map((doc, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 border border-slate-100 rounded-lg hover:bg-slate-50 group cursor-pointer transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 text-blue-600 rounded">
+                      <FileText size={16} />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-slate-800">{doc.name}</div>
+                      <div className="text-xs text-slate-500">{doc.size} • {doc.type}</div>
+                    </div>
+                  </div>
+                  <button className="text-slate-300 hover:text-brand-primary">
+                    <Download size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

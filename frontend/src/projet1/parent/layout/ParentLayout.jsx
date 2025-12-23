@@ -8,23 +8,22 @@ import {
   Bell,
   Settings,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  ChevronDown
 } from 'lucide-react';
 import '../styles/theme.css';
 
 const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
-    { id: 'children', label: 'My Children', icon: Users },
-    { id: 'payments', label: 'Payments & Fees', icon: CreditCard },
-    { id: 'grades', label: 'Grades', icon: Star },
-    { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
+    { id: 'dashboard', label: 'Tableau de bord', icon: LayoutGrid },
+    { id: 'children', label: 'Mes Enfants', icon: Users },
+    { id: 'payments', label: 'Paiements & Frais', icon: CreditCard },
+    { id: 'grades', label: 'Notes & Bulletins', icon: Star },
+    { id: 'attendance', label: 'Présence', icon: CalendarCheck },
     { id: 'notifications', label: 'Notifications', icon: Bell, badge: 3 },
   ];
 
-  const bottomMenuItems = [
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ];
 
   return (
     <div className="parent-portal">
@@ -47,13 +46,13 @@ const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
               key={item.id}
               onClick={() => onNavigate(item.id)}
               className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all group ${currentPage === item.id
-                  ? 'bg-[#eb8e3a] text-white shadow-lg shadow-orange-950/20'
-                  : 'text-white/50 hover:bg-white/5 hover:text-white'
+                ? 'bg-[#eb8e3a] text-white shadow-lg shadow-orange-950/20'
+                : 'text-white/50 hover:bg-white/5 hover:text-white'
                 }`}
             >
               <div className="flex items-center gap-4">
                 <item.icon size={22} strokeWidth={currentPage === item.id ? 2.5 : 2} />
-                <span className={`text-[15px] ${currentPage === item.id ? 'font-semibold' : 'font-medium'}`}>
+                <span className={`text-[15px] ${currentPage === item.id ? 'font-black' : 'font-bold'}`}>
                   {item.label}
                 </span>
               </div>
@@ -68,45 +67,41 @@ const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
 
         {/* Bottom Section */}
         <div className="mt-auto space-y-4 pt-6 border-t border-white/5">
-          {bottomMenuItems.map((item) => (
+          <div className="space-y-1">
             <button
-              key={item.id}
-              onClick={() => onNavigate(item.id)}
-              className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${currentPage === item.id
-                  ? 'bg-[#eb8e3a] text-white'
-                  : 'text-white/50 hover:bg-white/5 hover:text-white'
+              onClick={() => setSettingsOpen(!settingsOpen)}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${currentPage === 'settings'
+                ? 'bg-[#eb8e3a] text-white shadow-lg shadow-orange-950/20'
+                : 'text-white/50 hover:bg-white/5 hover:text-white'
                 }`}
             >
-              <item.icon size={22} />
-              <span className="text-[15px] font-medium">{item.label}</span>
-            </button>
-          ))}
-
-          {/* Profile Card */}
-          <div className="bg-white/5 rounded-2xl p-4 flex items-center justify-between group cursor-pointer hover:bg-white/10 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full ring-2 ring-[#eb8e3a] p-0.5">
-                <img
-                  src="https://i.pravatar.cc/150?u=marie"
-                  alt="Marie Dupont"
-                  className="w-full h-full rounded-full object-cover grayscale"
-                />
+              <div className="flex items-center gap-4">
+                <Settings size={22} strokeWidth={currentPage === 'settings' ? 2.5 : 2} />
+                <span className="text-[15px] font-bold">Paramètres</span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[14px] font-bold text-white">Marie Dupont</span>
-                <span className="text-[11px] text-white/40">Parent Account</span>
+              <ChevronDown size={16} className={`transition-transform duration-300 ${settingsOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Settings Sub-menus */}
+            <div className={`overflow-hidden transition-all duration-300 ${settingsOpen ? 'max-h-32 opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
+              <div className="pl-12 space-y-1">
+                <button
+                  onClick={() => onNavigate('settings')}
+                  className="w-full text-left py-2 text-[14px] font-bold text-white/40 hover:text-white transition-colors"
+                >
+                  Tous les paramètres
+                </button>
+                <button
+                  onClick={onLogout}
+                  className="w-full text-left py-2 text-[14px] font-bold text-white/40 hover:text-red-400 transition-colors flex items-center gap-2"
+                >
+                  <LogOut size={14} />
+                  Se déconnecter
+                </button>
               </div>
             </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onLogout();
-              }}
-              className="p-2 text-white/40 hover:text-white transition-colors"
-            >
-              <LogOut size={20} />
-            </button>
           </div>
+
         </div>
       </aside>
 

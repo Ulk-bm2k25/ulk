@@ -29,34 +29,62 @@ const ParentManager = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
     const [currentPage, setCurrentPage] = useState('dashboard');
+    const [registrationParams, setRegistrationParams] = useState({ mode: 'new', childData: null });
+
+    // Centralized children data
+    const [children] = useState([
+        { id: 1, name: 'Jean Dupont', grade: '6ème', gender: 'Masculin', birthDate: '12/05/2012', photo: 'https://i.pravatar.cc/150?u=jean', registrationValidated: true, cardDelivered: true },
+        { id: 2, name: 'Marie-Laure Dupont', grade: '3ème', gender: 'Féminin', birthDate: '05/09/2009', photo: 'https://i.pravatar.cc/150?u=marie-laure', registrationValidated: false, cardDelivered: false },
+    ]);
+
+    const [selectedChildId, setSelectedChildId] = useState(children[0]?.id || null);
 
     const handleLogin = () => setIsAuthenticated(true);
     const handleLogout = () => {
         setIsAuthenticated(false);
         setAuthMode('login');
         setCurrentPage('dashboard');
+        setRegistrationParams({ mode: 'new', childData: null });
+        setSelectedChildId(children[0]?.id || null);
+    };
+
+    const handleNavigate = (page, params = { mode: 'new', childData: null }) => {
+        if (page === 'registration') {
+            setRegistrationParams(params);
+        }
+        setCurrentPage(page);
     };
 
     const renderPage = () => {
+        const commonProps = {
+            children: children,
+            selectedChildId: selectedChildId,
+            setSelectedChildId: setSelectedChildId
+        };
+
         switch (currentPage) {
             case 'dashboard':
-                return <Dashboard />;
+                return <Dashboard {...commonProps} onNavigate={handleNavigate} />;
             case 'children':
-                return <MyChildren />;
+                return <MyChildren children={children} onNavigate={handleNavigate} />;
             case 'payments':
-                return <Payments />;
+                return <Payments {...commonProps} />;
             case 'grades':
-                return <Grades />;
+                return <Grades {...commonProps} />;
             case 'attendance':
-                return <Attendance />;
+                return <Attendance {...commonProps} />;
             case 'notifications':
                 return <Notifications />;
             case 'registration':
-                return <Registration />;
+                return <Registration
+                    mode={registrationParams.mode}
+                    initialData={registrationParams.childData}
+                    onComplete={() => handleNavigate('children')}
+                />;
             case 'settings':
-                return <PlaceholderPage title="Settings" icon={Settings} />;
+                return <PlaceholderPage title="Paramètres" icon={Settings} />;
             default:
-                return <Dashboard />;
+                return <Dashboard {...commonProps} onNavigate={handleNavigate} />;
         }
     };
 
@@ -69,7 +97,7 @@ const ParentManager = () => {
     return (
         <ParentLayout
             currentPage={currentPage}
-            onNavigate={setCurrentPage}
+            onNavigate={(page) => handleNavigate(page)}
             onLogout={handleLogout}
         >
             {renderPage()}

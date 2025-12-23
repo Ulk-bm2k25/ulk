@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import '../styles/theme.css';
+import paintedHands from '../assets/painted_handprints.png';
 
 const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
     const [formData, setFormData] = useState({
@@ -9,6 +11,9 @@ const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
         password: '',
         confirmPassword: ''
     });
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -30,7 +35,7 @@ const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
                 {/* Left Side: Image/Decor (Hidden on mobile) */}
                 <div className="hidden md:block w-1/2 relative">
                     <img
-                        src="https://images.unsplash.com/photo-1523050853063-8951ac30922f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+                        src={paintedHands}
                         alt="Join SchoolHub"
                         className="absolute inset-0 w-full h-full object-cover"
                     />
@@ -91,28 +96,46 @@ const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
 
                         <div>
                             <label className="block text-sm font-semibold mb-1 text-white/60">Mot de passe</label>
-                            <input
-                                name="password"
-                                type="password"
-                                className="parent-input py-3"
-                                placeholder="••••••••"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                            />
+                            <div className="relative group">
+                                <input
+                                    name="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    className="parent-input py-3 pr-12"
+                                    placeholder="••••••••"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-white/40 hover:text-white transition-colors"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                         </div>
 
                         <div>
                             <label className="block text-sm font-semibold mb-1 text-white/60">Confirmer le mot de passe</label>
-                            <input
-                                name="confirmPassword"
-                                type="password"
-                                className="parent-input py-3"
-                                placeholder="••••••••"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                required
-                            />
+                            <div className="relative group">
+                                <input
+                                    name="confirmPassword"
+                                    type={showConfirmPassword ? 'text' : 'password'}
+                                    className="parent-input py-3 pr-12"
+                                    placeholder="••••••••"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-white/40 hover:text-white transition-colors"
+                                >
+                                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                         </div>
 
                         <div className="pt-2">

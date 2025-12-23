@@ -1,12 +1,33 @@
 import React, { useState } from 'react';
-import { User, Users, School, CheckCircle, Smartphone, CreditCard } from 'lucide-react';
+import { User, Users, School, CheckCircle, Smartphone, CreditCard, Image as ImageIcon, FileText } from 'lucide-react';
 import '../styles/theme.css';
+import FileUpload from './FileUpload';
 
-const Registration = () => {
+const Registration = ({ mode = 'new', initialData = null, onComplete }) => {
     const [step, setStep] = useState(1);
+    const [formData, setFormData] = useState({
+        parentName: '',
+        parentPhone: '',
+        parentProfession: '',
+        parentAddress: '',
+        childName: initialData?.name || '',
+        childBirthDate: initialData?.birthDate?.split('/').reverse().join('-') || '', // Convert 12/05/2012 to 2012-05-12
+        childGender: initialData?.gender || 'Masculin',
+        childGrade: initialData?.grade || '6ème'
+    });
+
+    // États pour les documents
+    const [studentPhoto, setStudentPhoto] = useState(null);
+    const [birthCertificate, setBirthCertificate] = useState(null);
+
     const [paymentProvider, setPaymentProvider] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
 
     const handlePayment = () => {
         if (!paymentProvider || !phoneNumber) {
@@ -32,19 +53,19 @@ const Registration = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Nom complet</label>
-                                <input type="text" className="parent-input" placeholder="Ex: Jean Dupont" />
+                                <input name="parentName" type="text" className="parent-input" placeholder="Ex: Jean Dupont" value={formData.parentName} onChange={handleInputChange} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Téléphone</label>
-                                <input type="tel" className="parent-input" placeholder="Ex: +225 0102030405" />
+                                <input name="parentPhone" type="tel" className="parent-input" placeholder="Ex: +225 0102030405" value={formData.parentPhone} onChange={handleInputChange} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Profession</label>
-                                <input type="text" className="parent-input" placeholder="Ex: Enseignant" />
+                                <input name="parentProfession" type="text" className="parent-input" placeholder="Ex: Enseignant" value={formData.parentProfession} onChange={handleInputChange} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Adresse</label>
-                                <input type="text" className="parent-input" placeholder="Ex: Abidjan, Cocody" />
+                                <input name="parentAddress" type="text" className="parent-input" placeholder="Ex: Abidjan, Cocody" value={formData.parentAddress} onChange={handleInputChange} />
                             </div>
                         </div>
                         <button onClick={() => setStep(2)} className="parent-btn-primary float-right mt-6">Suivant</button>
@@ -59,31 +80,65 @@ const Registration = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Nom de l'enfant</label>
-                                <input type="text" className="parent-input" placeholder="Ex: Marc Dupont" />
+                                <input name="childName" type="text" className="parent-input" placeholder="Ex: Marc Dupont" value={formData.childName} onChange={handleInputChange} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Date de naissance</label>
-                                <input type="date" className="parent-input" />
+                                <input name="childBirthDate" type="date" className="parent-input" value={formData.childBirthDate} onChange={handleInputChange} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Genre</label>
-                                <select className="parent-input bg-parent-bg-medium text-white">
-                                    <option>Masculin</option>
-                                    <option>Féminin</option>
+                                <select name="childGender" className="parent-input" style={{ backgroundColor: 'white', color: 'black' }} value={formData.childGender} onChange={handleInputChange}>
+                                    <option value="Masculin">Masculin</option>
+                                    <option value="Féminin">Féminin</option>
                                 </select>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Classe souhaitée</label>
-                                <select className="parent-input bg-parent-bg-medium text-white">
-                                    <option>6ème</option>
-                                    <option>5ème</option>
-                                    <option>4ème</option>
+                                <select name="childGrade" className="parent-input" style={{ backgroundColor: 'white', color: 'black' }} value={formData.childGrade} onChange={handleInputChange}>
+                                    <option value="Maternelle">Maternelle</option>
+                                    <option value="CP">CP</option>
+                                    <option value="CE1">CE1</option>
+                                    <option value="CE2">CE2</option>
+                                    <option value="CM1">CM1</option>
+                                    <option value="CM2">CM2</option>
+                                    <option value="6ème">6ème</option>
+                                    <option value="5ème">5ème</option>
+                                    <option value="4ème">4ème</option>
+                                    <option value="3ème">3ème</option>
+                                    <option value="2nde">2nde</option>
+                                    <option value="1ère">1ère</option>
+                                    <option value="Terminale">Terminale</option>
                                 </select>
                             </div>
                         </div>
+
+                        {/* Section Documents Requis */}
+                        <div className="mt-8 pt-8 border-t border-white/5 space-y-6">
+                            <h4 className="text-sm font-black text-white/40 uppercase tracking-widest">Documents requis</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FileUpload
+                                    label="Photo d'identité"
+                                    icon={ImageIcon}
+                                    selectedFile={studentPhoto}
+                                    onFileSelect={setStudentPhoto}
+                                    onFileRemove={() => setStudentPhoto(null)}
+                                />
+                                <FileUpload
+                                    label="Extrait de naissance (PDF ou Image)"
+                                    icon={FileText}
+                                    selectedFile={birthCertificate}
+                                    onFileSelect={setBirthCertificate}
+                                    onFileRemove={() => setBirthCertificate(null)}
+                                />
+                            </div>
+                        </div>
+
                         <div className="flex justify-between mt-6">
                             <button onClick={() => setStep(1)} className="text-white/40 hover:text-white-medium">Retour</button>
-                            <button onClick={() => setStep(3)} className="parent-btn-primary">Finaliser l'inscription</button>
+                            <button onClick={() => setStep(3)} className="parent-btn-primary">
+                                {mode === 're-enrollment' ? 'Finaliser la réinscription' : 'Finaliser l\'inscription'}
+                            </button>
                         </div>
                     </div>
                 );
@@ -174,7 +229,9 @@ const Registration = () => {
                         <p className="text-white/60 max-w-md mx-auto">
                             Merci pour votre paiement. Votre enfant est désormais inscrit. Vous recevrez le reçu par email et pouvez le télécharger dans l'onglet "Paiements".
                         </p>
-                        <button onClick={() => setStep(1)} className="parent-btn-primary mt-6">Retour au début</button>
+                        <button onClick={onComplete} className="parent-btn-primary mt-6">
+                            Retour à la liste des enfants
+                        </button>
                     </div>
                 );
             default:
@@ -183,10 +240,16 @@ const Registration = () => {
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 text-white">
             <header>
-                <h1 className="text-3xl font-bold">Inscription en ligne</h1>
-                <p className="text-white/40 mt-1">Remplissez les informations pour inscrire votre enfant.</p>
+                <h1 className="text-3xl font-bold">
+                    {mode === 're-enrollment' ? 'Réinscription de l\'élève' : 'Inscription en ligne'}
+                </h1>
+                <p className="text-white/40 mt-1">
+                    {mode === 're-enrollment'
+                        ? `Veuillez confirmer les informations pour la réinscription de ${initialData?.name}.`
+                        : 'Remplissez les informations pour inscrire votre enfant.'}
+                </p>
             </header>
 
             {/* Steps Indicator */}
