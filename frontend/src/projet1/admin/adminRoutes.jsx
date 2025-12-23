@@ -1,13 +1,11 @@
 import { Route } from 'react-router-dom'
-import App from './App'
-// Import des pages du projet 1 (à venir)
-// import HomePage from './pages/HomePage'
+import AdminManager from './admin/AdminManager'
+import ParentManager from './parent/ParentManager'
 
 const adminRoutes = (
   <>
-    <Route path="/projet1/*" element={<App />} />
-    {/* <Route path="/projet1" element={<HomePage />} /> */}
-    {/* Autres routes du projet 1... */}
+    <Route path="/projet1/*" element={<AdminManager />} />
+    <Route path="/projet1-parent" element={<ParentManager />} />
   </>
 )
 
