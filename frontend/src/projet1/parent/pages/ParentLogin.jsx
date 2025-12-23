@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import '../styles/theme.css';
 import paintedHands from '../assets/painted_handprints.png';
 
 const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -51,14 +52,23 @@ const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
                                 <label className="block text-sm font-semibold text-white/60">Mot de passe</label>
                                 <a href="#" className="text-xs text-orange-400 hover:underline">Mot de passe oublié ?</a>
                             </div>
-                            <input
-                                type="password"
-                                className="parent-input"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
+                            <div className="relative group">
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    className="parent-input pr-12"
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-white/40 hover:text-white transition-colors"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-2">
