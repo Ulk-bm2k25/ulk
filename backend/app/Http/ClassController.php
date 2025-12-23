@@ -1,4 +1,4 @@
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
 use App\Models\Class;
 use App\Models\NiveauScolaire;
