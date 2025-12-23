@@ -9,8 +9,8 @@ import AdminLayout from './layout/AdminLayout';
 import PlaceholderPage from './pages/PlaceholderPage';
 import { FileText, Users, School, FileCheck, Bell, Settings } from 'lucide-react';
 
-const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+const AdminManager = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentPage, setCurrentPage] = useState('dashboard');
   
   // Nouvel état pour stocker l'élève sélectionné
@@ -44,7 +44,7 @@ const App = () => {
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <DashboardPage />;
+        return <DashboardPage onNavigate={handleNavigate} />;
         
       case 'inscriptions':
         // Logique conditionnelle ici :
@@ -102,4 +102,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default AdminManager;

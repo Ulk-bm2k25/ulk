@@ -1,18 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Search, Filter, Eye, MoreHorizontal, Download, UserPlus, 
-  Users, School, IdCard, FileText, ChevronDown, CheckSquare, X
+  Search, Eye, MoreHorizontal, Download, UserPlus, 
+  Users, School, IdCard, FileText, ChevronDown, X, 
+  Loader2, Edit, Trash2, Printer
 } from 'lucide-react';
 
-const StudentsList = ({ onViewProfile }) => { // Prop pour aller vers le profil (à venir)
+const StudentsList = ({ onViewProfile }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('active'); // active, excluded, left
-  
-  // Gestion de la sélection multiple (Cocher des cases)
+  const [selectedStatus, setSelectedStatus] = useState('active');
   const [selectedIds, setSelectedIds] = useState([]);
+  
+  // États pour UI
+  const [isLoading, setIsLoading] = useState(true);
+  const [openMenuId, setOpenMenuId] = useState(null);
 
-  // Données simulées (Mock Data)
+  // Simulation chargement API
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // --- MAPPING BASE DE DONNÉES LARAVEL ---
+  // id -> eleves.id (ou génération matricule custom)
+  // firstName -> users.prenom (via relation eleve->user)
+  // lastName -> users.nom (via relation eleve->user)
+  // class -> classes.nom (via relation eleve->classe)
+  // gender -> (Champ à ajouter dans users ou eleves, ex: 'sexe')
+  // parent -> parents_tuteurs.nom (via table pivot relations_eleve_tuteur)
+  // phone -> parents_tuteurs.telephone
   const mockStudents = [
     { id: 'MAT-25-001', firstName: 'Jean', lastName: 'Dupont', class: '2nde C', gender: 'M', parent: 'Paul Dupont', phone: '97001122', status: 'active' },
     { id: 'MAT-25-002', firstName: 'Amina', lastName: 'Kone', class: 'Tle D', gender: 'F', parent: 'Mme Kone', phone: '96554433', status: 'active' },
@@ -35,30 +51,41 @@ const StudentsList = ({ onViewProfile }) => { // Prop pour aller vers le profil 
     return matchSearch && matchClass && matchStatus;
   });
 
-  // Gestion des cases à cocher
+  // Gestion Selection
   const toggleSelectAll = () => {
-    if (selectedIds.length === filteredStudents.length) {
-      setSelectedIds([]); // Tout décocher
-    } else {
-      setSelectedIds(filteredStudents.map(s => s.id)); // Tout cocher
-    }
+    if (selectedIds.length === filteredStudents.length) setSelectedIds([]);
+    else setSelectedIds(filteredStudents.map(s => s.id));
   };
 
   const toggleSelectOne = (id) => {
-    if (selectedIds.includes(id)) {
-      setSelectedIds(selectedIds.filter(itemId => itemId !== id));
-    } else {
-      setSelectedIds([...selectedIds, id]);
-    }
+    if (selectedIds.includes(id)) setSelectedIds(selectedIds.filter(itemId => itemId !== id));
+    else setSelectedIds([...selectedIds, id]);
   };
 
-  // Liste unique des classes pour le filtre
+  const toggleMenu = (id, e) => {
+    e.stopPropagation();
+    setOpenMenuId(openMenuId === id ? null : id);
+  };
+
+  // Extraction unique des classes pour le filtre
   const classesList = [...new Set(mockStudents.map(s => s.class))].sort();
+
+  // Loader
+  if (isLoading) {
+    return (
+      <div className="h-[calc(100vh-150px)] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-slate-400">
+          <Loader2 size={40} className="animate-spin text-brand-primary" />
+          <p className="text-sm font-medium">Chargement de l'annuaire...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       
-      {/* 1. Header & Actions Principales */}
+      {/* 1. Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
@@ -81,10 +108,8 @@ const StudentsList = ({ onViewProfile }) => { // Prop pour aller vers le profil 
         </div>
       </div>
 
-      {/* 2. Barre d'outils de Filtrage */}
+      {/* 2. Filtres */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-4">
-        
-        {/* Recherche (5 cols) */}
         <div className="md:col-span-5 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input 
@@ -96,7 +121,6 @@ const StudentsList = ({ onViewProfile }) => { // Prop pour aller vers le profil 
           />
         </div>
 
-        {/* Filtre Classe (3 cols) */}
         <div className="md:col-span-3 relative">
             <School className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <select 
@@ -110,7 +134,6 @@ const StudentsList = ({ onViewProfile }) => { // Prop pour aller vers le profil 
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
         </div>
 
-        {/* Filtre Statut (2 cols) */}
         <div className="md:col-span-2 relative">
             <select 
                 className="w-full pl-3 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary cursor-pointer"
@@ -124,7 +147,6 @@ const StudentsList = ({ onViewProfile }) => { // Prop pour aller vers le profil 
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
         </div>
         
-        {/* Bouton Reset (2 cols) */}
         <div className="md:col-span-2">
             <button 
                 onClick={() => {setSearchTerm(''); setSelectedClass('all'); setSelectedStatus('all');}}
@@ -136,7 +158,7 @@ const StudentsList = ({ onViewProfile }) => { // Prop pour aller vers le profil 
         </div>
       </div>
 
-      {/* 3. Barre d'actions groupées (Visible seulement si sélection) */}
+      {/* 3. Actions groupées */}
       {selectedIds.length > 0 && (
         <div className="bg-brand-dark text-white p-3 rounded-xl flex items-center justify-between animate-in slide-in-from-top-2 shadow-lg">
             <div className="flex items-center gap-3 px-2">
@@ -156,8 +178,8 @@ const StudentsList = ({ onViewProfile }) => { // Prop pour aller vers le profil 
         </div>
       )}
 
-      {/* 4. Tableau des Élèves */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      {/* 4. Tableau */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden relative">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -181,8 +203,12 @@ const StudentsList = ({ onViewProfile }) => { // Prop pour aller vers le profil 
             <tbody className="divide-y divide-slate-100">
               {filteredStudents.length > 0 ? (
                 filteredStudents.map((student) => (
-                  <tr key={student.id} className={`hover:bg-slate-50 transition-colors group ${selectedIds.includes(student.id) ? 'bg-orange-50/30' : ''}`}>
-                    <td className="px-6 py-4">
+                  <tr 
+                    key={student.id} 
+                    className={`hover:bg-slate-50 transition-colors group cursor-pointer ${selectedIds.includes(student.id) ? 'bg-orange-50/30' : ''}`}
+                    onClick={() => onViewProfile && onViewProfile(student)} // Rendre la ligne cliquable
+                  >
+                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                       <input 
                         type="checkbox" 
                         className="rounded border-slate-300 text-brand-primary focus:ring-brand-primary cursor-pointer w-4 h-4"
@@ -230,7 +256,9 @@ const StudentsList = ({ onViewProfile }) => { // Prop pour aller vers le profil 
                             </span>
                         )}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    
+                    {/* ACTIONS avec Menu Contextuel */}
+                    <td className="px-6 py-4 text-right relative" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">
                          <button 
                             onClick={() => onViewProfile && onViewProfile(student)}
@@ -239,9 +267,49 @@ const StudentsList = ({ onViewProfile }) => { // Prop pour aller vers le profil 
                          >
                             <Eye size={18} />
                          </button>
-                         <button className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
-                            <MoreHorizontal size={18} />
-                         </button>
+                         
+                         <div className="relative">
+                            <button 
+                                onClick={(e) => toggleMenu(student.id, e)}
+                                className={`p-2 rounded-lg transition-colors ${
+                                    openMenuId === student.id 
+                                    ? 'bg-brand-primary text-white' 
+                                    : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
+                                }`}
+                            >
+                                <MoreHorizontal size={18} />
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            {openMenuId === student.id && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="py-1">
+                                        <button 
+                                            onClick={() => onViewProfile(student)}
+                                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                        >
+                                            <Eye size={16} className="text-blue-600"/>
+                                            Voir dossier
+                                        </button>
+                                        <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                            <Edit size={16} className="text-orange-600"/>
+                                            Modifier
+                                        </button>
+                                        <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                            <Printer size={16} className="text-slate-500"/>
+                                            Imprimer fiche
+                                        </button>
+                                    </div>
+                                    <div className="border-t border-slate-100 py-1">
+                                        <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                            <Trash2 size={16} />
+                                            Exclure / Supprimer
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                         </div>
+
                       </div>
                     </td>
                   </tr>
@@ -269,12 +337,20 @@ const StudentsList = ({ onViewProfile }) => { // Prop pour aller vers le profil 
             Total : <span className="font-medium text-slate-900">{filteredStudents.length}</span> élèves
           </p>
           <div className="flex gap-2">
-             {/* Pagination simplifiée */}
             <button className="px-3 py-1 border border-slate-300 bg-white rounded text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50" disabled>Précédent</button>
             <button className="px-3 py-1 border border-slate-300 bg-white rounded text-sm text-slate-600 hover:bg-slate-50">Suivant</button>
           </div>
         </div>
       </div>
+
+      {/* Overlay Fermeture Menu */}
+      {openMenuId && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setOpenMenuId(null)}
+        ></div>
+      )}
+
     </div>
   );
 };

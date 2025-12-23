@@ -1,17 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, Filter, Eye, MoreHorizontal, Download, 
   CheckCircle, XCircle, Clock, Calendar, FileText, 
-  Trash2, Mail, Send
+  Trash2, Mail, Loader2
 } from 'lucide-react';
 
-// 1. AJOUT DE LA PROP ICI ↓
 const InscriptionsList = ({ onViewDetails }) => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true); // 1. État de chargement
 
-  // Données simulées
+  // Simulation chargement API
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Données simulées (MAPPED avec tes migrations Laravel)
+  // Backend Mapping futur :
+  // id -> inscriptions.id (formaté)
+  // firstName -> users.prenom (via relation eleve)
+  // lastName -> users.nom
+  // class -> classes.nom (via relation demandée)
+  // date -> inscriptions.date_inscription
+  // status -> inscriptions.statut
   const mockInscriptions = [
     { 
       id: 'INS-2025-042', 
@@ -81,11 +94,10 @@ const InscriptionsList = ({ onViewDetails }) => {
   });
 
   const toggleMenu = (id, e) => {
-    e.stopPropagation(); // Empêche le clic de traverser vers la ligne
+    e.stopPropagation();
     setOpenMenuId(openMenuId === id ? null : id);
   };
 
-  // Badge Status
   const StatusBadge = ({ status }) => {
     const styles = {
       pending: { bg: 'bg-orange-100', text: 'text-orange-700', icon: Clock, label: 'En attente' },
@@ -102,6 +114,18 @@ const InscriptionsList = ({ onViewDetails }) => {
       </span>
     );
   };
+
+  // 2. Affichage Loader si chargement
+  if (isLoading) {
+    return (
+      <div className="h-[calc(100vh-150px)] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-slate-400">
+          <Loader2 size={40} className="animate-spin text-brand-primary" />
+          <p className="text-sm font-medium">Chargement des inscriptions...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -165,7 +189,7 @@ const InscriptionsList = ({ onViewDetails }) => {
       </div>
 
       {/* Tableau */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden relative">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -232,7 +256,6 @@ const InscriptionsList = ({ onViewDetails }) => {
                     <td className="px-6 py-4 text-right relative">
                       <div className="flex items-center justify-end gap-2">
                         
-                        {/* Bouton Oeil (Détails) */}
                         <button 
                           onClick={() => onViewDetails(item)}
                           className="p-1.5 text-slate-400 hover:text-brand-primary hover:bg-orange-50 rounded transition-colors" 
@@ -241,7 +264,6 @@ const InscriptionsList = ({ onViewDetails }) => {
                           <Eye size={18} />
                         </button>
 
-                        {/* Bouton 3 points (Menu) */}
                         <div className="relative">
                           <button 
                             onClick={(e) => toggleMenu(item.id, e)}
@@ -254,10 +276,8 @@ const InscriptionsList = ({ onViewDetails }) => {
                             <MoreHorizontal size={18} />
                           </button>
 
-                          {/* Le Menu Déroulant (Dropdown) */}
                           {openMenuId === item.id && (
                             <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                              
                               <div className="py-1">
                                 <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                                   <CheckCircle size={16} className="text-green-600"/>
@@ -272,14 +292,12 @@ const InscriptionsList = ({ onViewDetails }) => {
                                   Télécharger PDF
                                 </button>
                               </div>
-                              
                               <div className="border-t border-slate-100 py-1">
                                 <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
                                   <Trash2 size={16} />
                                   Supprimer
                                 </button>
                               </div>
-
                             </div>
                           )}
                         </div>
@@ -302,13 +320,6 @@ const InscriptionsList = ({ onViewDetails }) => {
               )}
             </tbody>
           </table>
-          {/* Overlay invisible pour fermer le menu au clic extérieur */}
-          {openMenuId && (
-            <div 
-              className="fixed inset-0 z-40" 
-              onClick={() => setOpenMenuId(null)}
-            ></div>
-          )}
         </div>
         
         {/* Pagination */}
@@ -322,6 +333,15 @@ const InscriptionsList = ({ onViewDetails }) => {
           </div>
         </div>
       </div>
+      
+      {/* 3. Overlay déplacé ICI pour couvrir tout l'écran correctement */}
+      {openMenuId && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setOpenMenuId(null)}
+        ></div>
+      )}
+
     </div>
   );
 };

@@ -1,30 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import StudentCardPreview from './StudentCardPreview';
 import { 
   ArrowLeft, User, Phone, Mail, MapPin, Calendar, 
   School, FileText, Download, Printer, CreditCard, 
-  Edit, Shield, Clock 
+  Edit, Shield, Clock, Loader2
 } from 'lucide-react';
 
 const StudentProfile = ({ student, onBack }) => {
-  const [activeTab, setActiveTab] = useState('infos'); // infos, scolarite, documents
+  const [activeTab, setActiveTab] = useState('infos');
   const [showCard, setShowCard] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // 1. État de chargement
+
+  // Simulation chargement API
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (!student) return null;
 
-  // Données étendues simulées (car la liste ne donne pas tout)
+  // --- MAPPING BASE DE DONNÉES LARAVEL ---
+  // Simulation d'une réponse API complexe qui agrège plusieurs tables
   const fullData = {
     ...student,
-    dob: '12 Mars 2009',
+    // Infos Perso -> table `users` ou extension `eleves`
+    dob: '12 Mars 2009', 
     pob: 'Cotonou',
-    address: 'Qtr. Fidjrossè, Maison 124',
-    email: 'parent.contact@gmail.com',
+    address: 'Qtr. Fidjrossè, Maison 124', // via `parents_tuteurs`
+    email: 'parent.contact@gmail.com', // via `parents_tuteurs`
+    
+    // Historique -> tables `affectations_classes` & `bulletins`
     history: [
       { year: '2024-2025', class: student.class, result: 'En cours' },
       { year: '2023-2024', class: '3ème', result: 'Admis (14.50)' },
       { year: '2022-2023', class: '4ème', result: 'Admis (13.20)' },
-    ]
+    ],
+
+    // Documents -> table `documents_eleves`
+    documents: [
+        { name: 'Acte de naissance.pdf', date: 'Ajouté le 12 Sept 2024' },
+        { name: 'Photo identité.jpg', date: 'Ajouté le 12 Sept 2024' },
+        { name: 'Certificat scolarité an dernier.pdf', date: 'Ajouté le 15 Sept 2024' },
+        { name: 'Fiche inscription signée.pdf', date: 'Ajouté le 20 Sept 2024' },
+    ],
+
+    // Finances -> tables `paiement`, `tranche_paiement`
+    finance: {
+        reste: '75.000 FCFA',
+        statut: 'En retard'
+    },
+
+    // Assiduité -> table `presence`
+    attendance: {
+        rate: 98,
+        justified: '12h',
+        absent: '2h'
+    }
   };
+
+  // 2. Loader
+  if (isLoading) {
+    return (
+      <div className="h-[calc(100vh-150px)] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-slate-400">
+          <Loader2 size={40} className="animate-spin text-brand-primary" />
+          <p className="text-sm font-medium">Chargement du dossier élève...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
@@ -40,7 +84,7 @@ const StudentProfile = ({ student, onBack }) => {
         <span className="font-medium">Retour à l'annuaire</span>
       </button>
 
-      {/* 2. En-tête Profil (Carte d'identité visuelle) */}
+      {/* 2. En-tête Profil */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 relative overflow-hidden">
         {/* Background décoratif */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-orange-50 rounded-full -mr-32 -mt-32 opacity-50 pointer-events-none"></div>
@@ -71,10 +115,11 @@ const StudentProfile = ({ student, onBack }) => {
                 </div>
             </div>
 
+            {/* Modal Carte Scolaire */}
             {showCard && (
                 <StudentCardPreview 
-                student={fullData} 
-                onClose={() => setShowCard(false)} 
+                  student={fullData} 
+                  onClose={() => setShowCard(false)} 
                 />
             )}
 
@@ -85,7 +130,7 @@ const StudentProfile = ({ student, onBack }) => {
                     Modifier
                 </button>
                 <button 
-                    onClick={() => setShowCard(true)} // <--- L'événement ici
+                    onClick={() => setShowCard(true)}
                     className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white rounded-lg font-bold hover:bg-orange-600 transition-colors shadow-md shadow-orange-500/20"
                 >
                     <CreditCard size={16} />
@@ -114,7 +159,7 @@ const StudentProfile = ({ student, onBack }) => {
                     >
                         {tab === 'infos' && 'Informations Personnelles'}
                         {tab === 'scolarite' && 'Parcours Scolaire'}
-                        {tab === 'documents' && 'Documents (4)'}
+                        {tab === 'documents' && `Documents (${fullData.documents.length})`}
                     </button>
                 ))}
             </div>
@@ -181,12 +226,7 @@ const StudentProfile = ({ student, onBack }) => {
                             <h3 className="text-lg font-bold text-slate-800">Dossier Numérique</h3>
                             <button className="text-sm text-brand-primary font-medium hover:underline">+ Ajouter un document</button>
                         </div>
-                        {[
-                            { name: 'Acte de naissance.pdf', date: 'Ajouté le 12 Sept 2024' },
-                            { name: 'Photo identité.jpg', date: 'Ajouté le 12 Sept 2024' },
-                            { name: 'Certificat scolarité an dernier.pdf', date: 'Ajouté le 15 Sept 2024' },
-                            { name: 'Fiche inscription signée.pdf', date: 'Ajouté le 20 Sept 2024' },
-                        ].map((doc, i) => (
+                        {fullData.documents.map((doc, i) => (
                             <div key={i} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-red-50 text-red-600 rounded-lg">
@@ -211,7 +251,7 @@ const StudentProfile = ({ student, onBack }) => {
         {/* COLONNE DROITE (Actions & Stats) */}
         <div className="space-y-6">
             
-            {/* Widget Présence (Placeholder pour Projet 4 mais utile ici) */}
+            {/* Widget Présence (Lien avec table `presence`) */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                 <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <Clock size={18} className="text-brand-primary"/> 
@@ -219,20 +259,20 @@ const StudentProfile = ({ student, onBack }) => {
                 </h3>
                 <div className="space-y-4">
                     <div className="flex justify-between items-end">
-                        <div className="text-3xl font-bold text-slate-800">98%</div>
+                        <div className="text-3xl font-bold text-slate-800">{fullData.attendance.rate}%</div>
                         <div className="text-xs text-green-600 font-bold mb-1">Excellent</div>
                     </div>
                     <div className="w-full bg-slate-100 rounded-full h-2">
-                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '98%' }}></div>
+                        <div className="bg-green-500 h-2 rounded-full" style={{ width: `${fullData.attendance.rate}%` }}></div>
                     </div>
                     <div className="text-xs text-slate-500 flex justify-between">
-                        <span>Heures justifiées: 12h</span>
-                        <span>Absences: 2h</span>
+                        <span>Justifiées: {fullData.attendance.justified}</span>
+                        <span>Absences: {fullData.attendance.absent}</span>
                     </div>
                 </div>
             </div>
 
-            {/* Widget Paiement (Placeholder pour Projet 2) */}
+            {/* Widget Paiement (Lien avec table `paiement`) */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                 <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <CreditCard size={18} className="text-brand-primary"/> 
@@ -240,7 +280,7 @@ const StudentProfile = ({ student, onBack }) => {
                 </h3>
                 <div className="p-4 bg-orange-50 rounded-lg border border-orange-100 mb-4">
                     <div className="text-sm text-orange-800 font-medium">Reste à payer</div>
-                    <div className="text-2xl font-bold text-orange-600">75.000 FCFA</div>
+                    <div className="text-2xl font-bold text-orange-600">{fullData.finance.reste}</div>
                 </div>
                 <button className="w-full py-2 bg-white border border-slate-200 text-slate-600 font-medium rounded-lg text-sm hover:bg-slate-50">
                     Voir détails financiers
@@ -265,7 +305,7 @@ const StudentProfile = ({ student, onBack }) => {
   );
 };
 
-// Petit composant helper pour les lignes d'info
+// Helper
 const InfoItem = ({ icon: Icon, label, value, highlight = false }) => (
     <div className="flex items-start gap-3">
         <div className="mt-1 text-slate-400">
