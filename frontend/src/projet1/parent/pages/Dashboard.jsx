@@ -2,16 +2,11 @@ import React from 'react';
 import { Users, Bell, CreditCard, ChevronRight } from 'lucide-react';
 import '../styles/theme.css';
 
-const Dashboard = () => {
+const Dashboard = ({ children, onNavigate }) => {
     const stats = [
-        { label: 'Enfants inscrits', value: '2', icon: Users, color: 'text-blue-400' },
-        { label: 'Notifications', value: '5', icon: Bell, color: 'text-orange-400' },
+        { label: 'Enfants inscrits', value: children.length.toString(), icon: Users, color: 'text-blue-400' },
+        { label: 'Notifications', value: '3', icon: Bell, color: 'text-orange-400' },
         { label: 'Paiements dus', value: '120,000 FCFA', icon: CreditCard, color: 'text-red-400' },
-    ];
-
-    const children = [
-        { name: 'Jean Dupont', class: '6ème A', status: 'Inscrit', image: 'https://i.pravatar.cc/150?u=jean' },
-        { name: 'Marie Dupont', class: 'CM2', status: 'Réinscription en cours', image: 'https://i.pravatar.cc/150?u=marie' },
     ];
 
     return (
@@ -45,12 +40,16 @@ const Dashboard = () => {
                     </div>
                     <div className="space-y-4">
                         {children.map((child, index) => (
-                            <div key={index} className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
+                            <div
+                                key={index}
+                                onClick={() => onNavigate('children')}
+                                className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group"
+                            >
                                 <div className="flex items-center gap-4">
-                                    <img src={child.image} alt={child.name} className="w-12 h-12 rounded-full ring-2 ring-white/10" />
+                                    <img src={child.photo} alt={child.name} className="w-12 h-12 rounded-full ring-2 ring-white/10 object-cover" />
                                     <div>
                                         <h3 className="font-semibold">{child.name}</h3>
-                                        <p className="text-xs text-white/40">{child.class} • {child.status}</p>
+                                        <p className="text-xs text-white/40">{child.grade} • {child.registrationValidated ? 'Inscrit' : 'En attente'}</p>
                                     </div>
                                 </div>
                                 <ChevronRight size={18} className="text-white/20 group-hover:text-orange-400" />

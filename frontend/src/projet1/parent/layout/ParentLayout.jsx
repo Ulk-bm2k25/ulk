@@ -14,16 +14,16 @@ import '../styles/theme.css';
 
 const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
-    { id: 'children', label: 'My Children', icon: Users },
-    { id: 'payments', label: 'Payments & Fees', icon: CreditCard },
-    { id: 'grades', label: 'Grades', icon: Star },
-    { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
+    { id: 'dashboard', label: 'Tableau de bord', icon: LayoutGrid },
+    { id: 'children', label: 'Mes Enfants', icon: Users },
+    { id: 'payments', label: 'Paiements & Frais', icon: CreditCard },
+    { id: 'grades', label: 'Notes & Bulletins', icon: Star },
+    { id: 'attendance', label: 'Présence', icon: CalendarCheck },
     { id: 'notifications', label: 'Notifications', icon: Bell, badge: 3 },
   ];
 
   const bottomMenuItems = [
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'settings', label: 'Paramètres', icon: Settings },
   ];
 
   return (
@@ -47,8 +47,8 @@ const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
               key={item.id}
               onClick={() => onNavigate(item.id)}
               className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all group ${currentPage === item.id
-                  ? 'bg-[#eb8e3a] text-white shadow-lg shadow-orange-950/20'
-                  : 'text-white/50 hover:bg-white/5 hover:text-white'
+                ? 'bg-[#eb8e3a] text-white shadow-lg shadow-orange-950/20'
+                : 'text-white/50 hover:bg-white/5 hover:text-white'
                 }`}
             >
               <div className="flex items-center gap-4">
@@ -73,8 +73,8 @@ const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
               key={item.id}
               onClick={() => onNavigate(item.id)}
               className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${currentPage === item.id
-                  ? 'bg-[#eb8e3a] text-white'
-                  : 'text-white/50 hover:bg-white/5 hover:text-white'
+                ? 'bg-[#eb8e3a] text-white'
+                : 'text-white/50 hover:bg-white/5 hover:text-white'
                 }`}
             >
               <item.icon size={22} />
@@ -94,7 +94,7 @@ const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
               </div>
               <div className="flex flex-col">
                 <span className="text-[14px] font-bold text-white">Marie Dupont</span>
-                <span className="text-[11px] text-white/40">Parent Account</span>
+                <span className="text-[11px] text-white/40">Compte Parent</span>
               </div>
             </div>
             <button

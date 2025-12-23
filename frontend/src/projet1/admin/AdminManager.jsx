@@ -10,7 +10,7 @@ import PlaceholderPage from './pages/PlaceholderPage';
 import { FileText, Users, School, FileCheck, Bell, Settings } from 'lucide-react';
 
 const AdminManager = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(true);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [currentPage, setCurrentPage] = useState('dashboard');
 
     // Nouvel état pour stocker l'élève sélectionné

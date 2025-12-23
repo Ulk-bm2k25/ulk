@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  Search, Filter, Eye, MoreHorizontal, Download, 
-  CheckCircle, XCircle, Clock, Calendar, FileText, 
+import {
+  Search, Filter, Eye, MoreHorizontal, Download,
+  CheckCircle, XCircle, Clock, Calendar, FileText,
   Trash2, Mail, Send
 } from 'lucide-react';
 
@@ -13,58 +13,58 @@ const InscriptionsList = ({ onViewDetails }) => {
 
   // Données simulées
   const mockInscriptions = [
-    { 
-      id: 'INS-2025-042', 
-      firstName: 'Jean', 
-      lastName: 'Dupont', 
-      class: 'Seconde C', 
-      date: '19 Déc 2025', 
-      status: 'pending', 
+    {
+      id: 'INS-2025-042',
+      firstName: 'Jean',
+      lastName: 'Dupont',
+      class: 'Seconde C',
+      date: '19 Déc 2025',
+      status: 'pending',
       payment: 'partial',
       docs: 'complete',
       email: 'p.dupont@email.com'
     },
-    { 
-      id: 'INS-2025-041', 
-      firstName: 'Amina', 
-      lastName: 'Kone', 
-      class: 'Terminale D', 
-      date: '18 Déc 2025', 
-      status: 'validated', 
-      payment: 'paid', 
+    {
+      id: 'INS-2025-041',
+      firstName: 'Amina',
+      lastName: 'Kone',
+      class: 'Terminale D',
+      date: '18 Déc 2025',
+      status: 'validated',
+      payment: 'paid',
       docs: 'complete',
       email: 'kone.famille@email.com'
     },
-    { 
-      id: 'INS-2025-039', 
-      firstName: 'Lucas', 
-      lastName: 'Martin', 
-      class: '1ère A', 
-      date: '15 Déc 2025', 
-      status: 'rejected', 
-      payment: 'unpaid', 
+    {
+      id: 'INS-2025-039',
+      firstName: 'Lucas',
+      lastName: 'Martin',
+      class: '1ère A',
+      date: '15 Déc 2025',
+      status: 'rejected',
+      payment: 'unpaid',
       docs: 'missing',
       email: 'lucas.m@email.com'
     },
-    { 
-      id: 'INS-2025-038', 
-      firstName: 'Sarah', 
-      lastName: 'Bensoussan', 
-      class: '6ème', 
-      date: '14 Déc 2025', 
-      status: 'pending', 
-      payment: 'paid', 
+    {
+      id: 'INS-2025-038',
+      firstName: 'Sarah',
+      lastName: 'Bensoussan',
+      class: '6ème',
+      date: '14 Déc 2025',
+      status: 'pending',
+      payment: 'paid',
       docs: 'missing',
       email: 's.bensoussan@email.com'
     },
-    { 
-      id: 'INS-2025-035', 
-      firstName: 'Marc', 
-      lastName: 'Evan', 
-      class: '3ème', 
-      date: '10 Déc 2025', 
-      status: 'validated', 
-      payment: 'paid', 
+    {
+      id: 'INS-2025-035',
+      firstName: 'Marc',
+      lastName: 'Evan',
+      class: '3ème',
+      date: '10 Déc 2025',
+      status: 'validated',
+      payment: 'paid',
       docs: 'complete',
       email: 'marc.e@email.com'
     },
@@ -73,8 +73,8 @@ const InscriptionsList = ({ onViewDetails }) => {
   // Filtrage
   const filteredData = mockInscriptions.filter(item => {
     const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
-    const matchesSearch = 
-      item.lastName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch =
+      item.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.id.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
@@ -105,7 +105,7 @@ const InscriptionsList = ({ onViewDetails }) => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -133,11 +133,10 @@ const InscriptionsList = ({ onViewDetails }) => {
             <button
               key={tab}
               onClick={() => setFilterStatus(tab)}
-              className={`flex-1 md:flex-none px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
-                filterStatus === tab 
-                  ? 'bg-white text-slate-800 shadow-sm' 
+              className={`flex-1 md:flex-none px-4 py-1.5 text-sm font-medium rounded-md transition-all ${filterStatus === tab
+                  ? 'bg-white text-slate-800 shadow-sm'
                   : 'text-slate-500 hover:text-slate-700'
-              }`}
+                }`}
             >
               {tab === 'all' && 'Tout voir'}
               {tab === 'pending' && 'En attente'}
@@ -150,12 +149,12 @@ const InscriptionsList = ({ onViewDetails }) => {
         <div className="flex gap-3 w-full md:w-auto">
           <div className="relative flex-1 md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Rechercher nom, matricule..." 
+            <input
+              type="text"
+              placeholder="Rechercher nom, matricule..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-slate-800"
             />
           </div>
           <button className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600">
@@ -171,7 +170,7 @@ const InscriptionsList = ({ onViewDetails }) => {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold tracking-wider">
                 <th className="px-6 py-4 w-12">
-                   <input type="checkbox" className="rounded border-slate-300 text-brand-primary focus:ring-brand-primary" />
+                  <input type="checkbox" className="rounded border-slate-300 text-brand-primary focus:ring-brand-primary" />
                 </th>
                 <th className="px-6 py-4">Élève / Demandeur</th>
                 <th className="px-6 py-4">Classe demandée</th>
@@ -206,7 +205,7 @@ const InscriptionsList = ({ onViewDetails }) => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Calendar size={14} className="text-slate-400"/>
+                        <Calendar size={14} className="text-slate-400" />
                         {item.date}
                       </div>
                     </td>
@@ -231,11 +230,11 @@ const InscriptionsList = ({ onViewDetails }) => {
                     </td>
                     <td className="px-6 py-4 text-right relative">
                       <div className="flex items-center justify-end gap-2">
-                        
+
                         {/* Bouton Oeil (Détails) */}
-                        <button 
+                        <button
                           onClick={() => onViewDetails(item)}
-                          className="p-1.5 text-slate-400 hover:text-brand-primary hover:bg-orange-50 rounded transition-colors" 
+                          className="p-1.5 text-slate-400 hover:text-brand-primary hover:bg-orange-50 rounded transition-colors"
                           title="Voir détails"
                         >
                           <Eye size={18} />
@@ -243,13 +242,12 @@ const InscriptionsList = ({ onViewDetails }) => {
 
                         {/* Bouton 3 points (Menu) */}
                         <div className="relative">
-                          <button 
+                          <button
                             onClick={(e) => toggleMenu(item.id, e)}
-                            className={`p-1.5 rounded transition-colors ${
-                              openMenuId === item.id 
-                                ? 'bg-brand-primary text-white' 
+                            className={`p-1.5 rounded transition-colors ${openMenuId === item.id
+                                ? 'bg-brand-primary text-white'
                                 : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
-                            }`}
+                              }`}
                           >
                             <MoreHorizontal size={18} />
                           </button>
@@ -257,22 +255,22 @@ const InscriptionsList = ({ onViewDetails }) => {
                           {/* Le Menu Déroulant (Dropdown) */}
                           {openMenuId === item.id && (
                             <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                              
+
                               <div className="py-1">
                                 <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                                  <CheckCircle size={16} className="text-green-600"/>
+                                  <CheckCircle size={16} className="text-green-600" />
                                   Valider rapidement
                                 </button>
                                 <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                                  <Mail size={16} className="text-blue-600"/>
+                                  <Mail size={16} className="text-blue-600" />
                                   Relancer parent
                                 </button>
                                 <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                                  <Download size={16} className="text-slate-500"/>
+                                  <Download size={16} className="text-slate-500" />
                                   Télécharger PDF
                                 </button>
                               </div>
-                              
+
                               <div className="border-t border-slate-100 py-1">
                                 <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
                                   <Trash2 size={16} />
@@ -304,13 +302,13 @@ const InscriptionsList = ({ onViewDetails }) => {
           </table>
           {/* Overlay invisible pour fermer le menu au clic extérieur */}
           {openMenuId && (
-            <div 
-              className="fixed inset-0 z-40" 
+            <div
+              className="fixed inset-0 z-40"
               onClick={() => setOpenMenuId(null)}
             ></div>
           )}
         </div>
-        
+
         {/* Pagination */}
         <div className="bg-slate-50 border-t border-slate-200 px-6 py-4 flex items-center justify-between">
           <p className="text-sm text-slate-500">
