@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import adminRoutes from './projet1/admin/adminRoutes'
 
 // Simple Landing Page for development
@@ -37,10 +37,10 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Route d'accueil globale (optionnelle) */}
-        <Route path="/" element={<div>Accueil plateforme</div>} />
+        <Route path="/" element={<Home />} />
         {adminRoutes}
 
-        
+
         {/* Les routes des projets seront montées ici */}
         {/* {projet1Routes} */}
         {/* {projet2Routes} */}
