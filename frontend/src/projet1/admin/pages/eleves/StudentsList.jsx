@@ -4,12 +4,14 @@ import {
   Users, School, IdCard, FileText, ChevronDown, X, 
   Loader2, Edit, Trash2, Printer
 } from 'lucide-react';
+import MoveStudentModal from './MoveStudentModal';
 
 const StudentsList = ({ onViewProfile }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('active');
   const [selectedIds, setSelectedIds] = useState([]);
+  const [studentToMove, setStudentToMove] = useState(null);
   
   // États pour UI
   const [isLoading, setIsLoading] = useState(true);
@@ -299,6 +301,17 @@ const StudentsList = ({ onViewProfile }) => {
                                             <Printer size={16} className="text-slate-500"/>
                                             Imprimer fiche
                                         </button>
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setStudentToMove(student); // Ouvre le modal pour cet élève
+                                                setOpenMenuId(null); // Ferme le menu
+                                            }}
+                                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                        >
+                                            <ArrowRight size={16} className="text-purple-600"/>
+                                            Changer de classe
+                                        </button>
                                     </div>
                                     <div className="border-t border-slate-100 py-1">
                                         <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
@@ -342,6 +355,18 @@ const StudentsList = ({ onViewProfile }) => {
           </div>
         </div>
       </div>
+
+      {/* Modal de Changement de Classe */}
+      <MoveStudentModal 
+        isOpen={!!studentToMove} // Ouvert si un élève est sélectionné
+        student={studentToMove}
+        onClose={() => setStudentToMove(null)}
+        onConfirm={(studentId, newClassId) => {
+            console.log(`Transfert de l'élève ${studentId} vers la classe ${newClassId}`);
+            // Ici : Appel API Backend (PUT /api/affectations)
+            // Puis refresh de la liste
+        }}
+      />
 
       {/* Overlay Fermeture Menu */}
       {openMenuId && (

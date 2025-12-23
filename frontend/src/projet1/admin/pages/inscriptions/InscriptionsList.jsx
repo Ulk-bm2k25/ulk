@@ -143,10 +143,6 @@ const InscriptionsList = ({ onViewDetails }) => {
             <Download size={16} />
             <span className="hidden sm:inline">Exporter CSV</span>
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white rounded-lg text-sm font-bold hover:bg-orange-600 transition-colors shadow-md shadow-orange-500/20">
-            <FileText size={16} />
-            Nouvelle Inscription
-          </button>
         </div>
       </div>
 

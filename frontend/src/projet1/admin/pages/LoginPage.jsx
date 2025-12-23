@@ -1,44 +1,39 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, EyeOff, Lock, Mail, ArrowLeft, Loader2 } from 'lucide-react'; // Ajout de Loader2
+import { Eye, EyeOff, Lock, Mail, ArrowLeft, Loader2, Check } from 'lucide-react';
 
 const LoginPage = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false); // 1. État pour la checkbox
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false); // Nouvel état pour le chargement
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
-    
-    // Validation simple (sera renforcée plus tard avec le backend)
     if (!email) {
       newErrors.email = "L'email est requis";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = 'Email invalide';
     }
-    
     if (!password) {
       newErrors.password = 'Le mot de passe est requis';
     } else if (password.length < 6) {
       newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
     }
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
     if (validateForm()) {
       setIsLoading(true);
-      
-      // Simulation d'un délai réseau (1s) pour une meilleure UX
       setTimeout(() => {
         setIsLoading(false);
-        onLogin(); // Appel de la fonction de connexion simulée
+        // 2. On passe l'état de "rememberMe" au parent
+        onLogin(rememberMe); 
       }, 1000);
     }
   };
@@ -46,7 +41,6 @@ const LoginPage = ({ onLogin }) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-brand-dark p-4 font-sans relative">
       
-      {/* Bouton Retour à l'accueil */}
       <Link 
         to="/" 
         className="absolute top-6 left-6 flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
@@ -59,7 +53,6 @@ const LoginPage = ({ onLogin }) => {
 
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-300">
         
-        {/* Header de la carte */}
         <div className="p-8 pb-6 text-center">
           <div className="inline-flex justify-center items-center mb-6">
             <div className="h-12 w-12 bg-orange-100 rounded-xl flex items-center justify-center text-brand-primary mb-2">
@@ -72,11 +65,9 @@ const LoginPage = ({ onLogin }) => {
           <p className="text-slate-500 mt-2">Connectez-vous à votre espace d'administration</p>
         </div>
 
-        {/* Formulaire */}
         <div className="p-8 pt-0">
           <form onSubmit={handleSubmit} className="space-y-5">
             
-            {/* Champ Email */}
             <div className="space-y-1.5">
               <label className="block text-sm font-semibold text-slate-700">
                 Email professionnel
@@ -103,16 +94,10 @@ const LoginPage = ({ onLogin }) => {
               )}
             </div>
 
-            {/* Champ Mot de passe */}
             <div className="space-y-1.5">
-              <div className="flex justify-between items-center">
-                <label className="block text-sm font-semibold text-slate-700">
+              <label className="block text-sm font-semibold text-slate-700">
                   Mot de passe
-                </label>
-                <a href="#" className="text-sm font-medium text-brand-primary hover:text-orange-600 transition-colors">
-                  Oublié ?
-                </a>
-              </div>
+              </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-brand-primary transition-colors">
                   <Lock size={18} />
@@ -143,7 +128,30 @@ const LoginPage = ({ onLogin }) => {
               )}
             </div>
 
-            {/* Bouton de soumission avec état Loading */}
+            {/* 3. Zone "Se souvenir de moi" et "Mdp oublié" */}
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
+                  rememberMe 
+                    ? 'bg-brand-primary border-brand-primary text-white' 
+                    : 'border-slate-300 bg-white group-hover:border-brand-primary'
+                }`}>
+                   {rememberMe && <Check size={14} strokeWidth={3} />}
+                </div>
+                <input 
+                  type="checkbox" 
+                  className="hidden" 
+                  checked={rememberMe} 
+                  onChange={(e) => setRememberMe(e.target.checked)} 
+                />
+                <span className="text-sm text-slate-600 font-medium">Se souvenir de moi</span>
+              </label>
+              
+              <a href="#" className="text-sm font-medium text-brand-primary hover:text-orange-600 transition-colors">
+                Mot de passe oublié ?
+              </a>
+            </div>
+
             <button
               type="submit"
               disabled={isLoading}
