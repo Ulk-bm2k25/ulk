@@ -1,4 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+// Import des composants 
+import Permissions from './Permissions.jsx';
+/*import Attendance from './Attendance.jsx';
+import Courses from './Courses.jsx';
+import Reports from './Reports.jsx';*/
 
 // Composants icônes SVG
 const DashboardIcon = () => (
@@ -138,261 +145,474 @@ const StudentsIcon = () => (
 function SchoolHub() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [currentClass, setCurrentClass] = useState('Terminale A');
-  const [attendanceData, setAttendanceData] = useState([]);
-  const [courses, setCourses] = useState([]);
-  const [permissionRequests, setPermissionRequests] = useState([]);
+  const [dashboardData, setDashboardData] = useState(null);
   const [notifications, setNotifications] = useState([]);
+  const [userInfo, setUserInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Données simulées pour les élèves
-  const initialStudents = [
-    { id: 1, name: 'Koffi Agbéssi', present: true, absences: 1, parentEmail: 'parent1@email.bj', parentPhone: '+229 60 12 34 56' },
-    { id: 2, name: 'Amina Adékambi', present: true, absences: 0, parentEmail: 'parent2@email.bj', parentPhone: '+229 61 23 45 67' },
-    { id: 3, name: 'Simplice Ahouandjinou', present: false, absences: 3, parentEmail: 'parent3@email.bj', parentPhone: '+229 62 34 56 78' },
-    { id: 4, name: 'Félicité Dossou', present: true, absences: 2, parentEmail: 'parent4@email.bj', parentPhone: '+229 63 45 67 89' },
-    { id: 5, name: 'Médard Gbaguidi', present: false, absences: 4, parentEmail: 'parent5@email.bj', parentPhone: '+229 64 56 78 90' },
-    { id: 6, name: 'Rosalie Houngbo', present: true, absences: 0, parentEmail: 'parent6@email.bj', parentPhone: '+229 65 67 89 01' },
-    { id: 7, name: 'Gérard Kakpo', present: true, absences: 1, parentEmail: 'parent7@email.bj', parentPhone: '+229 66 78 90 12' },
-    { id: 8, name: 'Patricia Lawson', present: false, absences: 2, parentEmail: 'parent8@email.bj', parentPhone: '+229 67 89 01 23' },
-  ];
-
-  // Données simulées pour les cours
-  const initialCourses = [
-    { id: 1, subject: 'Mathématiques', class: 'Terminale A', day: 'Lundi', time: '08:00-10:00', teacher: 'M. Adébayo' },
-    { id: 2, subject: 'Physique-Chimie', class: 'Terminale A', day: 'Lundi', time: '10:15-12:15', teacher: 'Mme. Akpédjé' },
-    { id: 3, subject: 'Français', class: 'Terminale A', day: 'Mardi', time: '08:00-10:00', teacher: 'M. Gnonlonfoun' },
-    { id: 4, subject: 'Histoire-Géographie', class: 'Terminale A', day: 'Mardi', time: '10:15-12:15', teacher: 'Mme. Zinsou' },
-    { id: 5, subject: 'Anglais', class: 'Terminale A', day: 'Mercredi', time: '08:00-10:00', teacher: 'M. Johnson' },
-    { id: 6, subject: 'Philosophie', class: 'Terminale A', day: 'Mercredi', time: '10:15-12:15', teacher: 'M. Agossou' },
-    { id: 7, subject: 'SVT', class: 'Terminale A', day: 'Jeudi', time: '08:00-10:00', teacher: 'Mme. Attolou' },
-  ];
-
-  // Données simulées pour les demandes de permission
-  const initialRequests = [
-    { id: 1, student: 'Simplice Ahouandjinou', studentId: 3, date: '2024-03-15', reason: 'Rendez-vous médical', status: 'En attente' },
-    { id: 2, student: 'Médard Gbaguidi', studentId: 5, date: '2024-03-14', reason: 'Cérémonie familiale', status: 'Approuvé' },
-    { id: 3, student: 'Patricia Lawson', studentId: 8, date: '2024-03-13', reason: 'Compétition scolaire', status: 'Refusé' },
-  ];
-
-  // Notifications simulées
-  const initialNotifications = [
-    { id: 1, message: 'Simplice Ahouandjinou a 3 absences consécutives', type: 'warning', time: '10:30', read: false },
-    { id: 2, message: 'Nouvelle demande de permission de Médard Gbaguidi', type: 'info', time: '09:15', read: false },
-    { id: 3, message: 'Rapport de présence du 12 Mars généré', type: 'success', time: 'Hier', read: true },
-    { id: 4, message: 'Réunion des enseignants prévue vendredi', type: 'info', time: '08:00', read: false },
-  ];
-
-  useEffect(() => {
-    setAttendanceData(initialStudents);
-    setCourses(initialCourses);
-    setPermissionRequests(initialRequests);
-    setNotifications(initialNotifications);
-  }, []);
-
-  const toggleAttendance = (studentId) => {
-    setAttendanceData(prevData => 
-      prevData.map(student => {
-        if (student.id === studentId) {
-          const newPresentState = !student.present;
-          if (!newPresentState) {
-            addNotification(`Absence enregistrée pour ${student.name}`, 'warning');
-          }
-          return { ...student, present: newPresentState };
-        }
-        return student;
-      })
-    );
+  // Configuration de l'API
+  const API_BASE_URL = 'http://localhost:8000/api';
+  
+  // Fonction pour récupérer le token d'authentification
+  const getAuthToken = () => {
+    return localStorage.getItem('token') || 'YOUR_JWT_TOKEN_HERE';
   };
 
-  const markAllPresent = () => {
-    setAttendanceData(prevData => 
-      prevData.map(student => ({ ...student, present: true }))
-    );
-    addNotification('Tous les élèves marqués présents', 'success');
-  };
-
-  const markAllAbsent = () => {
-    setAttendanceData(prevData => 
-      prevData.map(student => ({ ...student, present: false }))
-    );
-    addNotification('Tous les élèves marqués absents', 'warning');
-  };
-
-  const generateReport = () => {
-    addNotification('Rapport de présence généré au format PDF', 'success');
-    const reportData = {
-      date: new Date().toLocaleDateString('fr-BJ'),
-      class: currentClass,
-      totalStudents: attendanceData.length,
-      present: attendanceData.filter(s => s.present).length,
-      absent: attendanceData.filter(s => !s.present).length,
-      attendanceRate: Math.round((attendanceData.filter(s => s.present).length / attendanceData.length) * 100)
-    };
+  // Configuration des headers avec token
+  const getHeaders = () => {
+    const token = getAuthToken();
+    if (!token) {
+      // Rediriger vers la page de connexion si pas de token
+      window.location.href = '/login';
+      return {};
+    }
     
-    alert(`Rapport généré avec succès!\n\nClasse: ${reportData.class}\nDate: ${reportData.date}\nTaux de présence: ${reportData.attendanceRate}%\nPrésents: ${reportData.present}/${reportData.totalStudents}\n\nLe rapport PDF est prêt au téléchargement.`);
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    };
   };
 
-  const addNotification = (message, type) => {
+  // Fonction pour charger les données du dashboard
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Utiliser fetch comme dans Permissions.jsx
+      const statsResponse = await fetch(`${API_BASE_URL}/dashboard/stats`, {
+        headers: getHeaders()
+      });
+      
+      if (!statsResponse.ok) throw new Error('Erreur API dashboard stats');
+      
+      const statsData = await statsResponse.json();
+      
+      // Récupérer les notifications
+      const notificationsResponse = await fetch(`${API_BASE_URL}/notifications`, {
+        headers: getHeaders()
+      });
+      
+      if (!notificationsResponse.ok) throw new Error('Erreur API notifications');
+      
+      const notificationsData = await notificationsResponse.json();
+      
+      // Récupérer les élèves nécessitant attention
+      const studentsAlertResponse = await fetch(`${API_BASE_URL}/dashboard/students-needing-attention`, {
+        headers: getHeaders()
+      });
+      
+      if (!studentsAlertResponse.ok) throw new Error('Erreur API students alert');
+      
+      const studentsAlertData = await studentsAlertResponse.json();
+      
+      // Récupérer les informations utilisateur
+      const userResponse = await fetch(`${API_BASE_URL}/user`, {
+        headers: getHeaders()
+      });
+      
+      if (!userResponse.ok) throw new Error('Erreur API user');
+      
+      const userData = await userResponse.json();
+      
+      // Mettre à jour l'état avec les données de l'API
+      setDashboardData({
+        stats: statsData,
+        studentsAlert: studentsAlertData
+      });
+      setNotifications(notificationsData);
+      setUserInfo(userData);
+      
+    } catch (err) {
+      console.error('Erreur API:', err);
+      setError('Impossible de charger les données. Vérifiez votre connexion.');
+      
+      // Données de secours pour le développement
+      loadFallbackData();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Données de secours pour le développement
+  const loadFallbackData = () => {
+    const fallbackStats = {
+      attendance_today: {
+        present: 15,
+        absent: 5,
+        total: 20,
+        rate: 75
+      },
+      consecutive_absences: {
+        count: 3,
+        threshold: 3
+      },
+      pending_permissions: 5,
+      today_courses: [
+        { subject: 'Mathématiques', time: '08:00-10:00' },
+        { subject: 'Physique-Chimie', time: '10:15-12:15' },
+        { subject: 'Français', time: '13:30-15:30' }
+      ],
+      today_courses_count: 3
+    };
+
+    const fallbackStudentsAlert = [
+      { id: 3, name: 'Simplice Ahouandjinou', absences: 3, class: 'Terminale A', parent_email: 'parent3@email.bj' },
+      { id: 5, name: 'Médard Gbaguidi', absences: 4, class: 'Terminale A', parent_email: 'parent5@email.bj' }
+    ];
+
+    const fallbackNotifications = [
+      { id: 1, message: 'Simplice Ahouandjinou a 3 absences consécutives', type: 'warning', time: '10:30', read: false, created_at: new Date().toISOString() },
+      { id: 2, message: 'Nouvelle demande de permission de Médard Gbaguidi', type: 'info', time: '09:15', read: false, created_at: new Date().toISOString() },
+      { id: 3, message: 'Rapport de présence du 12 Mars généré', type: 'success', time: 'Hier', read: true, created_at: new Date().toISOString() }
+    ];
+
+    const fallbackUserInfo = {
+      id: 5,
+      name: 'M. Adébayo',
+      email: 'adebayo@schoolhub.com',
+      role: 'Professeur Principal',
+      avatar: 'MA',
+      class_assigned: 'Terminale A',
+      phone: '+229 97 11 22 33'
+    };
+
+    setDashboardData({
+      stats: fallbackStats,
+      studentsAlert: fallbackStudentsAlert
+    });
+    setNotifications(fallbackNotifications);
+    setUserInfo(fallbackUserInfo);
+  };
+
+  // Fonction pour marquer tous les présents via l'API
+  const markAllPresent = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/attendance/mark-all`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          status: 'present',
+          class_id: 1,
+          date: new Date().toISOString().split('T')[0]
+        })
+      });
+      
+      if (!response.ok) throw new Error('Erreur marquage présence');
+      
+      // Recharger les données
+      await fetchDashboardData();
+      
+      // Ajouter une notification locale
+      addLocalNotification('Tous les élèves marqués présents', 'success');
+      
+    } catch (err) {
+      console.error('Erreur:', err);
+      addLocalNotification('Erreur lors du marquage des présences', 'warning');
+    }
+  };
+
+  // Fonction pour marquer tous les absents via l'API
+  const markAllAbsent = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/attendance/mark-all`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          status: 'absent',
+          class_id: 1,
+          date: new Date().toISOString().split('T')[0]
+        })
+      });
+      
+      if (!response.ok) throw new Error('Erreur marquage absence');
+      
+      // Recharger les données
+      await fetchDashboardData();
+      
+      // Ajouter une notification locale
+      addLocalNotification('Tous les élèves marqués absents', 'warning');
+      
+    } catch (err) {
+      console.error('Erreur:', err);
+      addLocalNotification('Erreur lors du marquage des absences', 'warning');
+    }
+  };
+
+  // Fonction pour générer un rapport PDF via l'API
+  const generateReport = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/reports/generate`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          class_id: 1,
+          date: new Date().toISOString().split('T')[0],
+          report_type: 'daily_attendance',
+          include_details: true
+        })
+      });
+      
+      if (!response.ok) throw new Error('Erreur génération rapport');
+      
+      const data = await response.json();
+      
+      if (data.report_url) {
+        // Ouvrir le PDF dans un nouvel onglet
+        window.open(data.report_url, '_blank');
+        addLocalNotification('Rapport PDF généré avec succès', 'success');
+      }
+    } catch (err) {
+      console.error('Erreur:', err);
+      addLocalNotification('Erreur lors de la génération du rapport', 'warning');
+    }
+  };
+
+  // Fonction pour marquer une notification comme lue via l'API
+  const markNotificationAsRead = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+        method: 'PUT',
+        headers: getHeaders()
+      });
+      
+      if (!response.ok) throw new Error('Erreur marquage notification lue');
+      
+      // Mettre à jour localement
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification.id === id ? { ...notification, read: true } : notification
+        )
+      );
+    } catch (err) {
+      console.error('Erreur:', err);
+    }
+  };
+
+  // Fonction pour ajouter une notification locale
+  const addLocalNotification = (message, type) => {
     const newNotification = {
       id: notifications.length + 1,
       message,
       type,
       time: new Date().toLocaleTimeString('fr-BJ', { hour: '2-digit', minute: '2-digit' }),
-      read: false
+      read: false,
+      created_at: new Date().toISOString()
     };
     setNotifications(prev => [newNotification, ...prev]);
   };
 
-  const markNotificationAsRead = (id) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id ? { ...notification, read: true } : notification
-      )
-    );
+  // Fonction de déconnexion
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    // Rediriger vers la page de connexion
+    window.location.href = '/login';
   };
 
-  const Dashboard = () => (
-    <div className="dashboard">
-      <h2>Tableau de Bord de Présence</h2>
-      
-      <div className="stats-container">
-        <div className="stat-card">
-          <div className="stat-icon">
-            <StudentsIcon />
-          </div>
-          <div className="stat-content">
-            <h3>Présence d'aujourd'hui</h3>
-            <div className="stat-number">
-              {attendanceData.filter(s => s.present).length} / {attendanceData.length}
-            </div>
-            <div className="stat-subtitle">
-              {Math.round((attendanceData.filter(s => s.present).length / attendanceData.length) * 100)}% de présence
-            </div>
+  // Charger les données au montage du composant
+  useEffect(() => {
+    const token = getAuthToken();
+    if (token && token !== 'YOUR_JWT_TOKEN_HERE') {
+      fetchDashboardData();
+    } else {
+      loadFallbackData();
+      setLoading(false);
+    }
+    
+    // Polling toutes les 30 secondes pour les mises à jour
+    const interval = setInterval(() => {
+      const token = getAuthToken();
+      if (token && token !== 'YOUR_JWT_TOKEN_HERE') {
+        fetchDashboardData();
+      }
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  // Composant Dashboard
+  const Dashboard = () => {
+    if (loading) {
+      return (
+        <div className="dashboard">
+          <h2>Tableau de Bord de Présence</h2>
+          <div className="loading">
+            <p>Chargement des données...</p>
           </div>
         </div>
-        
-        <div className="stat-card warning">
-          <div className="stat-icon">
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="dashboard">
+          <h2>Tableau de Bord de Présence</h2>
+          <div className="error-message">
             <WarningIcon />
-          </div>
-          <div className="stat-content">
-            <h3>Absences successives</h3>
-            <div className="stat-number">
-              {attendanceData.filter(s => s.absences >= 3).length}
-            </div>
-            <div className="stat-subtitle">Élèves avec 3+ absences</div>
+            <p>{error}</p>
+            <button className="btn primary" onClick={fetchDashboardData}>
+              Réessayer
+            </button>
           </div>
         </div>
+      );
+    }
+
+    if (!dashboardData) return null;
+
+    const { stats, studentsAlert } = dashboardData;
+
+    return (
+      <div className="dashboard">
+        <h2>Tableau de Bord de Présence</h2>
         
-        <div className="stat-card info">
-          <div className="stat-icon">
-            <ClockIcon />
-          </div>
-          <div className="stat-content">
-            <h3>Demandes en attente</h3>
-            <div className="stat-number">
-              {permissionRequests.filter(r => r.status === 'En attente').length}
+        <div className="stats-container">
+          <div className="stat-card">
+            <div className="stat-icon">
+              <StudentsIcon />
             </div>
-            <div className="stat-subtitle">À traiter</div>
-          </div>
-        </div>
-        
-        <div className="stat-card success">
-          <div className="stat-icon">
-            <CalendarIcon />
-          </div>
-          <div className="stat-content">
-            <h3>Cours aujourd'hui</h3>
-            <div className="stat-number">3</div>
-            <div className="stat-subtitle">Maths, Physique, Français</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="quick-actions">
-        <h3>Actions Rapides</h3>
-        <div className="action-buttons">
-          <button className="btn primary" onClick={() => setActiveTab('attendance')}>
-            <span className="btn-icon"><AttendanceIcon /></span>
-            Marquer la présence
-          </button>
-          <button className="btn secondary" onClick={() => setActiveTab('courses')}>
-            <span className="btn-icon"><CoursesIcon /></span>
-            Voir les cours
-          </button>
-          <button className="btn warning" onClick={generateReport}>
-            <span className="btn-icon"><PdfIcon /></span>
-            Générer rapport PDF
-          </button>
-          <button className="btn info" onClick={() => addNotification('Fonctionnalité à venir', 'info')}>
-            <span className="btn-icon"><StatsIcon /></span>
-            Statistiques détaillées
-          </button>
-        </div>
-      </div>
-
-      <div className="recent-activity">
-        <div className="activity-header">
-          <h3>Activité Récente</h3>
-          <span className="activity-count">{notifications.length} activités</span>
-        </div>
-        <div className="activity-list">
-          {notifications.slice(0, 5).map(notification => (
-            <div key={notification.id} className={`activity-item ${notification.type} ${notification.read ? 'read' : 'unread'}`}>
-              <div className="activity-icon">
-                {notification.type === 'warning' && <WarningIcon />}
-                {notification.type === 'success' && <CheckIcon />}
-                {notification.type === 'info' && <BellIcon />}
+            <div className="stat-content">
+              <h3>Présence d'aujourd'hui</h3>
+              <div className="stat-number">
+                {stats.attendance_today?.present || 0} / {stats.attendance_today?.total || 0}
               </div>
-              <div className="activity-content">
-                <div className="activity-message">{notification.message}</div>
-                <div className="activity-time">{notification.time}</div>
+              <div className="stat-subtitle">
+                {stats.attendance_today?.rate || 0}% de présence
               </div>
-              {!notification.read && (
-                <button 
-                  className="btn small" 
-                  onClick={() => markNotificationAsRead(notification.id)}
-                  title="Marquer comme lu"
-                >
-                  <CheckIcon />
-                </button>
-              )}
             </div>
-          ))}
+          </div>
+          
+          <div className="stat-card warning">
+            <div className="stat-icon">
+              <WarningIcon />
+            </div>
+            <div className="stat-content">
+              <h3>Absences successives</h3>
+              <div className="stat-number">
+                {stats.consecutive_absences?.count || 0}
+              </div>
+              <div className="stat-subtitle">Élèves avec 3+ absences</div>
+            </div>
+          </div>
+          
+          <div className="stat-card info">
+            <div className="stat-icon">
+              <ClockIcon />
+            </div>
+            <div className="stat-content">
+              <h3>Demandes en attente</h3>
+              <div className="stat-number">
+                {stats.pending_permissions || 0}
+              </div>
+              <div className="stat-subtitle">À traiter</div>
+            </div>
+          </div>
+          
+          <div className="stat-card success">
+            <div className="stat-icon">
+              <CalendarIcon />
+            </div>
+            <div className="stat-content">
+              <h3>Cours aujourd'hui</h3>
+              <div className="stat-number">{stats.today_courses_count || 0}</div>
+              <div className="stat-subtitle">
+                {stats.today_courses?.map(c => c.subject).join(', ') || 'Aucun cours'}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="students-alert">
-        <h3>Élèves nécessitant attention</h3>
-        <div className="students-list">
-          {attendanceData
-            .filter(student => student.absences >= 3)
-            .map(student => (
-              <div key={student.id} className="student-alert-card">
-                <div className="student-info">
-                  <div className="student-name">{student.name}</div>
-                  <div className="student-details">
-                    <span className="badge warning">{student.absences} absences</span>
-                    <span className="student-class">{currentClass}</span>
+        <div className="quick-actions">
+          <h3>Actions Rapides</h3>
+          <div className="action-buttons">
+            <button className="btn primary" onClick={() => setActiveTab('attendance')}>
+              <span className="btn-icon"><AttendanceIcon /></span>
+              Marquer la présence
+            </button>
+            <button className="btn secondary" onClick={() => setActiveTab('courses')}>
+              <span className="btn-icon"><CoursesIcon /></span>
+              Voir les cours
+            </button>
+            <button className="btn warning" onClick={generateReport}>
+              <span className="btn-icon"><PdfIcon /></span>
+              Générer rapport PDF
+            </button>
+            <button className="btn success" onClick={markAllPresent}>
+              <span className="btn-icon"><PresentIcon /></span>
+              Tout marquer présent
+            </button>
+          </div>
+        </div>
+
+        <div className="recent-activity">
+          <div className="activity-header">
+            <h3>Activité Récente</h3>
+            <span className="activity-count">{notifications.length} activités</span>
+          </div>
+          <div className="activity-list">
+            {notifications.slice(0, 5).map(notification => (
+              <div key={notification.id} className={`activity-item ${notification.type} ${notification.read ? 'read' : 'unread'}`}>
+                <div className="activity-icon">
+                  {notification.type === 'warning' && <WarningIcon />}
+                  {notification.type === 'success' && <CheckIcon />}
+                  {notification.type === 'info' && <BellIcon />}
+                </div>
+                <div className="activity-content">
+                  <div className="activity-message">{notification.message}</div>
+                  <div className="activity-time">
+                    {new Date(notification.created_at).toLocaleTimeString('fr-BJ', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
                   </div>
                 </div>
-                <div className="student-actions">
-                  <button className="btn small">
-                    <EmailIcon /> Contacter
+                {!notification.read && (
+                  <button 
+                    className="btn small" 
+                    onClick={() => markNotificationAsRead(notification.id)}
+                    title="Marquer comme lu"
+                  >
+                    <CheckIcon />
                   </button>
-                </div>
+                )}
               </div>
             ))}
-          
-          {attendanceData.filter(student => student.absences >= 3).length === 0 && (
-            <div className="no-alert">
-              <CheckIcon />
-              <p>Tous les élèves ont un bon taux de présence</p>
-            </div>
-          )}
+          </div>
+        </div>
+
+        <div className="students-alert">
+          <h3>Élèves nécessitant attention</h3>
+          <div className="students-list">
+            {studentsAlert && studentsAlert.length > 0 ? (
+              studentsAlert.map(student => (
+                <div key={student.id} className="student-alert-card">
+                  <div className="student-info">
+                    <div className="student-name">{student.name}</div>
+                    <div className="student-details">
+                      <span className="badge warning">{student.absences} absences</span>
+                      <span className="student-class">{student.class || currentClass}</span>
+                    </div>
+                  </div>
+                  <div className="student-actions">
+                    <a href={`mailto:${student.parent_email}`} className="btn small">
+                      <EmailIcon /> Contacter
+                    </a>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="no-alert">
+                <CheckIcon />
+                <p>Tous les élèves ont un bon taux de présence</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const unreadNotifications = notifications.filter(n => !n.read).length;
 
@@ -747,33 +967,35 @@ function SchoolHub() {
           background: var(--light-bg);
         }
 
-        .coming-soon {
-          background: var(--white);
-          border-radius: 16px;
-          padding: 4rem;
-          text-align: center;
-          box-shadow: 0 4px 20px rgba(45, 50, 80, 0.08);
-          border: 1px solid var(--gray-200);
-        }
-
-        .coming-soon h2 {
-          margin-bottom: 1rem;
-          color: var(--secondary);
-          font-size: 2rem;
-          font-weight: 700;
-        }
-
-        .coming-soon p {
-          color: var(--gray-500);
-          font-size: 1.1rem;
-        }
-
         /* Dashboard */
         .dashboard h2 {
           margin-bottom: 1.5rem;
           color: var(--secondary);
           font-size: 1.75rem;
           font-weight: 700;
+        }
+
+        .loading, .error-message {
+          text-align: center;
+          padding: 4rem;
+          background: var(--white);
+          border-radius: 16px;
+          box-shadow: 0 4px 20px rgba(45, 50, 80, 0.08);
+          margin-bottom: 2rem;
+        }
+
+        .error-message {
+          color: var(--danger);
+        }
+
+        .error-message svg {
+          width: 48px;
+          height: 48px;
+          margin-bottom: 1rem;
+        }
+
+        .error-message p {
+          margin: 1rem 0;
         }
 
         .stats-container {
@@ -908,6 +1130,7 @@ function SchoolHub() {
           justify-content: center;
           gap: 0.75rem;
           font-family: inherit;
+          text-decoration: none;
         }
 
         .btn:hover {
@@ -1353,12 +1576,12 @@ function SchoolHub() {
               <UserIcon />
             </div>
             <div className="user-details">
-              <div className="user-name">M. Adébayo</div>
-              <div className="user-role">Professeur Principal</div>
+              <div className="user-name">{userInfo?.name || 'M. Adébayo'}</div>
+              <div className="user-role">{userInfo?.role || 'Professeur Principal'}</div>
             </div>
           </div>
           
-          <button className="btn logout">
+          <button className="btn logout" onClick={handleLogout}>
             <LogoutIcon /> Déconnexion
           </button>
         </div>
@@ -1408,7 +1631,7 @@ function SchoolHub() {
             <div className="current-class-widget">
               <div className="widget-title">Classe actuelle</div>
               <div className="class-display">
-                <div className="class-name">{currentClass}</div>
+                <div className="class-name">{userInfo?.class_assigned || currentClass}</div>
                 <div className="class-change" onClick={() => setCurrentClass(
                   currentClass === 'Terminale A' ? 'Terminale B' : 
                   currentClass === 'Terminale B' ? 'Première A' :
@@ -1423,30 +1646,10 @@ function SchoolHub() {
 
         <main className="main-content">
           {activeTab === 'dashboard' && <Dashboard />}
-          {activeTab === 'attendance' && (
-            <div className="coming-soon">
-              <h2>Marquage de Présence</h2>
-              <p>Cette fonctionnalité sera disponible prochainement.</p>
-            </div>
-          )}
-          {activeTab === 'courses' && (
-            <div className="coming-soon">
-              <h2>Gestion des Cours</h2>
-              <p>Cette fonctionnalité sera disponible prochainement.</p>
-            </div>
-          )}
-          {activeTab === 'permissions' && (
-            <div className="coming-soon">
-              <h2>Demandes de Permission</h2>
-              <p>Cette fonctionnalité sera disponible prochainement.</p>
-            </div>
-          )}
-          {activeTab === 'reports' && (
-            <div className="coming-soon">
-              <h2>Rapports</h2>
-              <p>Cette fonctionnalité sera disponible prochainement.</p>
-            </div>
-          )}
+          {activeTab === 'attendance' && <Attendance />}
+          {activeTab === 'courses' && <Courses />}
+          {activeTab === 'permissions' && <Permissions />}
+          {activeTab === 'reports' && <Reports />}
         </main>
       </div>
     </div>
