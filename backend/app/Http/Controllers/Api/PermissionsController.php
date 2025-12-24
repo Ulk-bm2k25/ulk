@@ -5,11 +5,29 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Permission;
-use App\Models\Eleve;   // corrigé : Student → Eleve pour cohérence avec ton projet
+use App\Models\Eleve;
 use App\Models\Course;
 
 class PermissionsController extends Controller
 {
+    /**
+     * Mapping des status frontend → backend
+     */
+    private $statusMap = [
+        'pending' => 'en_attente',
+        'approved' => 'approuvee',
+        'rejected' => 'rejetee',
+    ];
+
+    /**
+     * Mapping inverse backend → frontend
+     */
+    private $statusMapReverse = [
+        'en_attente' => 'pending',
+        'approuvee' => 'approved',
+        'rejetee' => 'rejected',
+    ];
+
     /**
      * Afficher toutes les permissions
      * 
@@ -17,10 +35,27 @@ class PermissionsController extends Controller
      */
     public function index()
     {
-        // Récupère toutes les permissions avec les relations Eleve et Course
-        $permissions = Permission::with(['eleve', 'course'])->get();
+        $permissions = Permission::with(['eleve.user', 'course'])->get();
 
-        return response()->json($permissions, 200);
+        // Transformer les données pour le frontend
+        $transformed = $permissions->map(function ($permission) {
+            return $this->transformPermission($permission);
+        });
+
+        return response()->json($transformed, 200);
+    }
+
+    /**
+     * Afficher une permission spécifique
+     * 
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show($id)
+    {
+        $permission = Permission::with(['eleve.user', 'course'])->findOrFail($id);
+        
+        return response()->json($this->transformPermission($permission), 200);
     }
 
     /**
@@ -31,14 +66,23 @@ class PermissionsController extends Controller
      */
     public function store(Request $request)
     {
-        // Validation des champs requis
-        $data = $request->validate([
-            'eleve_id'      => 'required|exists:eleves,id',
-            'course_id'     => 'required|exists:courses,id',
+        // Validation des champs (accepte les noms frontend)
+        $request->validate([
+            'student_id'    => 'required|exists:eleves,id',
+            'course_id'     => 'required|exists:cours,id',
             'absence_date'  => 'required|date',
-            'raison'        => 'required|string',
-            'attachment'    => 'nullable|file|max:2048', // facultatif : justificatif
+            'reason'        => 'required|string',
+            'attachment'    => 'nullable|file|max:2048',
         ]);
+
+        // Mapper les champs frontend → backend
+        $data = [
+            'eleve_id'     => $request->student_id,
+            'course_id'    => $request->course_id,
+            'absence_date' => $request->absence_date,
+            'raison'       => $request->reason,
+            'status'       => 'en_attente',
+        ];
 
         // Gestion du fichier attaché si présent
         if ($request->hasFile('attachment')) {
@@ -48,8 +92,9 @@ class PermissionsController extends Controller
 
         // Création de la permission
         $permission = Permission::create($data);
+        $permission->load(['eleve.user', 'course']);
 
-        return response()->json($permission, 201);
+        return response()->json($this->transformPermission($permission), 201);
     }
 
     /**
@@ -61,47 +106,76 @@ class PermissionsController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Récupérer la permission par ID ou échouer
         $permission = Permission::findOrFail($id);
 
-        // Validation du statut
+        // Validation du statut (accepte les status en anglais)
         $request->validate([
-            'status' => 'required|in:approuvee,rejetee',
+            'status' => 'required|in:approved,rejected,pending,approuvee,rejetee,en_attente',
         ]);
 
-        // Mise à jour du statut
-        $permission->update([
-            'status' => $request->status
-        ]);
+        // Mapper le status si nécessaire
+        $status = $request->status;
+        if (isset($this->statusMap[$status])) {
+            $status = $this->statusMap[$status];
+        }
 
-        return response()->json($permission, 200);
+        $permission->update(['status' => $status]);
+        $permission->load(['eleve.user', 'course']);
+
+        return response()->json($this->transformPermission($permission), 200);
+    }
+
+    /**
+     * Supprimer une permission
+     * 
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function destroy($id)
+    {
+        $permission = Permission::findOrFail($id);
+        $permission->delete();
+
+        return response()->json(['message' => 'Permission supprimée'], 200);
     }
 
     /**
      * Envoyer une notification pour une permission
-     * (À implémenter : email, SMS, etc.)
      * 
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function notify($id)
     {
-        $permission = Permission::findOrFail($id);
+        $permission = Permission::with(['eleve.user', 'course'])->findOrFail($id);
 
-        // TODO : envoyer une notification (email/SMS)
+        // TODO : implémenter l'envoi de notification (email/SMS)
+        
         return response()->json([
+            'success' => true,
             'message' => "Notification pour la permission ID {$permission->id} envoyée."
         ], 200);
     }
 
     /**
-     * Récupérer tous les élèves
+     * Récupérer tous les élèves (route /students)
      * 
      * @return \Illuminate\Http\JsonResponse
      */
-    public function eleves()
+    public function students()
     {
-        return response()->json(Eleve::all(), 200);
+        $eleves = Eleve::with('user')->get();
+
+        // Transformer pour le frontend
+        $transformed = $eleves->map(function ($eleve) {
+            return [
+                'id' => $eleve->id,
+                'name' => $eleve->user ? $eleve->user->name : 'Inconnu',
+                'class' => $eleve->classe_id,
+            ];
+        });
+
+        return response()->json($transformed, 200);
     }
 
     /**
@@ -111,6 +185,41 @@ class PermissionsController extends Controller
      */
     public function courses()
     {
-        return response()->json(Course::all(), 200);
+        $courses = Course::all();
+
+        // Transformer pour le frontend
+        $transformed = $courses->map(function ($course) {
+            return [
+                'id' => $course->id,
+                'subject' => $course->subject,
+            ];
+        });
+
+        return response()->json($transformed, 200);
+    }
+
+    /**
+     * Transformer une permission pour le format frontend
+     */
+    private function transformPermission($permission)
+    {
+        return [
+            'id' => $permission->id,
+            'status' => $this->statusMapReverse[$permission->status] ?? $permission->status,
+            'absence_date' => $permission->absence_date,
+            'reason' => $permission->raison,
+            'attachment' => $permission->attachment,
+            'created_at' => $permission->created_at,
+            'updated_at' => $permission->updated_at,
+            'student' => $permission->eleve ? [
+                'id' => $permission->eleve->id,
+                'name' => $permission->eleve->user ? $permission->eleve->user->name : 'Inconnu',
+                'class' => $permission->eleve->classe_id,
+            ] : null,
+            'course' => $permission->course ? [
+                'id' => $permission->course->id,
+                'subject' => $permission->course->subject,
+            ] : null,
+        ];
     }
 }

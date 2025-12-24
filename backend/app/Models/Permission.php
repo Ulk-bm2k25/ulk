@@ -27,6 +27,8 @@ class Permission extends Model
         'raison',        // Optionnel: raison de la demande
         'commentaire',   // Optionnel: commentaire supplémentaire
         'date_demande',  // Date de la demande
+        'absence_date',  // Date de l'absence demandée
+        'attachment',    // Fichier justificatif (optionnel)
     ];
 
     /**

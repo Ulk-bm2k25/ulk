@@ -19,6 +19,14 @@ return new class extends Migration
             $table->timestamps();
         });
     }
+        Schema::create('annee_scolaires', function (Blueprint $table) {
+            $table->id();
+            $table->string('annee'); // ex: 2024-2025
+            $table->date('date_debut')->nullable();
+            $table->date('date_fin')->nullable();
+            $table->timestamps();
+        });
+
 
     /**
      * Reverse the migrations.
@@ -26,5 +34,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('annee_scolaires_table');
+        Schema::dropIfExists('annee_scolaires');
     }
 };

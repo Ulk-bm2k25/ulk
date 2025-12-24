@@ -10,7 +10,7 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ClasseController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\EleveController;
-use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\PermissionsController;
 use App\Http\Controllers\Api\PresenceController;
 use App\Http\Controllers\Api\SeanceController;
 use App\Http\Controllers\Api\ProgrammeController;
@@ -247,8 +247,23 @@ Route::middleware('auth:sanctum')->group(function() {
     Route::apiResource('classes', ClasseController::class);
     Route::apiResource('courses', CourseController::class);
     Route::apiResource('eleves', EleveController::class);
-    Route::apiResource('permissions', PermissionController::class);
+    Route::apiResource('permissions', PermissionsController::class);
     Route::apiResource('presences', PresenceController::class);
     Route::apiResource('seances', SeanceController::class)->only(['index','store','show']);
     Route::apiResource('programmes', ProgrammeController::class)->only(['index','store']);
+
+    // Routes additionnelles pour le frontend Permissions
+    Route::get('students', [PermissionsController::class, 'students'])->name('students.index');
+    Route::post('permissions/{id}/notify', [PermissionsController::class, 'notify'])->name('permissions.notify');
 });
+
+// ============================================
+// ROUTES PUBLIQUES TEMPORAIRES (POUR TESTS)
+// ============================================
+Route::get('permissions', [PermissionsController::class, 'index']);
+Route::post('permissions', [PermissionsController::class, 'store']);
+Route::get('permissions/{id}', [PermissionsController::class, 'show']);
+Route::put('permissions/{id}', [PermissionsController::class, 'update']);
+Route::get('students', [PermissionsController::class, 'students']);
+Route::get('courses', [PermissionsController::class, 'courses']);
+Route::post('permissions/{id}/notify', [PermissionsController::class, 'notify']);

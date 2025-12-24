@@ -16,6 +16,8 @@ return new class extends Migration
             $table->text('raison')->nullable();
             $table->text('commentaire')->nullable();
             $table->date('date_demande')->nullable();
+            $table->date('absence_date')->nullable();
+            $table->string('attachment')->nullable();
             $table->timestamps();
 
             $table->index('eleve_id');
