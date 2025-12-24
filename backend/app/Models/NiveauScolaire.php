@@ -1,3 +1,4 @@
+<?php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,6 @@ class NiveauScolaire extends Model
 
     public function classes()
     {
-        return $this->hasMany(Class::class, 'niveau_id');
+        return $this->hasMany(Classe::class, 'niveau_id');
     }
 }

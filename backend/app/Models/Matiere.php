@@ -1,3 +1,4 @@
+<?php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,6 @@ class Matiere extends Model
 
     public function classes()
     {
-        return $this->belongsToMany(Class::class, 'affectations');
+        return $this->belongsToMany(Classe::class, 'affectations');
     }
 }

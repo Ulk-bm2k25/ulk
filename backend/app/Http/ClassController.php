@@ -1,9 +1,11 @@
+<?php
 namespace App\Http\Controllers;
 
 use App\Models\Class;
 use App\Models\NiveauScolaire;
 use App\Models\Matiere;
 use App\Models\Affectation;
+use App\Models\Classe;
 use App\Models\Eleve;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -13,7 +15,7 @@ class ClassController extends Controller
 {
     public function index()
     {
-        return response()->json(Class::with('niveauScolaire')->get());
+        return response()->json(Classe::with('niveauScolaire')->get());
     }
 
     public function store(Request $request)
@@ -28,32 +30,32 @@ class ClassController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $class = Class::create($request->all());
+        $class = Classe::create($request->all());
         return response()->json($class, 201);
     }
 
     public function show($id)
     {
-        $class = Class::with('niveauScolaire', 'eleves', 'matieres', 'enseignants')->findOrFail($id);
+        $class = Classe::with('niveauScolaire', 'eleves', 'matieres', 'enseignants')->findOrFail($id);
         return response()->json($class);
     }
 
     public function update(Request $request, $id)
     {
-        $class = Class::findOrFail($id);
+        $class = Classe::findOrFail($id);
         $class->update($request->all());
         return response()->json($class);
     }
 
     public function destroy($id)
     {
-        Class::findOrFail($id)->delete();
+        Classe::findOrFail($id)->delete();
         return response()->json(['message' => 'Classe supprimée']);
     }
 
     public function assignEleve(Request $request, $classId)
     {
-        $class = Class::findOrFail($classId);
+        $class = Classe::findOrFail($classId);
         if ($class->isFull()) {
             return response()->json(['error' => 'Classe pleine'], 400);
         }
@@ -81,7 +83,7 @@ class ClassController extends Controller
         $affectation = Affectation::where('class_id', $classId)->where('eleve_id', $eleveId)->firstOrFail();
         $affectation->delete();
 
-        $class = Class::findOrFail($classId);
+        $class = Classe::findOrFail($classId);
         $class->decrementStudents();
         return response()->json(['message' => 'Élève désaffecté']);
     }
