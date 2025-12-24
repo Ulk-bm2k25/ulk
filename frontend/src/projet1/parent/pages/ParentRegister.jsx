@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import '../styles/theme.css';
-import paintedHands from '../assets/painted_handprints.png';
+import smilingChildren from '../assets/smiling_children.png';
 
 const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
     const [formData, setFormData] = useState({
@@ -35,7 +35,7 @@ const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
                 {/* Left Side: Image/Decor (Hidden on mobile) */}
                 <div className="hidden md:block w-1/2 relative">
                     <img
-                        src={paintedHands}
+                        src={smilingChildren}
                         alt="Join SchoolHub"
                         className="absolute inset-0 w-full h-full object-cover"
                     />
