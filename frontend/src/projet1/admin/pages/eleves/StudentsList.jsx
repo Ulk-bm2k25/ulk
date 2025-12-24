@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   Search, Eye, MoreHorizontal, Download, UserPlus,
   Users, School, IdCard, FileText, ChevronDown, CheckSquare, X,
-  Loader2, Edit, Trash2, Printer
+  Loader2, Edit, Trash2, Printer, ArrowRight
 } from 'lucide-react';
 import MoveStudentModal from './MoveStudentModal';
 
-const StudentsList = ({ onViewProfile }) => {
+const StudentsList = ({ students = [], onViewProfile, onNavigate }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('active'); // active, excluded, left
@@ -14,7 +14,7 @@ const StudentsList = ({ onViewProfile }) => {
   // Gestion de la sélection multiple (Cocher des cases)
   const [selectedIds, setSelectedIds] = useState([]);
   const [studentToMove, setStudentToMove] = useState(null);
-  
+
   // États pour UI
   const [isLoading, setIsLoading] = useState(true);
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -25,25 +25,8 @@ const StudentsList = ({ onViewProfile }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // --- MAPPING BASE DE DONNÉES LARAVEL ---
-  // id -> eleves.id (ou génération matricule custom)
-  // firstName -> users.prenom (via relation eleve->user)
-  // lastName -> users.nom (via relation eleve->user)
-  // class -> classes.nom (via relation eleve->classe)
-  // gender -> (Champ à ajouter dans users ou eleves, ex: 'sexe')
-  // parent -> parents_tuteurs.nom (via table pivot relations_eleve_tuteur)
-  // phone -> parents_tuteurs.telephone
-  const mockStudents = [
-    { id: 'MAT-25-001', firstName: 'Jean', lastName: 'Dupont', class: '2nde C', gender: 'M', parent: 'Paul Dupont', phone: '97001122', status: 'active' },
-    { id: 'MAT-25-002', firstName: 'Amina', lastName: 'Kone', class: 'Tle D', gender: 'F', parent: 'Mme Kone', phone: '96554433', status: 'active' },
-    { id: 'MAT-25-003', firstName: 'Lucas', lastName: 'Martin', class: '1ère A', gender: 'M', parent: 'Jean Martin', phone: '66889900', status: 'excluded' },
-    { id: 'MAT-25-004', firstName: 'Sarah', lastName: 'Bensoussan', class: '6ème', gender: 'F', parent: 'Eric Ben', phone: '95123456', status: 'active' },
-    { id: 'MAT-25-005', firstName: 'Marc', lastName: 'Evan', class: '3ème', gender: 'M', parent: 'Luc Evan', phone: '94778899', status: 'active' },
-    { id: 'MAT-25-006', firstName: 'Chloe', lastName: 'Dubois', class: '2nde C', gender: 'F', parent: 'Marie Dubois', phone: '97887766', status: 'active' },
-  ];
-
-  // Logique de filtrage
-  const filteredStudents = mockStudents.filter(student => {
+  // Logique de filtrage basé sur le state centralisé
+  const filteredStudents = students.filter(student => {
     const matchSearch =
       student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -72,7 +55,7 @@ const StudentsList = ({ onViewProfile }) => {
   };
 
   // Extraction unique des classes pour le filtre
-  const classesList = [...new Set(mockStudents.map(s => s.class))].sort();
+  const classesList = [...new Set(students.map(s => s.class))].sort();
 
   // Loader
   if (isLoading) {
@@ -97,15 +80,21 @@ const StudentsList = ({ onViewProfile }) => {
             Annuaire des Élèves
           </h1>
           <p className="text-slate-500 text-sm mt-1">
-            Gérez les {mockStudents.length} élèves inscrits pour l'année scolaire en cours.
+            Gérez les {students.length} élèves inscrits pour l'année scolaire en cours.
           </p>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 text-sm font-medium hover:bg-slate-50 shadow-sm">
+          <button
+            onClick={() => alert(`Préparation de l'exportation de l'annuaire (${students.length} élèves)...`)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 text-sm font-medium hover:bg-slate-50 shadow-sm"
+          >
             <Download size={16} />
             Exporter Liste
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-brand-dark text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10">
+          <button
+            onClick={() => alert('Ouverture du formulaire d\'admission directe (Nouvel élève)...')}
+            className="flex items-center gap-2 px-4 py-2 bg-brand-dark text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10"
+          >
             <UserPlus size={16} />
             Nouvel Élève
           </button>
@@ -171,7 +160,10 @@ const StudentsList = ({ onViewProfile }) => {
             <span className="text-sm font-medium">élèves sélectionnés</span>
           </div>
           <div className="flex gap-2">
-            <button className="flex items-center gap-2 px-3 py-1.5 bg-white text-brand-dark rounded-lg text-xs font-bold hover:bg-brand-primary hover:text-white transition-colors">
+            <button
+              onClick={() => onNavigate('qr')}
+              className="flex items-center gap-2 px-3 py-1.5 bg-white text-brand-dark rounded-lg text-xs font-bold hover:bg-brand-primary hover:text-white transition-colors"
+            >
               <IdCard size={14} />
               Générer Cartes
             </button>
@@ -284,46 +276,64 @@ const StudentsList = ({ onViewProfile }) => {
                             <MoreHorizontal size={18} />
                           </button>
 
-                            {/* Dropdown Menu */}
-                            {openMenuId === student.id && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                                    <div className="py-1">
-                                        <button 
-                                            onClick={() => onViewProfile(student)}
-                                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                        >
-                                            <Eye size={16} className="text-blue-600"/>
-                                            Voir dossier
-                                        </button>
-                                        <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                                            <Edit size={16} className="text-orange-600"/>
-                                            Modifier
-                                        </button>
-                                        <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                                            <Printer size={16} className="text-slate-500"/>
-                                            Imprimer fiche
-                                        </button>
-                                        <button 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setStudentToMove(student); // Ouvre le modal pour cet élève
-                                                setOpenMenuId(null); // Ferme le menu
-                                            }}
-                                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                        >
-                                            <ArrowRight size={16} className="text-purple-600"/>
-                                            Changer de classe
-                                        </button>
-                                    </div>
-                                    <div className="border-t border-slate-100 py-1">
-                                        <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                            <Trash2 size={16} />
-                                            Exclure / Supprimer
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                         </div>
+                          {/* Dropdown Menu */}
+                          {openMenuId === student.id && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                              <div className="py-1">
+                                <button
+                                  onClick={() => onViewProfile(student)}
+                                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <Eye size={16} className="text-blue-600" />
+                                  Voir dossier
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    alert(`Ouverture du mode édition pour ${student.firstName} ${student.lastName}...`);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <Edit size={16} className="text-orange-600" />
+                                  Modifier
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    alert(`Impression de la fiche individuelle de ${student.lastName}...`);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <Printer size={16} className="text-slate-500" />
+                                  Imprimer fiche
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setStudentToMove(student);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <ArrowRight size={16} className="text-purple-600" />
+                                  Changer de classe
+                                </button>
+                              </div>
+                              <div className="border-t border-slate-100 py-1">
+                                <button
+                                  onClick={() => {
+                                    alert(`Dossier de ${student.lastName} archivé.`);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                >
+                                  <Trash2 size={16} />
+                                  Exclure / Supprimer
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
 
                       </div>
                     </td>
@@ -360,21 +370,21 @@ const StudentsList = ({ onViewProfile }) => {
       </div>
 
       {/* Modal de Changement de Classe */}
-      <MoveStudentModal 
+      <MoveStudentModal
         isOpen={!!studentToMove} // Ouvert si un élève est sélectionné
         student={studentToMove}
         onClose={() => setStudentToMove(null)}
         onConfirm={(studentId, newClassId) => {
-            console.log(`Transfert de l'élève ${studentId} vers la classe ${newClassId}`);
-            // Ici : Appel API Backend (PUT /api/affectations)
-            // Puis refresh de la liste
+          console.log(`Transfert de l'élève ${studentId} vers la classe ${newClassId}`);
+          // Ici : Appel API Backend (PUT /api/affectations)
+          // Puis refresh de la liste
         }}
       />
 
       {/* Overlay Fermeture Menu */}
       {openMenuId && (
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-40 bg-slate-900/5 backdrop-blur-[1px]"
           onClick={() => setOpenMenuId(null)}
         ></div>
       )}

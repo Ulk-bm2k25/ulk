@@ -5,7 +5,7 @@ import {
   Trash2, Mail, Loader2
 } from 'lucide-react';
 
-const InscriptionsList = ({ onViewDetails }) => {
+const InscriptionsList = ({ inscriptions = [], onViewDetails }) => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -17,65 +17,7 @@ const InscriptionsList = ({ onViewDetails }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const mockInscriptions = [
-    {
-      id: 'INS-2025-042',
-      firstName: 'Jean',
-      lastName: 'Dupont',
-      class: 'Seconde C',
-      date: '19 Déc 2025',
-      status: 'pending',
-      payment: 'partial',
-      docs: 'complete',
-      email: 'p.dupont@email.com'
-    },
-    {
-      id: 'INS-2025-041',
-      firstName: 'Amina',
-      lastName: 'Kone',
-      class: 'Terminale D',
-      date: '18 Déc 2025',
-      status: 'validated',
-      payment: 'paid',
-      docs: 'complete',
-      email: 'kone.famille@email.com'
-    },
-    {
-      id: 'INS-2025-039',
-      firstName: 'Lucas',
-      lastName: 'Martin',
-      class: '1ère A',
-      date: '15 Déc 2025',
-      status: 'rejected',
-      payment: 'unpaid',
-      docs: 'missing',
-      email: 'lucas.m@email.com'
-    },
-    {
-      id: 'INS-2025-038',
-      firstName: 'Sarah',
-      lastName: 'Bensoussan',
-      class: '6ème',
-      date: '14 Déc 2025',
-      status: 'pending',
-      payment: 'paid',
-      docs: 'missing',
-      email: 's.bensoussan@email.com'
-    },
-    {
-      id: 'INS-2025-035',
-      firstName: 'Marc',
-      lastName: 'Evan',
-      class: '3ème',
-      date: '10 Déc 2025',
-      status: 'validated',
-      payment: 'paid',
-      docs: 'complete',
-      email: 'marc.e@email.com'
-    },
-  ];
-
-  const filteredData = mockInscriptions.filter(item => {
+  const filteredData = inscriptions.filter(item => {
     const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
     const matchesSearch =
       item.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -127,7 +69,10 @@ const InscriptionsList = ({ onViewDetails }) => {
           </p>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm">
+          <button
+            onClick={() => alert(`Préparation de l'exportation des ${inscriptions.length} inscriptions...\nFormat: CSV / Excel`)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm"
+          >
             <Download size={16} />
             <span className="hidden sm:inline">Exporter CSV</span>
           </button>
@@ -303,7 +248,7 @@ const InscriptionsList = ({ onViewDetails }) => {
 
         <div className="bg-slate-50 border-t border-slate-200 px-6 py-4 flex items-center justify-between">
           <p className="text-sm text-slate-500">
-            Affichage de <span className="font-medium text-slate-900">{filteredData.length}</span> sur <span className="font-medium text-slate-900">{mockInscriptions.length}</span> résultats
+            Affichage de <span className="font-medium text-slate-900">{filteredData.length}</span> sur <span className="font-medium text-slate-900">{inscriptions.length}</span> résultats
           </p>
           <div className="flex gap-2">
             <button className="px-3 py-1 border border-slate-300 bg-white rounded text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50" disabled>Précédent</button>
@@ -314,7 +259,7 @@ const InscriptionsList = ({ onViewDetails }) => {
 
       {openMenuId && (
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-40 bg-slate-900/5 backdrop-blur-[1px]"
           onClick={() => setOpenMenuId(null)}
         ></div>
       )}

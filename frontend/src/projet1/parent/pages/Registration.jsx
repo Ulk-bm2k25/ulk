@@ -97,18 +97,40 @@ const Registration = ({ mode = 'new', initialData = null, onComplete }) => {
                                 <label className="text-sm text-white/60">Classe souhaitée</label>
                                 <select name="childGrade" className="parent-input" style={{ backgroundColor: 'white', color: 'black' }} value={formData.childGrade} onChange={handleInputChange}>
                                     <option value="Maternelle">Maternelle</option>
-                                    <option value="CP">CP</option>
-                                    <option value="CE1">CE1</option>
-                                    <option value="CE2">CE2</option>
-                                    <option value="CM1">CM1</option>
-                                    <option value="CM2">CM2</option>
-                                    <option value="6ème">6ème</option>
-                                    <option value="5ème">5ème</option>
-                                    <option value="4ème">4ème</option>
-                                    <option value="3ème">3ème</option>
-                                    <option value="2nde">2nde</option>
-                                    <option value="1ère">1ère</option>
-                                    <option value="Terminale">Terminale</option>
+                                    <optgroup label="Primaire">
+                                        <option value="CI">CI</option>
+                                        <option value="CP">CP</option>
+                                        <option value="CE1">CE1</option>
+                                        <option value="CE2">CE2</option>
+                                        <option value="CM1">CM1</option>
+                                        <option value="CM2">CM2</option>
+                                    </optgroup>
+                                    <optgroup label="Collège">
+                                        <option value="6ème">6ème</option>
+                                        <option value="5ème">5ème</option>
+                                        <option value="4ème">4ème</option>
+                                        <option value="3ème">3ème</option>
+                                    </optgroup>
+                                    <optgroup label="Lycée">
+                                        <option value="2nde A">2nde A</option>
+                                        <option value="2nde B">2nde B</option>
+                                        <option value="2nde C">2nde C</option>
+                                        <option value="2nde D">2nde D</option>
+                                        <option value="2nde G1">2nde G1</option>
+                                        <option value="2nde G2">2nde G2</option>
+                                        <option value="1ère A">1ère A</option>
+                                        <option value="1ère B">1ère B</option>
+                                        <option value="1ère C">1ère C</option>
+                                        <option value="1ère D">1ère D</option>
+                                        <option value="1ère G1">1ère G1</option>
+                                        <option value="1ère G2">1ère G2</option>
+                                        <option value="Terminale A">Terminale A</option>
+                                        <option value="Terminale B">Terminale B</option>
+                                        <option value="Terminale C">Terminale C</option>
+                                        <option value="Terminale D">Terminale D</option>
+                                        <option value="Terminale G1">Terminale G1</option>
+                                        <option value="Terminale G2">Terminale G2</option>
+                                    </optgroup>
                                 </select>
                             </div>
                         </div>
