@@ -10,6 +10,7 @@ import Payments from './pages/Payments';
 import Grades from './pages/Grades';
 import Attendance from './pages/Attendance';
 import { Settings, ClipboardCheck, CreditCard, Bell } from 'lucide-react';
+import SettingsPage from './pages/Settings';
 import './styles/theme.css';
 
 // Simple placeholder for unimplemented pages
@@ -82,7 +83,7 @@ const ParentManager = () => {
                     onComplete={() => handleNavigate('children')}
                 />;
             case 'settings':
-                return <PlaceholderPage title="Paramètres" icon={Settings} />;
+                return <SettingsPage onLogout={handleLogout} />;
             default:
                 return <Dashboard {...commonProps} onNavigate={handleNavigate} />;
         }

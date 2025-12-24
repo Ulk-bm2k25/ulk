@@ -57,7 +57,12 @@ const Notifications = () => {
                     <h1 className="text-3xl font-bold">Centre de Notifications</h1>
                     <p className="text-white/40 mt-1">Restez informé de tout ce qui concerne la scolarité de vos enfants.</p>
                 </div>
-                <button className="text-sm text-orange-400 font-semibold hover:underline">Tout marquer comme lu</button>
+                <button
+                    onClick={() => alert("Toutes les notifications ont été marquées comme lues.")}
+                    className="text-sm text-orange-400 font-semibold hover:underline"
+                >
+                    Tout marquer comme lu
+                </button>
             </header>
 
             <div className="grid grid-cols-1 gap-4">
@@ -91,14 +96,7 @@ const Notifications = () => {
                 ))}
             </div>
 
-            <div className="mt-12 p-8 glass-card bg-orange-400/5 text-center">
-                <Bell className="mx-auto mb-4 text-orange-400" size={32} />
-                <h4 className="text-lg font-bold mb-2">Gérez vos alertes</h4>
-                <p className="text-white/60 mb-6 max-w-lg mx-auto">
-                    Vous pouvez choisir de recevoir ces notifications par Email ou via WhatsApp dans vos paramètres de compte.
-                </p>
-                <button className="parent-btn-primary">Configurer les alertes</button>
-            </div>
+
         </div>
     );
 };
