@@ -88,14 +88,20 @@ const Registration = ({ mode = 'new', initialData = null, onComplete }) => {
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Genre</label>
-                                <select name="childGender" className="parent-input bg-parent-bg-medium text-white" value={formData.childGender} onChange={handleInputChange}>
+                                <select name="childGender" className="parent-input" style={{ backgroundColor: 'white', color: 'black' }} value={formData.childGender} onChange={handleInputChange}>
                                     <option value="Masculin">Masculin</option>
                                     <option value="Féminin">Féminin</option>
                                 </select>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Classe souhaitée</label>
-                                <select name="childGrade" className="parent-input bg-parent-bg-medium text-white" value={formData.childGrade} onChange={handleInputChange}>
+                                <select name="childGrade" className="parent-input" style={{ backgroundColor: 'white', color: 'black' }} value={formData.childGrade} onChange={handleInputChange}>
+                                    <option value="Maternelle">Maternelle</option>
+                                    <option value="CP">CP</option>
+                                    <option value="CE1">CE1</option>
+                                    <option value="CE2">CE2</option>
+                                    <option value="CM1">CM1</option>
+                                    <option value="CM2">CM2</option>
                                     <option value="6ème">6ème</option>
                                     <option value="5ème">5ème</option>
                                     <option value="4ème">4ème</option>
