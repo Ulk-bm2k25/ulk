@@ -3,8 +3,8 @@ import axios from 'axios';
 
 // Import des composants 
 import Permissions from './Permissions.jsx';
-/*import Attendance from './Attendance.jsx';
-import Courses from './Courses.jsx';
+import Attendance from './Attendance.jsx';
+/*import Courses from './Courses.jsx';
 import Reports from './Reports.jsx';*/
 
 // Composants icônes SVG
