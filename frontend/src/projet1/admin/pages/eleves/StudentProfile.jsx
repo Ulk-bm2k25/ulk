@@ -5,6 +5,7 @@ import {
     School, FileText, Download, Printer, CreditCard,
     Edit, Shield, Clock, Loader2
 } from 'lucide-react';
+import StudentCardsPage from './StudentCardsPage';
 
 const StudentProfile = ({ student, onBack }) => {
     const [activeTab, setActiveTab] = useState('infos');

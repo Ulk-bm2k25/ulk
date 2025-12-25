@@ -188,7 +188,7 @@ const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) =
                   <span>Ce dossier est déjà validé.</span>
                 </div>
                 <button
-                  onClick={() => onNavigate('qr')}
+                  onClick={() => onNavigate('cartes')}
                   className="w-full h-12 flex items-center justify-center gap-3 bg-brand-dark text-white rounded-lg font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10"
                 >
                   <IdCard size={20} className="text-brand-primary" />

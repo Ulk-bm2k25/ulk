@@ -6,7 +6,7 @@ import {
 import ClassCard from './components/ClassCard';
 import ClassFormModal from './ClassFormModal';
 
-const ClassesList = ({ onViewDetails, onManageAffectations, onAddClass }) => {
+const ClassesList = ({ onViewDetails, onManageAffectations, onAddClass, classes }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
@@ -17,18 +17,11 @@ const ClassesList = ({ onViewDetails, onManageAffectations, onAddClass }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // --- MAPPING BASE DE DONNÉES LARAVEL ---
-  const mockClasses = [
-    { id: 1, name: '6ème A', level: 'Collège', series: null, studentCount: 45, capacity: 50, mainTeacher: 'M. Kpoton' },
-    { id: 2, name: '6ème B', level: 'Collège', series: null, studentCount: 22, capacity: 50, mainTeacher: 'Mme. Bio' },
-    { id: 3, name: '3ème A', level: 'Collège', series: 'Moderne', studentCount: 38, capacity: 40, mainTeacher: 'M. Mensah' },
-    { id: 4, name: '2nde C', level: 'Lycée', series: 'Scientifique', studentCount: 32, capacity: 35, mainTeacher: 'M. Sossa' },
-    { id: 5, name: '1ère D', level: 'Lycée', series: 'Scientifique', studentCount: 28, capacity: 35, mainTeacher: 'Mme. Agbo' },
-    { id: 6, name: 'Tle C', level: 'Lycée', series: 'Scientifique', studentCount: 36, capacity: 35, mainTeacher: 'Pr. Zinsou' },
-  ];
+
+  const sourceData = classes || []; // Utiliser les classes passées en props si disponibles
 
   // Logique de filtrage
-  const filteredClasses = mockClasses.filter(cls => {
+  const filteredClasses = sourceData.filter(cls => {
     const matchesSearch = cls.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLevel = selectedLevel === 'all' || cls.level === selectedLevel;
     return matchesSearch && matchesLevel;

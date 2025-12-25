@@ -5,8 +5,15 @@ import {
   Loader2, Edit, Trash2, Printer, ArrowRight
 } from 'lucide-react';
 import MoveStudentModal from './MoveStudentModal';
+import StudentFormModal from './StudentFormModal';
 
-const StudentsList = ({ students = [], onViewProfile, onNavigate }) => {
+const StudentsList = ({ 
+  students = [], 
+  onViewProfile, 
+  onNavigate, 
+  onAddStudent,
+  onEditStudent
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('active'); // active, excluded, left
@@ -92,7 +99,7 @@ const StudentsList = ({ students = [], onViewProfile, onNavigate }) => {
             Exporter Liste
           </button>
           <button
-            onClick={() => alert('Ouverture du formulaire d\'admission directe (Nouvel élève)...')}
+            onClick={onAddStudent}
             className="flex items-center gap-2 px-4 py-2 bg-brand-dark text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10"
           >
             <UserPlus size={16} />
@@ -288,7 +295,14 @@ const StudentsList = ({ students = [], onViewProfile, onNavigate }) => {
                                             <Eye size={16} className="text-blue-600"/>
                                             Voir dossier
                                         </button>
-                                        <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenMenuId(null);
+                                                onEditStudent(student); // <--- BOUTON CORRIGÉ : MODIFIER
+                                            }}
+                                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                        >
                                             <Edit size={16} className="text-orange-600"/>
                                             Modifier
                                         </button>

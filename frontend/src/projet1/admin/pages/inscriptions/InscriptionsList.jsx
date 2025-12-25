@@ -5,7 +5,13 @@ import {
   Trash2, Mail, Loader2
 } from 'lucide-react';
 
-const InscriptionsList = ({ inscriptions = [], onViewDetails }) => {
+const InscriptionsList = ({ 
+  inscriptions = [], 
+  onViewDetails,
+  onQuickValidate, 
+  onDelete, 
+  onRelance 
+}) => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -203,21 +209,58 @@ const InscriptionsList = ({ inscriptions = [], onViewDetails }) => {
                           {openMenuId === item.id && (
                             <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                               <div className="py-1">
-                                <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                                  <CheckCircle size={16} className="text-green-600" />
-                                  Valider rapidement
-                                </button>
-                                <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                {/* BOUTON VALIDER RAPIDEMENT */}
+                                {item.status === 'pending' && (
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onQuickValidate(item.id);
+                                            setOpenMenuId(null);
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                    >
+                                        <CheckCircle size={16} className="text-green-600" />
+                                        Valider rapidement
+                                    </button>
+                                )}
+
+                                {/* BOUTON RELANCER */}
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onRelance(item);
+                                        setOpenMenuId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                >
                                   <Mail size={16} className="text-blue-600" />
                                   Relancer parent
                                 </button>
-                                <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+
+                                {/* BOUTON TÉLÉCHARGER (Simulation) */}
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        alert("Téléchargement du dossier PDF...");
+                                        setOpenMenuId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                >
                                   <Download size={16} className="text-slate-500" />
                                   Télécharger PDF
                                 </button>
                               </div>
+
                               <div className="border-t border-slate-100 py-1">
-                                <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                {/* BOUTON SUPPRIMER */}
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDelete(item.id);
+                                        setOpenMenuId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                >
                                   <Trash2 size={16} />
                                   Supprimer
                                 </button>

@@ -194,7 +194,7 @@ const DashboardPage = ({ onNavigate }) => {
             <QuickAction icon={CheckCircle} label="Valider inscriptions" color="text-orange-600" bg="bg-orange-100" onClick={() => onNavigate('inscriptions')} />
             <QuickAction icon={Plus} label="Créer une classe" color="text-blue-600" bg="bg-blue-100" onClick={() => onNavigate('classes')} />
             <QuickAction icon={Send} label="Envoi rapide" color="text-green-600" bg="bg-green-100" onClick={() => onNavigate('notifications')} />
-            <QuickAction icon={IdCard} label="Cartes scolaires" color="text-red-600" bg="bg-red-100" onClick={() => onNavigate('qr')} />
+            <QuickAction icon={IdCard} label="Cartes scolaires" color="text-red-600" bg="bg-red-100" onClick={() => onNavigate('cartes')} />
             <QuickAction icon={FileText} label="Historique docs" color="text-purple-600" bg="bg-purple-100" onClick={() => onNavigate('documents')} />
           </div>
         </div>
