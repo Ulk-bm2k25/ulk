@@ -16,14 +16,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->unique()->constrained('users')->onDelete('cascade');
             $table->foreignId('classe_id')->constrained('classes')->onDelete('cascade');
-<<<<<<< HEAD
             $table->enum('sexe', ['M', 'F'])->comment('M = Masculin, F = Féminin');
-            $table->unsignedTinyInteger('age')->nullable()->comment('Âge de l\'élève ');
-=======
->>>>>>> origin/develop
+            $table->unsignedTinyInteger('age')->nullable()->comment('Âge de l\'élève');
             $table->timestamps();
             $table->index('user_id');
-            $table->index('classe_id');
+            $table->index('classe_id');     
         });
     }
 

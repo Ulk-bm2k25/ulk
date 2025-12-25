@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\StatsController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\PdfController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\app\RegisterController;
