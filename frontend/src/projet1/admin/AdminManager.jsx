@@ -35,7 +35,8 @@ const AdminManager = () => {
 
   // Données initiales (Vides pour l'intégration Backend)
   const [inscriptions, setInscriptions] = useState([]);
-  const [students, setStudents] = useState([]);
+  const [classesData, setClassesData] = useState([]);
+  const [studentsData, setStudentsData] = useState([]);
 
   // 2. MODIFICATION DE LA FONCTION LOGIN
   const handleLogin = (token, rememberMe = false) => {
