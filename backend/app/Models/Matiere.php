@@ -3,22 +3,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Matiere extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nom', 'code', 'coefficient', 'classe_id'];
+    protected $fillable = ['nom', 'coefficient'];
 
-    public function classe(): BelongsTo
+    public function classes()
     {
-        return $this->belongsTo(Classe::class);
-    }
-
-    public function notes(): HasMany
-    {
-        return $this->hasMany(Note::class);
+        return $this->belongsToMany(Classe::class, 'affectations');
     }
 }

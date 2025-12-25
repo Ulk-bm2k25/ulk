@@ -12,15 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('classes', function (Blueprint $table) {
-            $table->engine = 'InnoDB';
-
             $table->id();
             $table->string('nom');
-            $table->unsignedBigInteger('niveau_id');
-            $table->foreign('niveau_id')
-            ->references('id')
-            ->on('niveaux_scolaires')
-            ->onDelete('cascade');
+            $table->foreignId('niveau_id')->constrained('niveaux_scolaires')->onDelete('cascade');
             $table->text('description')->nullable();
             $table->string('annee_scolaire');
             $table->timestamps();
