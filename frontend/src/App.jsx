@@ -1,3 +1,5 @@
+import React from "react";
+import Dashboard from "./projet4/Dashboard";
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import projet1Routes from './projet1/projet1Routes.jsx';
 
@@ -37,18 +39,28 @@ const Home = () => (
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Route d'accueil globale (optionnelle) */}
-        <Route path="/" element={<Home />} />
-        {projet1Routes}
-
-
-        {/* Les routes des projets seront montées ici */}
-        {/* {projet1Routes} */}
-        {/* {projet2Routes} */}
-      </Routes>
-    </BrowserRouter>
+    <>
+      <div>
+        <a href="https://vite.dev" target="_blank">
+          <img src={viteLogo} className="logo" alt="Vite logo" />
+        </a>
+        <a href="https://react.dev" target="_blank">
+          <img src={reactLogo} className="logo react" alt="React logo" />
+        </a>
+      </div>
+      <h1>Vite + React</h1>
+      <div className="card">
+        <button onClick={() => setCount((count) => count + 1)}>
+          count is {count}
+        </button>
+        <p>
+          Edit <code>src/App.jsx</code> and save to test HMR
+        </p>
+      </div>
+      <p className="read-the-docs">
+        Click on the Vite and React logos to learn more
+      </p>
+    </>
   )
 }
 
