@@ -11,24 +11,14 @@ const Payments = ({ children, selectedChildId, setSelectedChildId }) => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-    const paymentsDataMap = {
-        1: {
-            totalPaid: '150,000 FCFA',
-            balance: '120,000 FCFA',
-            transactions: [
-                { id: 'TX001', student: 'Jean Dupont', date: '15/10/2025', amount: '150,000 FCFA', method: 'Momo', status: 'Payé' },
-            ]
-        },
-        2: {
-            totalPaid: '200,000 FCFA',
-            balance: '30,000 FCFA',
-            transactions: [
-                { id: 'TX002', student: 'Marie-Laure Dupont', date: '12/09/2025', amount: '200,000 FCFA', method: 'Carte', status: 'Payé' },
-            ]
-        }
-    };
+    // Data map (Empty for Backend integration)
+    const paymentsDataMap = {};
 
-    const currentChildPayments = paymentsDataMap[selectedChildId] || paymentsDataMap[1];
+    const currentChildPayments = paymentsDataMap[selectedChildId] || {
+        totalPaid: '0 FCFA',
+        balance: '0 FCFA',
+        transactions: []
+    };
     const transactions = currentChildPayments.transactions;
 
     const handlePayment = (e) => {

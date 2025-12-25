@@ -12,31 +12,11 @@ const AffectationsManager = ({ onBack }) => {
 
     // --- MOCK DATA (Simulant les données BDD) ---
 
-    const classes = [
-        { id: 1, name: '6ème A', capacity: 50, current: 45, level: 'Collège', root: '6ème' },
-        { id: 2, name: '6ème B', capacity: 50, current: 22, level: 'Collège', root: '6ème' },
-        { id: 3, name: '5ème A', capacity: 45, current: 10, level: 'Collège', root: '5ème' },
-        { id: 4, name: '3ème A', capacity: 38, current: 36, level: 'Collège', root: '3ème' },
-        { id: 5, name: '2nde C', capacity: 35, current: 32, level: 'Lycée', root: '2nde' },
-        { id: 6, name: 'Tle C', capacity: 35, current: 36, level: 'Lycée', root: 'Tle' },
-    ];
+    const classes = [];
 
     // Liste des élèves en attente d'affectation
     // Mapping Laravel : Jointure entre `inscriptions` (année en cours) et `bulletins` (année passée)
-    const unassignedStudents = [
-        // Cas : Nouveaux entrants (CM2 vers 6ème)
-        { id: 'MAT-NEW-01', name: 'Koffi A.', gender: 'M', previous_class: 'CM2', average: 14.5, decision: 'Admis', suggested_level: '6ème' },
-        { id: 'MAT-NEW-02', name: 'Sena B.', gender: 'F', previous_class: 'CM2', average: 11.2, decision: 'Admis', suggested_level: '6ème' },
-
-        // Cas : Passage en classe supérieure
-        { id: 'MAT-OLD-03', name: 'Junior D.', gender: 'M', previous_class: '3ème', average: 12.8, decision: 'Admis', suggested_level: '2nde' },
-        { id: 'MAT-OLD-04', name: 'Gloria M.', gender: 'F', previous_class: '6ème', average: 15.1, decision: 'Admis', suggested_level: '5ème' },
-
-        // Cas : Redoublants
-        { id: 'MAT-OLD-05', name: 'Paul P.', gender: 'M', previous_class: '2nde', average: 8.4, decision: 'Redouble', suggested_level: '2nde' },
-        { id: 'MAT-OLD-06', name: 'Anna S.', gender: 'F', previous_class: 'Tle', average: 9.1, decision: 'Redouble', suggested_level: 'Tle' },
-        { id: 'MAT-EXT-07', name: 'David Z. (Transfert)', gender: 'M', previous_class: '4ème (Ste Rita)', average: 13.5, decision: 'Transfert', suggested_level: '3ème' }
-    ];
+    const unassignedStudents = [];
 
     useEffect(() => {
         const timer = setTimeout(() => setIsLoading(false), 600);

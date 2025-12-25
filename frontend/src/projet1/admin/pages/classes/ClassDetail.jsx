@@ -24,16 +24,8 @@ const ClassDetail = ({ classData, onBack, onEdit }) => {
 
     if (!classData) return null;
 
-    // --- MAPPING BASE DE DONNÉES LARAVEL ---
-    // Récupération des élèves via la table `affectations_classes`
-    const mockStudents = [
-        { id: 'MAT-25-101', name: 'Alain T.', gender: 'M', status: 'active', rank: 1 },
-        { id: 'MAT-25-102', name: 'Bernice K.', gender: 'F', status: 'active', rank: 2 },
-        { id: 'MAT-25-103', name: 'Charles D.', gender: 'M', status: 'active', rank: 3 },
-        { id: 'MAT-25-104', name: 'Dorian S.', gender: 'M', status: 'excluded', rank: '-' },
-        { id: 'MAT-25-105', name: 'Elodie M.', gender: 'F', status: 'active', rank: 4 },
-        // ... on imagine 30 élèves ici
-    ];
+    // --- MAPPING BASE DE DONNÉES ---
+    const mockStudents = [];
 
     // Calcul dynamique des stats (Filles/Garçons)
     const stats = {

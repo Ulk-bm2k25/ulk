@@ -20,7 +20,7 @@ import { FileText, Users, School, FileCheck, Bell, Settings } from 'lucide-react
 const AdminManager = () => {
   // 1. INITIALISATION INTELLIGENTE
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('auth_token') === 'true' || sessionStorage.getItem('auth_token') === 'true';
+    return localStorage.getItem('token') !== null || sessionStorage.getItem('token') !== null;
   });
 
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -31,31 +31,18 @@ const AdminManager = () => {
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
 
-  // Données initiales pour les inscriptions (Mock)
-  const [inscriptions, setInscriptions] = useState([
-    { id: 'INS-2025-042', firstName: 'Jean', lastName: 'Dupont', class: 'Seconde C', date: '19 Déc 2025', status: 'pending', payment: 'partial', docs: 'complete', email: 'p.dupont@email.com' },
-    { id: 'INS-2025-041', firstName: 'Amina', lastName: 'Kone', class: 'Terminale D', date: '18 Déc 2025', status: 'validated', payment: 'paid', docs: 'complete', email: 'kone.famille@email.com' },
-    { id: 'INS-2025-039', firstName: 'Lucas', lastName: 'Martin', class: '1ère A', date: '15 Déc 2025', status: 'rejected', payment: 'unpaid', docs: 'missing', email: 'lucas.m@email.com' },
-    { id: 'INS-2025-038', firstName: 'Sarah', lastName: 'Bensoussan', class: '6ème', date: '14 Déc 2025', status: 'pending', payment: 'paid', docs: 'missing', email: 's.bensoussan@email.com' },
-    { id: 'INS-2025-035', firstName: 'Marc', lastName: 'Evan', class: '3ème', date: '10 Déc 2025', status: 'validated', payment: 'paid', docs: 'complete', email: 'marc.e@email.com' },
-  ]);
-
-  const [students, setStudents] = useState([
-    { id: 'MAT-25-041', firstName: 'Amina', lastName: 'Kone', class: 'Terminale D', gender: 'F', parent: 'Mme Kone', phone: '96554433', status: 'active', level: 'Lycée', birthDate: '03/08/2009' },
-    { id: 'MAT-25-035', firstName: 'Marc', lastName: 'Evan', class: '3ème', gender: 'M', parent: 'Luc Evan', phone: '94778899', status: 'active', level: 'Collège', birthDate: '20/01/2013' },
-  ]);
+  // Données initiales (Vides pour l'intégration Backend)
+  const [inscriptions, setInscriptions] = useState([]);
+  const [students, setStudents] = useState([]);
 
   // 2. MODIFICATION DE LA FONCTION LOGIN
-  // Elle accepte maintenant le paramètre "rememberMe"
-  const handleLogin = (rememberMe = false) => {
+  const handleLogin = (token, rememberMe = false) => {
     setIsAuthenticated(true);
 
-    // Si "Se souvenir de moi", on stocke dans localStorage (persistant même après fermeture)
-    // Sinon, on stocke dans sessionStorage (persistant au refresh, mais effacé à la fermeture)
     if (rememberMe) {
-      localStorage.setItem('auth_token', 'true');
+      localStorage.setItem('token', token);
     } else {
-      sessionStorage.setItem('auth_token', 'true');
+      sessionStorage.setItem('token', token);
     }
   };
 
@@ -63,8 +50,8 @@ const AdminManager = () => {
   // On nettoie tout
   const handleLogout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem('auth_token');
-    sessionStorage.removeItem('auth_token');
+    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
     setCurrentPage('dashboard');
     setSelectedInscription(null);
     setSelectedStudent(null);

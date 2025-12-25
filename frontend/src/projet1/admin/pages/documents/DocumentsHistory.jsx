@@ -8,53 +8,7 @@ const DocumentsHistory = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [docType, setDocType] = useState('all');
 
-    const [documents] = useState([
-        {
-            id: 'DOC-001',
-            name: 'Reçu de Paiement - Jean Dupont',
-            type: 'Reçu',
-            date: '24 Déc 2025, 08:30',
-            student: 'Jean Dupont',
-            class: '2nde C',
-            status: 'Généré'
-        },
-        {
-            id: 'DOC-002',
-            name: 'Fiche d\'inscription - Amina Kone',
-            type: 'Dossier',
-            date: '23 Déc 2025, 14:15',
-            student: 'Amina Kone',
-            class: 'Tle D',
-            status: 'Généré'
-        },
-        {
-            id: 'DOC-003',
-            name: 'Certificat de Scolarité - Sarah B.',
-            type: 'Certificat',
-            date: '22 Déc 2025, 10:00',
-            student: 'Sarah Bensoussan',
-            class: '6ème',
-            status: 'Signé'
-        },
-        {
-            id: 'DOC-004',
-            name: 'Bordereau de Versement - Marc Evan',
-            type: 'Reçu',
-            date: '21 Déc 2025, 16:45',
-            student: 'Marc Evan',
-            class: 'CM2',
-            status: 'Généré'
-        },
-        {
-            id: 'DOC-005',
-            name: 'Bulletin 1er Trimestre - Jean Dupont',
-            type: 'Bulletin',
-            date: '20 Déc 2025, 11:30',
-            student: 'Jean Dupont',
-            class: '2nde C',
-            status: 'Signé'
-        }
-    ]);
+    const [documents] = useState([]);
 
     const filteredDocs = documents.filter(doc => {
         const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

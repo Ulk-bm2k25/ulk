@@ -15,24 +15,20 @@ const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) =
 
   if (!data) return null;
 
-  // 2. Simulation de "Hydratation" des données
+  // 2. Utilisation des données réelles (sera hydraté par l'API)
   const fullData = {
     ...data,
-    birthDate: '12 Mai 2010',
-    birthPlace: 'Cotonou, Bénin',
-    gender: 'Masculin',
-    previousSchool: 'Collège Père Aupiais',
-    parent: {
-      name: 'M. Paul Dupont',
-      job: 'Comptable',
-      phone: '+229 97 00 00 00',
-      email: data.email
+    birthDate: data.birthDate || '--',
+    birthPlace: data.birthPlace || '--',
+    gender: data.gender || '--',
+    previousSchool: data.previousSchool || '--',
+    parent: data.parent || {
+      name: '--',
+      job: '--',
+      phone: '--',
+      email: data.email || '--'
     },
-    documents: [
-      { id: 1, name: 'Acte de naissance', size: '1.2 MB', type: 'PDF' },
-      { id: 2, name: 'Dernier Bulletin', size: '850 KB', type: 'JPG' },
-      { id: 3, name: 'Photo identité', size: '2.4 MB', type: 'PNG' },
-    ]
+    documents: data.documents || []
   };
 
   const getStatusColor = (status) => {
