@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('eleves', function (Blueprint $table) {
             $table->foreignId('serie_id')->constrained('series')->onDelete('cascade');
+            $table->foreign('classe_id')->references('id')->on('classes')->onDelete('cascade');
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('eleves', function (Blueprint $table) {
             $table->dropForeign(['serie_id']);
+            $table->dropForeign(['classe_id']);
         });
     }
 };

@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\PermissionsController;
 use App\Http\Controllers\Api\PresenceController;
 use App\Http\Controllers\Api\SeanceController;
 use App\Http\Controllers\Api\ProgrammeController;
+use App\Http\Controllers\AnneeScolaireController;
 
 
 /*
@@ -239,8 +240,6 @@ Route::fallback(function () {
 });
 
 
-
-
 // Routes protégées par auth:sanctum
 Route::middleware('auth:sanctum')->group(function() {
 
@@ -251,6 +250,7 @@ Route::middleware('auth:sanctum')->group(function() {
     Route::apiResource('presences', PresenceController::class);
     Route::apiResource('seances', SeanceController::class)->only(['index','store','show']);
     Route::apiResource('programmes', ProgrammeController::class)->only(['index','store']);
+    Route::apiResource('annee-scolaires', AnneeScolaireController::class);
 
     // Routes additionnelles pour le frontend Permissions
     Route::get('students', [PermissionsController::class, 'students'])->name('students.index');

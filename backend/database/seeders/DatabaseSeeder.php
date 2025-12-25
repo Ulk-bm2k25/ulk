@@ -22,20 +22,22 @@ class DatabaseSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
         // Créer une année scolaire de test
         $anneeId = DB::table('annee_scolaires')->insertGetId([
-            'libelle' => '2024-2025',
+            'annee' => '2024-2025',
             'date_debut' => '2024-09-01',
             'date_fin' => '2025-06-30',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
+
         // Créer une classe de test
         $classeId = DB::table('classes')->insertGetId([
             'nom' => 'Terminale A',
             'niveau_id' => $niveauId,
-            'annee_scolaire_id' => $anneeId,
+            'annee_scolaire' => $anneeId,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -70,20 +72,31 @@ class DatabaseSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
+        // Créer une série de test
+        $serieId = DB::table('series')->insertGetId([
+            'nom' => 'Scientifique', // ou Littéraire, Éco, etc.
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+
         // Créer les élèves
         Eleve::create([
             'user_id' => $user1->id,
             'classe_id' => $classeId,
+            'serie_id' => $serieId,
         ]);
 
         Eleve::create([
             'user_id' => $user2->id,
             'classe_id' => $classeId,
+            'serie_id' => $serieId,
         ]);
 
         Eleve::create([
             'user_id' => $user3->id,
             'classe_id' => $classeId,
+            'serie_id' => $serieId,
         ]);
 
         // Créer des cours
