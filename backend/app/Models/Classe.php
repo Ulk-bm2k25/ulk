@@ -1,9 +1,11 @@
+<?php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Class extends Model
+
+class Classe extends Model
 {
     use HasFactory;
 
@@ -43,4 +45,6 @@ class Class extends Model
     {
         $this->decrement('current_students');
     }
+
+    
 }

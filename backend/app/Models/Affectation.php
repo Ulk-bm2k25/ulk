@@ -1,3 +1,4 @@
+<?php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +12,7 @@ class Affectation extends Model
 
     public function class()
     {
-        return $this->belongsTo(Class::class);
+        return $this->belongsTo(Classe::class);
     }
 
     public function eleve()

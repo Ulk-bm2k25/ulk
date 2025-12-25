@@ -155,15 +155,15 @@ const Grades = ({ children, selectedChildId, setSelectedChildId }) => {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="bg-white/[0.02] text-white/40 text-[11px] font-black uppercase tracking-widest border-b border-white/5">
+                            <tr className="bg-white/[0.02] text-white/40 text-[10px] font-black uppercase tracking-widest border-b border-white/5">
                                 <th className="px-8 py-6">Matière</th>
-                                <th className="px-4 py-6 text-center">Coef</th>
-                                <th className="px-4 py-6 text-center">Interro 1</th>
-                                <th className="px-4 py-6 text-center">Interro 2</th>
-                                <th className="px-4 py-6 text-center">Interro 3</th>
-                                <th className="px-4 py-6 text-center">Devoir</th>
-                                <th className="px-4 py-6 text-center">Composition</th>
-                                <th className="px-4 py-6 text-center">Moyenne</th>
+                                <th className="px-4 py-6 text-center">Coefficient</th>
+                                <th className="px-4 py-6 text-center text-white/20">Interro 1</th>
+                                <th className="px-4 py-6 text-center text-white/20">Interro 2</th>
+                                <th className="px-4 py-6 text-center text-white/20">Interro 3</th>
+                                <th className="px-4 py-6 text-center text-[#eb8e3a]/40">Devoir</th>
+                                <th className="px-4 py-6 text-center text-blue-400/40">Composition</th>
+                                <th className="px-4 py-6 text-center">Moyenne /20</th>
                                 <th className="px-4 py-6 text-center">Tendance</th>
                             </tr>
                         </thead>
@@ -194,8 +194,8 @@ const Grades = ({ children, selectedChildId, setSelectedChildId }) => {
                                         <td className="px-4 py-6 text-center text-white/50 font-medium">
                                             {subject.composition !== '--' ? `${subject.composition}/20` : '--'}
                                         </td>
-                                        <td className={`px-4 py-6 text-center font-black ${getMoyenneColor(subject.moyenne)}`}>
-                                            {subject.moyenne !== '--' ? `${subject.moyenne}/20` : '--'}
+                                        <td className={`px-4 py-6 text-center font-black text-lg ${getMoyenneColor(subject.moyenne)}`}>
+                                            {subject.moyenne !== '--' ? subject.moyenne : '--'}
                                         </td>
                                         <td className="px-4 py-6 text-center">
                                             <div className="flex justify-center">
@@ -217,6 +217,14 @@ const Grades = ({ children, selectedChildId, setSelectedChildId }) => {
                         </tbody>
                     </table>
                 </div>
+            </div>
+            {/* Formula Hint */}
+            <div className="mt-8 flex items-center gap-3 px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white/40 text-xs font-medium">
+                <AlertCircle size={16} className="text-[#eb8e3a]" />
+                <p>
+                    <span className="text-white/60 font-bold uppercase">Calcul :</span> (Moyenne Interros + Devoir + 2 × Composition) / 4.
+                    La moyenne finale est ensuite multipliée par le <span className="text-[#eb8e3a] font-bold">Coefficient</span> de la matière.
+                </p>
             </div>
         </div>
 

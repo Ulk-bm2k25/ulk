@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, Calendar, MapPin, User, Phone, Mail, FileText,
-  CheckCircle, XCircle, AlertTriangle, Download, Printer, Loader2
+  CheckCircle, XCircle, AlertTriangle, Download, Printer, Loader2, IdCard
 } from 'lucide-react';
 
-const InscriptionDetail = ({ data, onBack }) => {
+const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   // 1. Simulation du chargement des détails complets
@@ -77,7 +77,10 @@ const InscriptionDetail = ({ data, onBack }) => {
         </button>
 
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 font-medium shadow-sm">
+          <button
+            onClick={() => alert(`Impression de la fiche d'inscription complète de ${fullData.firstName}...`)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 font-medium shadow-sm transition-colors"
+          >
             <Printer size={18} />
             Imprimer fiche
           </button>
@@ -179,9 +182,19 @@ const InscriptionDetail = ({ data, onBack }) => {
             <h3 className="font-bold text-slate-800 mb-4">Traitement du dossier</h3>
 
             {fullData.status === 'validated' && (
-              <div className="mb-4 p-3 bg-green-50 text-green-700 text-sm rounded-lg border border-green-100 flex items-center gap-2">
-                <CheckCircle size={16} />
-                <span>Ce dossier est déjà validé.</span>
+              <div className="space-y-4">
+                <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg border border-green-100 flex items-center gap-2">
+                  <CheckCircle size={16} />
+                  <span>Ce dossier est déjà validé.</span>
+                </div>
+                <button
+                  onClick={() => onNavigate('qr')}
+                  className="w-full h-12 flex items-center justify-center gap-3 bg-brand-dark text-white rounded-lg font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10"
+                >
+                  <IdCard size={20} className="text-brand-primary" />
+                  Générer la carte scolaire
+                </button>
+                <div className="h-px bg-slate-100 my-4"></div>
               </div>
             )}
             {fullData.status === 'rejected' && (
@@ -194,7 +207,7 @@ const InscriptionDetail = ({ data, onBack }) => {
             <div className="space-y-3">
               {(fullData.status === 'pending' || fullData.status === 'rejected') && (
                 <button
-                  onClick={() => alert(`Dossier de ${fullData.firstName} validé avec succès !`)}
+                  onClick={() => onValidate(fullData.id)}
                   className="w-full flex items-center justify-center gap-2 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold shadow-sm shadow-green-500/20 transition-all"
                 >
                   <CheckCircle size={18} />
@@ -203,13 +216,19 @@ const InscriptionDetail = ({ data, onBack }) => {
               )}
 
               {fullData.status === 'pending' && (
-                <button className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-lg font-bold transition-all">
+                <button
+                  onClick={() => onReject(fullData.id)}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-lg font-bold transition-all"
+                >
                   <XCircle size={18} />
                   Rejeter le dossier
                 </button>
               )}
 
-              <button className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-orange-200 text-orange-600 hover:bg-orange-50 rounded-lg font-medium text-sm transition-all">
+              <button
+                onClick={() => alert(`Relance envoyée à ${fullData.parent.email}.\nLe parent recevra une notification pour compléter le dossier.`)}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-orange-200 text-orange-600 hover:bg-orange-50 rounded-lg font-medium text-sm transition-all"
+              >
                 <AlertTriangle size={18} />
                 {fullData.status === 'validated' ? 'Demander un document supplémentaire' : 'Demander complément'}
               </button>
@@ -234,7 +253,13 @@ const InscriptionDetail = ({ data, onBack }) => {
                       <div className="text-xs text-slate-500">{doc.size} • {doc.type}</div>
                     </div>
                   </div>
-                  <button className="text-slate-300 hover:text-brand-primary">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(`Téléchargement du fichier : ${doc.name}`);
+                    }}
+                    className="text-slate-300 hover:text-brand-primary"
+                  >
                     <Download size={16} />
                   </button>
                 </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, FileText, Users, School, FileCheck, Bell, Settings, LogOut, Menu, X, Search, ChevronRight } from 'lucide-react';
+import { Home, FileText, Users, School, FileCheck, Bell, Settings, LogOut, Menu, X, Search, ChevronRight, IdCard } from 'lucide-react';
 
 const AdminLayout = ({ children, currentPage, onNavigate, onLogout }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -10,8 +10,10 @@ const AdminLayout = ({ children, currentPage, onNavigate, onLogout }) => {
     { id: 'inscriptions', label: 'Inscriptions', icon: FileText, available: true },
     { id: 'eleves', label: 'Élèves', icon: Users, available: true },
     { id: 'classes', label: 'Classes', icon: School, available: true },
+    { id: 'documents', label: 'Documents', icon: FileCheck, available: true },
+    { id: 'qr', label: 'Cartes Scolaires', icon: IdCard, available: true },
     { id: 'notifications', label: 'Notifications', icon: Bell, available: true },
-    { id: 'parametres', label: 'Paramètres', icon: Settings, available: false }
+    { id: 'parametres', label: 'Paramètres', icon: Settings, available: true }
   ];
 
   const SidebarContent = () => (
@@ -29,8 +31,8 @@ const AdminLayout = ({ children, currentPage, onNavigate, onLogout }) => {
             onClick={() => item.available && onNavigate(item.id)}
             disabled={!item.available}
             className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-lg transition-all duration-200 group ${currentPage === item.id
-                ? 'bg-brand-primary text-white shadow-lg shadow-orange-500/20'
-                : 'text-slate-400 hover:bg-white/5 hover:text-white'
+              ? 'bg-brand-primary text-white shadow-lg shadow-orange-500/20'
+              : 'text-slate-400 hover:bg-white/5 hover:text-white'
               } ${!item.available && 'opacity-50 cursor-not-allowed'}`}
           >
             <item.icon size={20} strokeWidth={currentPage === item.id ? 2.5 : 2} />
@@ -78,7 +80,7 @@ const AdminLayout = ({ children, currentPage, onNavigate, onLogout }) => {
       )}
 
       {/* Main Content Wrapper */}
-      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
+      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 bg-brand-bg ${isSidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
 
         {/* Header (Top bar) */}
         <header className="bg-white sticky top-0 z-20 px-6 py-4 flex items-center justify-between">
@@ -103,7 +105,7 @@ const AdminLayout = ({ children, currentPage, onNavigate, onLogout }) => {
           <div className="flex items-center gap-6">
             <div className="relative hidden md:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input type="text" placeholder="Rechercher..." className="pl-10 pr-4 py-2 bg-slate-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-64 text-slate-800" />
+              <input type="text" placeholder="Rechercher..." className="pl-10 pr-4 py-2 bg-slate-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-64 text-slate-800 placeholder:text-slate-400" />
             </div>
 
             <button className="relative text-slate-500 hover:text-brand-dark">

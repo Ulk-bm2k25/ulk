@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import '../styles/theme.css';
-import paintedHands from '../assets/painted_handprints.png';
+import smilingChildren from '../assets/smiling_children.png';
 
 const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
     const [email, setEmail] = useState('');
@@ -97,7 +97,7 @@ const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
                 {/* Right Side: Image/Decor */}
                 <div className="hidden md:block w-1/2 relative">
                     <img
-                        src={paintedHands}
+                        src={smilingChildren}
                         alt="School life"
                         className="absolute inset-0 w-full h-full object-cover"
                     />

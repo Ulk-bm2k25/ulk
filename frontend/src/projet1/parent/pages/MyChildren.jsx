@@ -26,18 +26,35 @@ const MyChildren = ({ onNavigate }) => {
         },
     ];
 
+    const handleDownload = (type, childName, event) => {
+        const docName = type === 'card' ? 'Carte Scolaire' : 'Fiche d\'inscription';
+        const btn = event.currentTarget;
+        const originalContent = btn.innerHTML;
+
+        btn.innerHTML = `<span class="inline-block animate-spin mr-2">⏳</span>...`;
+        btn.style.opacity = "0.7";
+        btn.disabled = true;
+
+        setTimeout(() => {
+            btn.innerHTML = originalContent;
+            btn.style.opacity = "1";
+            btn.disabled = false;
+            alert(`Le document "${docName}" pour ${childName} a été généré et téléchargé avec succès.`);
+        }, 1500);
+    };
+
     const ActionButton = ({ icon: Icon, label, onClick, primary = false, disabled = false, badge = null }) => (
         <button
             onClick={(e) => {
                 e.stopPropagation();
-                if (!disabled && onClick) onClick();
+                if (!disabled && onClick) onClick(e);
             }}
             disabled={disabled}
             className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${disabled
-                    ? 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed opacity-50'
-                    : primary
-                        ? 'bg-[#eb8e3a] text-white hover:bg-[#d67d2e] shadow-lg shadow-orange-950/20'
-                        : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white border border-white/5'
+                ? 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed opacity-50'
+                : primary
+                    ? 'bg-[#eb8e3a] text-white hover:bg-[#d67d2e] shadow-lg shadow-orange-950/20'
+                    : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white border border-white/5'
                 }`}
         >
             <Icon size={14} />
@@ -97,13 +114,13 @@ const MyChildren = ({ onNavigate }) => {
                                 icon={Download}
                                 label="Carte Scolaire"
                                 disabled={!child.cardDelivered}
-                                onClick={() => console.log('Download Card', child.id)}
+                                onClick={(e) => handleDownload('card', child.name, e)}
                             />
                             <ActionButton
                                 icon={FileText}
                                 label="Fiche d'inscription"
                                 disabled={!child.registrationValidated}
-                                onClick={() => console.log('Download Doc', child.id)}
+                                onClick={(e) => handleDownload('doc', child.name, e)}
                             />
                         </div>
                     </div>
