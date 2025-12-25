@@ -1,44 +1,43 @@
 <?php
-
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Eleve extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
+        'matricule',
         'user_id',
+        'nom',
+        'prenom',
+        'genre',
+        'date_naissance',
         'classe_id',
-        'serie_id'
+        'photo',
+        'serie'
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    protected $casts = [
+        'date_naissance' => 'date',
+    ];
 
-    public function classe()
+    public function classe(): BelongsTo
     {
         return $this->belongsTo(Classe::class);
     }
 
-    public function inscription()
+    public function notes(): HasMany
     {
-        return $this->hasMany(Inscription::class);
+        return $this->hasMany(Note::class);
     }
 
-    public function tuteurs()
+    public function presences(): HasMany
     {
-        return $this->belongsToMany(
-            ParentTuteur::class,
-            'relations_eleve_tuteur',
-            'eleve_id',
-            'tuteur_id'
-        )->withPivot('relation_type');
-    }
-
-    public function carteScolarite()
-    {
-        return $this->hasOne(CarteScolarite::class);
+        return $this->hasMany(Presence::class);
     }
 }
