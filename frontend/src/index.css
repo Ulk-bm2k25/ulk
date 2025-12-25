@@ -1,8 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  /* Couleurs extraites de l'image */
-  --color-brand-dark: #2A2D3E;  /* Le fond de la sidebar */
-  --color-brand-primary: #F59E0B; /* L'orange des boutons/badges */
-  --color-brand-bg: #F3F4F6; /* Gris très clair du fond */
+  /* Vos variables de thème existantes */
+  --color-brand-dark: #2A2D3E;
+  --color-brand-primary: #F59E0B;
+  --color-brand-bg: #F3F4F6;
+}
+
+
+@layer base {
+  input, textarea, select {
+    color: #1f2937; /* C'est l'équivalent de text-gray-800 */
+  }
+
+  /* Si vous voulez être sûr que le placeholder (texte fantôme) soit visible aussi */
+  input::placeholder, textarea::placeholder {
+    color: #9ca3af; /* gray-400 */
+  }
 }
