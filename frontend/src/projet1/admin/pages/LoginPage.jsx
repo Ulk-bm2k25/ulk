@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft, Loader2, Check } from 'lucide-react';
+import api from '../../../api';
 
 const LoginPage = ({ onLogin }) => {
   const [email, setEmail] = useState('');
@@ -26,37 +27,46 @@ const LoginPage = ({ onLogin }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
       setIsLoading(true);
-      setTimeout(() => {
+      try {
+        // simulation d'appel API - À décommenter lors de l'intégration réelle
+        // const response = await api.post('/login', { email, password });
+        // onLogin(response.data.token, rememberMe);
+
+        // Simulation temporaire
+        setTimeout(() => {
+          setIsLoading(false);
+          onLogin("mock-token-admin", rememberMe);
+        }, 1000);
+      } catch (error) {
         setIsLoading(false);
-        // 2. On passe l'état de "rememberMe" au parent
-        onLogin(rememberMe); 
-      }, 1000);
+        setErrors({ general: "Erreur de connexion serveur." });
+      }
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-brand-dark p-4 font-sans relative">
-      
-      <Link 
-        to="/" 
+
+      <Link
+        to="/"
         className="absolute top-6 left-6 flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
       >
         <div className="p-2 rounded-full group-hover:bg-white/10 transition-colors">
-            <ArrowLeft size={20} />
+          <ArrowLeft size={20} />
         </div>
         <span className="font-medium text-sm hidden sm:inline">Retour à l'accueil</span>
       </Link>
 
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-300">
-        
+
         <div className="p-8 pb-6 text-center">
           <div className="inline-flex justify-center items-center mb-6">
             <div className="h-12 w-12 bg-orange-100 rounded-xl flex items-center justify-center text-brand-primary mb-2">
-                <Lock size={24} />
+              <Lock size={24} />
             </div>
           </div>
           <h1 className="text-3xl font-bold text-brand-dark tracking-tight">
@@ -67,7 +77,7 @@ const LoginPage = ({ onLogin }) => {
 
         <div className="p-8 pt-0">
           <form onSubmit={handleSubmit} className="space-y-5">
-            
+
             <div className="space-y-1.5">
               <label className="block text-sm font-semibold text-slate-700">
                 Email professionnel
@@ -81,11 +91,10 @@ const LoginPage = ({ onLogin }) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
-                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg text-slate-900 bg-slate-50 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-all duration-200 ${
-                    errors.email 
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-200' 
-                      : 'border-slate-200 focus:border-brand-primary focus:ring-orange-100'
-                  } ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg text-slate-900 bg-slate-50 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-all duration-200 ${errors.email
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
+                    : 'border-slate-200 focus:border-brand-primary focus:ring-orange-100'
+                    } ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
                   placeholder="admin@ecole.com"
                 />
               </div>
@@ -96,7 +105,7 @@ const LoginPage = ({ onLogin }) => {
 
             <div className="space-y-1.5">
               <label className="block text-sm font-semibold text-slate-700">
-                  Mot de passe
+                Mot de passe
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-brand-primary transition-colors">
@@ -107,11 +116,10 @@ const LoginPage = ({ onLogin }) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
-                  className={`block w-full pl-10 pr-10 py-3 border rounded-lg text-slate-900 bg-slate-50 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-all duration-200 ${
-                    errors.password 
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-200' 
-                      : 'border-slate-200 focus:border-brand-primary focus:ring-orange-100'
-                  } ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  className={`block w-full pl-10 pr-10 py-3 border rounded-lg text-slate-900 bg-slate-50 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-all duration-200 ${errors.password
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
+                    : 'border-slate-200 focus:border-brand-primary focus:ring-orange-100'
+                    } ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
                   placeholder="••••••••"
                 />
                 <button
@@ -131,22 +139,21 @@ const LoginPage = ({ onLogin }) => {
             {/* 3. Zone "Se souvenir de moi" et "Mdp oublié" */}
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer group">
-                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
-                  rememberMe 
-                    ? 'bg-brand-primary border-brand-primary text-white' 
-                    : 'border-slate-300 bg-white group-hover:border-brand-primary'
-                }`}>
-                   {rememberMe && <Check size={14} strokeWidth={3} />}
+                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${rememberMe
+                  ? 'bg-brand-primary border-brand-primary text-white'
+                  : 'border-slate-300 bg-white group-hover:border-brand-primary'
+                  }`}>
+                  {rememberMe && <Check size={14} strokeWidth={3} />}
                 </div>
-                <input 
-                  type="checkbox" 
-                  className="hidden" 
-                  checked={rememberMe} 
-                  onChange={(e) => setRememberMe(e.target.checked)} 
+                <input
+                  type="checkbox"
+                  className="hidden"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                 />
                 <span className="text-sm text-slate-600 font-medium">Se souvenir de moi</span>
               </label>
-              
+
               <a href="#" className="text-sm font-medium text-brand-primary hover:text-orange-600 transition-colors">
                 Mot de passe oublié ?
               </a>
@@ -155,11 +162,10 @@ const LoginPage = ({ onLogin }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white transition-all duration-200 ${
-                isLoading 
-                  ? 'bg-brand-primary/70 cursor-wait' 
-                  : 'bg-brand-primary hover:bg-orange-600 hover:-translate-y-0.5'
-              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary`}
+              className={`w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white transition-all duration-200 ${isLoading
+                ? 'bg-brand-primary/70 cursor-wait'
+                : 'bg-brand-primary hover:bg-orange-600 hover:-translate-y-0.5'
+                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary`}
             >
               {isLoading ? (
                 <>

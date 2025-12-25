@@ -20,42 +20,23 @@ const StudentProfile = ({ student, onBack }) => {
 
     if (!student) return null;
 
-    // --- MAPPING BASE DE DONNÉES LARAVEL ---
-    // Simulation d'une réponse API complexe qui agrège plusieurs tables
+    // --- MAPPING BASE DE DONNÉES ---
     const fullData = {
         ...student,
-        // Infos Perso -> table `users` ou extension `eleves`
-        dob: '12 Mars 2009',
-        pob: 'Cotonou',
-        address: 'Qtr. Fidjrossè, Maison 124', // via `parents_tuteurs`
-        email: 'parent.contact@gmail.com', // via `parents_tuteurs`
-
-        // Historique -> tables `affectations_classes` & `bulletins`
-        history: [
-            { year: '2024-2025', class: student.class, result: 'En cours' },
-            { year: '2023-2024', class: '3ème', result: 'Admis (14.50)' },
-            { year: '2022-2023', class: '4ème', result: 'Admis (13.20)' },
-        ],
-
-        // Documents -> table `documents_eleves`
-        documents: [
-            { name: 'Acte de naissance.pdf', date: 'Ajouté le 12 Sept 2024' },
-            { name: 'Photo identité.jpg', date: 'Ajouté le 12 Sept 2024' },
-            { name: 'Certificat scolarité an dernier.pdf', date: 'Ajouté le 15 Sept 2024' },
-            { name: 'Fiche inscription signée.pdf', date: 'Ajouté le 20 Sept 2024' },
-        ],
-
-        // Finances -> tables `paiement`, `tranche_paiement`
+        dob: '--/--/----',
+        pob: '--',
+        address: '--',
+        email: '--',
+        history: [],
+        documents: [],
         finance: {
-            reste: '75.000 FCFA',
-            statut: 'En retard'
+            reste: '0 FCFA',
+            statut: '--'
         },
-
-        // Assiduité -> table `presence`
         attendance: {
-            rate: 98,
-            justified: '12h',
-            absent: '2h'
+            rate: 0,
+            justified: '0h',
+            absent: '0h'
         }
     };
 
@@ -156,8 +137,8 @@ const StudentProfile = ({ student, onBack }) => {
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === tab
-                                        ? 'bg-slate-800 text-white shadow-md'
-                                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                                    ? 'bg-slate-800 text-white shadow-md'
+                                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                                     }`}
                             >
                                 {tab === 'infos' && 'Informations Personnelles'}

@@ -27,22 +27,26 @@ const PlaceholderPage = ({ title, icon: Icon }) => (
 );
 
 const ParentManager = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(() => {
+        return localStorage.getItem('token') !== null || sessionStorage.getItem('token') !== null;
+    });
     const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
     const [currentPage, setCurrentPage] = useState('dashboard');
     const [registrationParams, setRegistrationParams] = useState({ mode: 'new', childData: null });
 
-    // Centralized children data
-    const [children] = useState([
-        { id: 1, name: 'Jean Dupont', grade: '6ème', gender: 'Masculin', birthDate: '12/05/2012', photo: 'https://i.pravatar.cc/150?u=jean', registrationValidated: true, cardDelivered: true },
-        { id: 2, name: 'Marie-Laure Dupont', grade: '3ème', gender: 'Féminin', birthDate: '05/09/2009', photo: 'https://i.pravatar.cc/150?u=marie-laure', registrationValidated: false, cardDelivered: false },
-    ]);
+    // Centralized children data (Empty for Backend integration)
+    const [children] = useState([]);
 
-    const [selectedChildId, setSelectedChildId] = useState(children[0]?.id || null);
+    const [selectedChildId, setSelectedChildId] = useState(null);
 
-    const handleLogin = () => setIsAuthenticated(true);
+    const handleLogin = (token) => {
+        setIsAuthenticated(true);
+        localStorage.setItem('token', token);
+    };
     const handleLogout = () => {
         setIsAuthenticated(false);
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
         setAuthMode('login');
         setCurrentPage('dashboard');
         setRegistrationParams({ mode: 'new', childData: null });

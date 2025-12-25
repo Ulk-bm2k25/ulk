@@ -21,7 +21,7 @@ const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
     { id: 'payments', label: 'Paiements & Frais', icon: CreditCard },
     { id: 'grades', label: 'Notes & Bulletins', icon: Star },
     { id: 'attendance', label: 'Présence', icon: CalendarCheck },
-    { id: 'notifications', label: 'Notifications', icon: Bell, badge: 3 },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
   ];
 
 

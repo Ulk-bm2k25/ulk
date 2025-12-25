@@ -6,17 +6,14 @@ const DashboardPage = ({ onNavigate }) => {
 
   // Simulation des données (State)
   // Dans le futur, ces états seront remplis par un useEffect + fetch()
-  const [inscriptions] = useState([
-    { id: 'INS-2025-001', name: 'Martin Dubois', class: 'Terminale C', status: 'Validé', complete: true, paid: true },
-    { id: 'INS-2025-002', name: 'Sophie Moreau', class: '1ère D', status: 'Validé', complete: true, paid: true },
-    { id: 'INS-2025-003', name: 'Lucas Bernard', class: 'Seconde A', status: 'En attente', complete: false, paid: false, note: 'Manque certificat' },
-  ]);
+  // Données initiales (Vides pour l'intégration Backend)
+  const [inscriptions] = useState([]);
 
   const [kpis] = useState({
-    totalEleves: 1248,
-    inscriptionsAttente: 42,
-    tauxPresence: 94,
-    classesSaturees: 1
+    totalEleves: 0,
+    inscriptionsAttente: 0,
+    tauxPresence: 0,
+    classesSaturees: 0
   });
 
   // Simulation du chargement des données (1.5 secondes)
@@ -55,7 +52,7 @@ const DashboardPage = ({ onNavigate }) => {
       });
     }
 
-    const notifsFailed = 5;
+    const notifsFailed = 0;
     if (notifsFailed > 0) {
       activeAlerts.push({
         id: 'alert-notif',

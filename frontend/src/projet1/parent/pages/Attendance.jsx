@@ -4,30 +4,15 @@ import { CalendarCheck, AlertTriangle, CheckCircle2, XCircle } from 'lucide-reac
 import ChildSelector from '../components/ChildSelector';
 
 const Attendance = ({ children, selectedChildId, setSelectedChildId }) => {
-    const attendanceDataMap = {
-        1: {
-            name: 'Jean Dupont',
-            rate: '98%',
-            absences: 1,
-            history: [
-                { date: '21/12/2025', status: 'Présent', time: '07:55' },
-                { date: '20/12/2025', status: 'Présent', time: '08:02' },
-                { date: '19/12/2025', status: 'Absent', time: '-', reason: 'Médical' },
-                { date: '18/12/2025', status: 'Présent', time: '07:50' },
-            ]
-        },
-        2: {
-            name: 'Marie-Laure Dupont',
-            rate: '100%',
-            absences: 0,
-            history: [
-                { date: '21/12/2025', status: 'Présent', time: '07:58' },
-                { date: '20/12/2025', status: 'Présent', time: '08:05' },
-            ]
-        }
-    };
+    // Data map (Empty for Backend integration)
+    const attendanceDataMap = {};
 
-    const currentChildAttendance = attendanceDataMap[selectedChildId] || attendanceDataMap[1];
+    const currentChildAttendance = attendanceDataMap[selectedChildId] || {
+        name: 'Élève',
+        rate: '--',
+        absences: 0,
+        history: []
+    };
 
     return (
         <div className="space-y-8">

@@ -6,10 +6,10 @@ const Settings = ({ onLogout }) => {
     const [activeTab, setActiveTab] = useState('profile');
 
     const [profile, setProfile] = useState({
-        name: 'Jean Dupont',
-        email: 'jean.dupont@email.com',
-        phone: '+225 07 07 07 07 07',
-        occupation: 'Architecte'
+        name: 'Prénom Nom',
+        email: 'votre.email@exemple.com',
+        phone: '+229 00 00 00 00',
+        occupation: 'Votre profession'
     });
 
     const [password, setPassword] = useState({
@@ -65,8 +65,8 @@ const Settings = ({ onLogout }) => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${activeTab === tab.id
-                                    ? 'bg-[#eb8e3a] text-white font-bold shadow-lg'
-                                    : 'text-white/60 hover:bg-white/5 hover:text-white'
+                                ? 'bg-[#eb8e3a] text-white font-bold shadow-lg'
+                                : 'text-white/60 hover:bg-white/5 hover:text-white'
                                 }`}
                         >
                             <tab.icon size={18} />
@@ -94,7 +94,7 @@ const Settings = ({ onLogout }) => {
                             <h2 className="text-2xl font-bold mb-6">Informations Personnelles</h2>
                             <div className="flex items-center gap-6 mb-8">
                                 <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center text-4xl font-bold border-4 border-[#eb8e3a]">
-                                    JD
+                                    PN
                                 </div>
                                 <div>
                                     <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors">

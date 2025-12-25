@@ -53,19 +53,19 @@ const Registration = ({ mode = 'new', initialData = null, onComplete }) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Nom complet</label>
-                                <input name="parentName" type="text" className="parent-input" placeholder="Ex: Jean Dupont" value={formData.parentName} onChange={handleInputChange} />
+                                <input name="parentName" type="text" className="parent-input" placeholder="Prénom Nom" value={formData.parentName} onChange={handleInputChange} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Téléphone</label>
-                                <input name="parentPhone" type="tel" className="parent-input" placeholder="Ex: +225 0102030405" value={formData.parentPhone} onChange={handleInputChange} />
+                                <input name="parentPhone" type="tel" className="parent-input" placeholder="+229 00000000" value={formData.parentPhone} onChange={handleInputChange} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Profession</label>
-                                <input name="parentProfession" type="text" className="parent-input" placeholder="Ex: Enseignant" value={formData.parentProfession} onChange={handleInputChange} />
+                                <input name="parentProfession" type="text" className="parent-input" placeholder="Ex: Profession" value={formData.parentProfession} onChange={handleInputChange} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Adresse</label>
-                                <input name="parentAddress" type="text" className="parent-input" placeholder="Ex: Abidjan, Cocody" value={formData.parentAddress} onChange={handleInputChange} />
+                                <input name="parentAddress" type="text" className="parent-input" placeholder="Adresse complète" value={formData.parentAddress} onChange={handleInputChange} />
                             </div>
                         </div>
                         <button onClick={() => setStep(2)} className="parent-btn-primary float-right mt-6">Suivant</button>
@@ -80,7 +80,7 @@ const Registration = ({ mode = 'new', initialData = null, onComplete }) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Nom de l'enfant</label>
-                                <input name="childName" type="text" className="parent-input" placeholder="Ex: Marc Dupont" value={formData.childName} onChange={handleInputChange} />
+                                <input name="childName" type="text" className="parent-input" placeholder="Prénom Nom de l'enfant" value={formData.childName} onChange={handleInputChange} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm text-white/60">Date de naissance</label>

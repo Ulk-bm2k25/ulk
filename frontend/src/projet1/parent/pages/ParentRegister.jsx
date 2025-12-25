@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import '../styles/theme.css';
 import smilingChildren from '../assets/smiling_children.png';
+import api from '../../../api';
 
 const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
     const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
         confirmPassword: ''
     });
 
+    const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -20,13 +22,28 @@ const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (formData.password !== formData.confirmPassword) {
             alert("Les mots de passe ne correspondent pas.");
             return;
         }
-        onRegister();
+
+        setIsLoading(true);
+        try {
+            // simulation d'appel API - À décommenter lors de l'intégration réelle
+            // const response = await api.post('/register', formData);
+            // onRegister(response.data.token);
+
+            // Simulation temporaire
+            setTimeout(() => {
+                setIsLoading(false);
+                onRegister("mock-token-parent-new");
+            }, 1000);
+        } catch (error) {
+            setIsLoading(false);
+            alert("Une erreur est survenue lors de l'inscription.");
+        }
     };
 
     return (
@@ -60,7 +77,7 @@ const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
                                 name="fullName"
                                 type="text"
                                 className="parent-input py-3"
-                                placeholder="Jean Dupont"
+                                placeholder="Prénom Nom"
                                 value={formData.fullName}
                                 onChange={handleChange}
                                 required
@@ -74,7 +91,7 @@ const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
                                     name="email"
                                     type="email"
                                     className="parent-input py-3"
-                                    placeholder="jean@email.com"
+                                    placeholder="nom@exemple.com"
                                     value={formData.email}
                                     onChange={handleChange}
                                     required
@@ -86,7 +103,7 @@ const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
                                     name="phone"
                                     type="tel"
                                     className="parent-input py-3"
-                                    placeholder="+225 0102030405"
+                                    placeholder="+229 00000000"
                                     value={formData.phone}
                                     onChange={handleChange}
                                     required
@@ -139,8 +156,19 @@ const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
                         </div>
 
                         <div className="pt-2">
-                            <button type="submit" className="parent-btn-primary w-full py-3.5 text-lg font-bold">
-                                S'enregistrer
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="parent-btn-primary w-full py-3.5 text-lg font-bold flex items-center justify-center gap-2"
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="animate-spin" size={24} />
+                                        <span>Création du compte...</span>
+                                    </>
+                                ) : (
+                                    "S'enregistrer"
+                                )}
                             </button>
                         </div>
                     </form>

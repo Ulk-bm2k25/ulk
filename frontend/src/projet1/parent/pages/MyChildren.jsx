@@ -3,28 +3,7 @@ import { User, GraduationCap, Calendar, ChevronRight, Download, FileText, UserPl
 import '../styles/theme.css';
 
 const MyChildren = ({ onNavigate }) => {
-    const children = [
-        {
-            id: 1,
-            name: 'Jean Dupont',
-            grade: '6ème A',
-            birthDate: '12/05/2012',
-            gender: 'Masculin',
-            avatar: 'https://i.pravatar.cc/150?u=jean',
-            registrationValidated: true,
-            cardDelivered: true
-        },
-        {
-            id: 2,
-            name: 'Marie Dupont',
-            grade: 'CM2',
-            birthDate: '08/11/2014',
-            gender: 'Féminin',
-            avatar: 'https://i.pravatar.cc/150?u=marie',
-            registrationValidated: false,
-            cardDelivered: false
-        },
-    ];
+    const children = [];
 
     const handleDownload = (type, childName, event) => {
         const docName = type === 'card' ? 'Carte Scolaire' : 'Fiche d\'inscription';

@@ -5,14 +5,14 @@ import '../styles/theme.css';
 const Dashboard = ({ children, onNavigate }) => {
     const stats = [
         { label: 'Enfants inscrits', value: children.length.toString(), icon: Users, color: 'text-blue-400', bg: 'bg-white/5' },
-        { label: 'Notifications', value: '3', icon: Bell, color: 'text-orange-400', bg: 'bg-white/5' },
-        { label: 'Paiements dus', value: '120,000 FCFA', icon: CreditCard, color: 'text-red-400', bg: 'bg-white/5' },
+        { label: 'Notifications', value: '0', icon: Bell, color: 'text-orange-400', bg: 'bg-white/5' },
+        { label: 'Paiements dus', value: '0 FCFA', icon: CreditCard, color: 'text-red-400', bg: 'bg-white/5' },
     ];
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 text-white">
             <header>
-                <h1 className="text-3xl font-black">Bonjour, M. Dupont</h1>
+                <h1 className="text-3xl font-black">Bonjour, Cher Parent</h1>
                 <p className="text-white/40 mt-1 font-medium">Voici un résumé de l'activité scolaire de vos enfants.</p>
             </header>
 
@@ -67,15 +67,8 @@ const Dashboard = ({ children, onNavigate }) => {
                         <button onClick={() => onNavigate('notifications')} className="text-sm text-[#eb8e3a] font-bold hover:underline">Tout marquer comme lu</button>
                     </div>
                     <div className="space-y-4 text-sm">
-                        <div className="p-5 rounded-2xl border-l-4 border-[#eb8e3a] bg-white/5">
-                            <p className="font-bold mb-1">Paiement de la 2ème tranche</p>
-                            <p className="text-white/60">Le délai pour le paiement de la 2ème tranche arrive à expiration le 30/12.</p>
-                            <p className="text-[11px] text-white/20 font-bold uppercase mt-3">Il y a 2 heures</p>
-                        </div>
-                        <div className="p-5 rounded-2xl border-l-4 border-blue-400 bg-white/5">
-                            <p className="font-bold mb-1">Note de Mathématiques disponible</p>
-                            <p className="text-white/60">Jean a reçu sa note pour l'évaluation de mi-trimestre.</p>
-                            <p className="text-[11px] text-white/20 font-bold uppercase mt-3">Hier à 14:30</p>
+                        <div className="p-8 text-center text-white/20 italic">
+                            Aucune notification récente.
                         </div>
                     </div>
                 </section>

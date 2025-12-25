@@ -18,27 +18,8 @@ const SendNotification = () => {
         }
     });
 
-    // Mock Data pour l'historique
-    const [sentNotifications, setSentNotifications] = useState([
-        {
-            id: 1,
-            date: '24 Déc 2025, 10:30',
-            target: '6ème',
-            subject: 'Réunion des parents',
-            message: 'Bonjour chers parents, une réunion est prévue ce vendredi à 16h...',
-            channels: ['email', 'whatsapp'],
-            status: 'sent'
-        },
-        {
-            id: 2,
-            date: '23 Déc 2025, 14:15',
-            target: 'Terminale D',
-            subject: 'Résultats compositions',
-            message: 'Les résultats du premier trimestre sont désormais disponibles sur le portail...',
-            channels: ['email'],
-            status: 'sent'
-        }
-    ]);
+    // Historique des notifications (Vague pour l'intégration Backend)
+    const [sentNotifications, setSentNotifications] = useState([]);
 
     const classes = [
         'Maternelle', 'CI', 'CP', 'CE1', 'CE2', 'CM1', 'CM2',

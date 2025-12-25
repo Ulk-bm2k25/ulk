@@ -7,65 +7,15 @@ import TrimesterSelector from '../components/TrimesterSelector';
 const Grades = ({ children, selectedChildId, setSelectedChildId }) => {
     const [selectedTrimesterId, setSelectedTrimesterId] = useState(1);
 
-    // Enhanced mock data to match the requirements from the image
-    const childrenGradesMap = {
-        1: {
-            name: 'Lucas Dupont',
-            moyenneGenerale: '14.43',
-            matièresCount: 6,
-            progression: 3,
-            trimesters: [
-                {
-                    id: 1,
-                    title: '1er Trimestre',
-                    isClosed: true,
-                    average: '14.43',
-                    subjects: [
-                        { name: 'Mathématiques', coef: 5, interros: ['16', '15', '14'], devoir: '17', composition: '17', moyenne: '16.2', trend: 'up' },
-                        { name: 'Physique-Chimie', coef: 4, interros: ['14', '15', '13'], devoir: '15', composition: '14', moyenne: '14.3', trend: 'neutral' },
-                        { name: 'SVT', coef: 3, interros: ['13', '14', '12'], devoir: '14', composition: '15', moyenne: '14.0', trend: 'up' },
-                        { name: 'Français', coef: 3, interros: ['12', '11', '13'], devoir: '11', composition: '13', moyenne: '12.0', trend: 'down' },
-                    ]
-                },
-                {
-                    id: 2,
-                    title: '2ème Trimestre',
-                    isClosed: false,
-                    average: '15.10',
-                    subjects: [
-                        { name: 'Mathématiques', coef: 5, interros: ['17', '18', '--'], devoir: '16', composition: '--', moyenne: '17.0', trend: 'up' },
-                        { name: 'Physique-Chimie', coef: 4, interros: ['15', '16', '--'], devoir: '14', composition: '--', moyenne: '15.2', trend: 'up' },
-                    ]
-                },
-                {
-                    id: 3,
-                    title: '3ème Trimestre',
-                    isClosed: false,
-                    average: '--',
-                    subjects: []
-                }
-            ]
-        },
-        2: {
-            name: 'Marie-Laure Dupont',
-            moyenneGenerale: '15.20',
-            matièresCount: 5,
-            progression: 2,
-            trimesters: [
-                {
-                    id: 1,
-                    title: '1er Trimestre',
-                    isClosed: true,
-                    average: '15.20',
-                    subjects: [
-                        { name: 'Mathématiques', coef: 5, interros: ['15', '14', '16'], devoir: '15', composition: '16', moyenne: '15.4', trend: 'neutral' },
-                    ]
-                }
-            ]
-        }
-    };
+    // Data map (Empty for Backend integration)
+    const childrenGradesMap = {};
 
-    const currentChild = childrenGradesMap[selectedChildId] || childrenGradesMap[1];
+    const currentChild = childrenGradesMap[selectedChildId] || {
+        name: 'Élève',
+        matièresCount: 0,
+        progression: 0,
+        trimesters: [{ id: 1, title: '1er Trimestre', average: '--', subjects: [] }]
+    };
     const currentTrimester = currentChild.trimesters.find(t => t.id === selectedTrimesterId) || currentChild.trimesters[0];
 
     const handleDownloadBulletin = () => {

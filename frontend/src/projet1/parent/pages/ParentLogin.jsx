@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
+import api from '../../../api';
 import '../styles/theme.css';
 import smilingChildren from '../assets/smiling_children.png';
 
@@ -9,9 +10,25 @@ const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
-    const handleSubmit = (e) => {
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onLogin();
+        setIsLoading(true);
+        try {
+            // Simulation d'appel API - À décommenter lors de l'intégration réelle
+            // const response = await api.post('/login', { email, password });
+            // onLogin(response.data.token);
+
+            // Pour l'instant, on simule une réussite avec un faux token
+            setTimeout(() => {
+                onLogin("mock-token-parent");
+                setIsLoading(false);
+            }, 1000);
+        } catch (error) {
+            setIsLoading(false);
+            alert("Erreur de connexion. Veuillez vérifier vos identifiants.");
+        }
     };
 
     return (
@@ -76,8 +93,19 @@ const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
                             <label htmlFor="remember" className="text-sm text-white/60">Se souvenir de moi</label>
                         </div>
 
-                        <button type="submit" className="parent-btn-primary w-full py-4 text-lg font-bold">
-                            Se connecter
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="parent-btn-primary w-full py-4 text-lg font-bold flex items-center justify-center gap-2"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="animate-spin" size={24} />
+                                    <span>Connexion...</span>
+                                </>
+                            ) : (
+                                "Se connecter"
+                            )}
                         </button>
                     </form>
 

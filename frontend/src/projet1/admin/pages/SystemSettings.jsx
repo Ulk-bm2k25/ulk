@@ -6,10 +6,10 @@ const SystemSettings = () => {
 
     const [settings, setSettings] = useState({
         // Général
-        schoolName: 'School-HUB Academy',
-        address: 'Cocody, Abidjan',
-        phone: '+225 27 22 00 00 00',
-        email: 'contact@schoolhub.ci',
+        schoolName: 'Nom de l\'établissement',
+        address: 'Adresse de l\'établissement',
+        phone: '+229 00 00 00 00',
+        email: 'administration@ecole.com',
         academicYear: '2025-2026',
 
         // Inscriptions
