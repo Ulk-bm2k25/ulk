@@ -138,7 +138,7 @@ const StudentCardPreview = ({ student, onClose }) => {
 
                   <div className="mt-auto space-y-3">
                      <div className="text-[8px] text-slate-400 leading-tight text-justify">
-                        Cette carte est la propriété de l'établissement ÉCOLE+. Elle doit être présentée à toute réquisition.
+                        Cette carte est la propriété de l'établissement SchoolHUb. Elle doit être présentée à toute réquisition.
                      </div>
                      
                      <div className="flex justify-between items-end border-t border-slate-100 pt-2">
