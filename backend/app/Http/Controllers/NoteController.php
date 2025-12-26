@@ -1,18 +1,58 @@
 <?php
-namespace App\Models;
+namespace App\Http\Controllers;
 
 use App\Models\Note;
 use App\Models\Eleve;
 use App\Models\Matiere;
 use App\Models\Semestre;
-use App\Models\Bulletin;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class NoteController extends Controller
 {
+    /**
+     * Generate and download a PDF bulletin for a specific student and semester.
+     */
+    public function downloadBulletin($eleveId, Request $request)
+    {
+        $semestreId = $request->query('semestre_id', 1);
+        $eleve = Eleve::with(['user', 'classe'])->findOrFail($eleveId);
+        $semestre = Semestre::findOrFail($semestreId);
+        
+        $notes = Note::with('matiere')
+            ->where('eleve_id', $eleveId)
+            ->where('semestre_id', $semestreId)
+            ->get();
+
+        if ($notes->isEmpty()) {
+            return response()->json(['error' => 'Aucune note disponible pour ce semestre.'], 404);
+        }
+
+        // Calculate weighted average
+        $totalPoints = 0;
+        $totalCoefficients = 0;
+        foreach ($notes as $note) {
+            $totalPoints += $note->note * $note->coefficient;
+            $totalCoefficients += $note->coefficient;
+        }
+        $average = $totalCoefficients > 0 ? $totalPoints / $totalCoefficients : 0;
+
+        $data = [
+            'eleve' => $eleve,
+            'semestre' => $semestre,
+            'notes' => $notes,
+            'average' => $average,
+            'total_points' => $totalPoints,
+            'total_coefficients' => $totalCoefficients,
+            'annee_scolaire' => date('Y') . '-' . (date('Y') + 1), // Simplified
+        ];
+
+        $pdf = Pdf::loadView('bulletin', $data);
+        
+        return $pdf->download("Bulletin_{$eleve->user->nom}_{$semestre->nom}.pdf");
+    }
     /**
      * Get all grades for a specific class and subject/semester.
      */
@@ -46,7 +86,9 @@ class NoteController extends Controller
             'grades.*.eleve_id' => 'required|exists:eleves,id',
             'grades.*.matiere_id' => 'required|exists:matieres,id',
             'grades.*.semestre_id' => 'required|exists:semestres,id',
-            'grades.*.valeur' => 'required|numeric|min:0|max:20',
+            'grades.*.note' => 'required|numeric|min:0|max:20',
+            'grades.*.coefficient' => 'nullable|integer|min:1',
+            'grades.*.appreciation' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -64,8 +106,9 @@ class NoteController extends Controller
                         'semestre_id' => $gradeData['semestre_id'],
                     ],
                     [
-                        'valeur' => $gradeData['valeur'],
-                        'date_note' => now(),
+                        'note' => $gradeData['note'],
+                        'coefficient' => $gradeData['coefficient'] ?? 1,
+                        'appreciation' => $gradeData['appreciation'] ?? null,
                     ]
                 );
             }
@@ -92,39 +135,44 @@ class NoteController extends Controller
     }
 
     /**
-     * Generate bulletins for a class.
+     * Generate bulletins for a class (simplified - just calculates averages).
      */
     public function generateBulletins(Request $request, $classId)
-    {
-        $anneeScolaire = $request->input('annee_scolaire', '2024-2025');
-        
-        $students = Eleve::where('classe_id', $classId)->get();
-        $bulletins = [];
+    {        
+        $students = Eleve::with('user')->where('classe_id', $classId)->get();
+        $semestreId = $request->input('semestre_id', 1);
+        $results = [];
 
         foreach ($students as $student) {
-            $average = Note::where('eleve_id', $student->id)
-                ->whereHas('semestre', function($q) use ($request) {
-                    if ($request->has('semestre_id')) {
-                        $q->where('id', $request->semestre_id);
-                    }
-                })
-                ->avg('valeur');
+            $notes = Note::where('eleve_id', $student->id)
+                ->where('semestre_id', $semestreId)
+                ->get();
 
-            $bulletin = Bulletin::updateOrCreate(
-                [
-                    'eleve_id' => $student->id,
-                    'annee_scolaire' => $anneeScolaire,
-                ],
-                [
-                    'moyenne' => $average,
-                ]
-            );
-            $bulletins[] = $bulletin;
+            if ($notes->count() > 0) {
+                // Calculate weighted average
+                $totalPoints = 0;
+                $totalCoef = 0;
+                foreach ($notes as $note) {
+                    $totalPoints += $note->note * $note->coefficient;
+                    $totalCoef += $note->coefficient;
+                }
+                $average = $totalCoef > 0 ? round($totalPoints / $totalCoef, 2) : 0;
+            } else {
+                $average = 0;
+            }
+
+            $results[] = [
+                'eleve_id' => $student->id,
+                'nom' => $student->user->nom ?? '',
+                'prenom' => $student->user->prenom ?? '',
+                'moyenne' => $average,
+                'notes_count' => $notes->count()
+            ];
         }
 
         return response()->json([
-            'message' => 'Bulletins générés avec succès',
-            'bulletins' => $bulletins
+            'message' => 'Moyennes calculées avec succès',
+            'results' => $results
         ]);
     }
 

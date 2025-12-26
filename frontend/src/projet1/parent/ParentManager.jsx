@@ -7,10 +7,9 @@ import Dashboard from './pages/Dashboard';
 import Registration from './pages/Registration';
 import Notifications from './pages/Notifications';
 import MyChildren from './pages/MyChildren';
-import Payments from './pages/Payments';
 import Grades from './pages/Grades';
 import Attendance from './pages/Attendance';
-import { Settings, ClipboardCheck, CreditCard, Bell } from 'lucide-react';
+import { Settings, Bell } from 'lucide-react';
 import SettingsPage from './pages/Settings';
 import './styles/theme.css';
 
@@ -39,8 +38,26 @@ const ParentManager = () => {
     const [currentPage, setCurrentPage] = useState('dashboard');
     const [registrationParams, setRegistrationParams] = useState({ mode: 'new', childData: null });
 
-    // Centralized children data (Empty for Backend integration)
-    const [children] = useState([]);
+    // Centralized children data
+    const [children, setChildren] = useState([]);
+
+    React.useEffect(() => {
+        if (isAuthenticated) {
+            const fetchChildren = async () => {
+                try {
+                    const response = await api.get('/parent/children');
+                    setChildren(response.data.children || []);
+                    // If no child selected and we have children, select the first one
+                    if (!selectedChildId && response.data.children?.length > 0) {
+                        setSelectedChildId(response.data.children[0].id);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch children in manager", error);
+                }
+            };
+            fetchChildren();
+        }
+    }, [isAuthenticated]);
 
     const [selectedChildId, setSelectedChildId] = useState(null);
 
@@ -81,8 +98,6 @@ const ParentManager = () => {
                 return <Dashboard {...commonProps} onNavigate={handleNavigate} />;
             case 'children':
                 return <MyChildren children={children} onNavigate={handleNavigate} />;
-            case 'payments':
-                return <Payments {...commonProps} />;
             case 'grades':
                 return <Grades {...commonProps} />;
             case 'attendance':

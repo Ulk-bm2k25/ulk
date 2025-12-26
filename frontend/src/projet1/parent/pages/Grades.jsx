@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Star, TrendingUp, BookOpen, AlertCircle, Download, FileText, Calendar, LayoutGrid, TrendingDown, Minus, Loader2 } from 'lucide-react';
-import api from '../../../api';
+import api from '@/api';
 
 import ChildSelector from '../components/ChildSelector';
 import TrimesterSelector from '../components/TrimesterSelector';
@@ -49,22 +49,48 @@ const Grades = ({ children, selectedChildId, setSelectedChildId }) => {
     const filteredGrades = studentGrades.filter(g => g.semestre_id === selectedTrimesterId);
     const currentTrimester = availableSemesters.find(s => s.id === selectedTrimesterId) || { nom: 'Trimestre' };
 
-    const subjectsUI = filteredGrades.map(g => ({
-        name: g.matiere?.nom || 'Matière',
-        coef: g.matiere?.coefficient || 1,
-        interros: ['--', '--', '--'],
-        devoir: '--',
-        composition: '--',
-        moyenne: g.valeur,
-        trend: 'up' // Manual for now
-    }));
+    const subjectsUI = filteredGrades.map(g => {
+        const note = parseFloat(g.note || 0);
+        let trend = 'minus';
+        if (note >= 12) trend = 'up';
+        else if (note < 10) trend = 'down';
+
+        return {
+            name: g.matiere?.nom || 'Matière',
+            coef: g.coefficient || g.matiere?.coefficient || 1,
+            interros: ['--', '--', '--'],
+            devoir: '--',
+            composition: '--',
+            moyenne: note,
+            trend: trend,
+            appreciation: g.appreciation
+        };
+    });
 
     const globalAverage = subjectsUI.length > 0
         ? (subjectsUI.reduce((acc, s) => acc + (parseFloat(s.moyenne) * s.coef), 0) / subjectsUI.reduce((acc, s) => acc + s.coef, 0)).toFixed(2)
         : '--';
 
-    const handleDownloadBulletin = () => {
-        alert(`Téléchargement du bulletin de ${currentChildData?.user?.nom} (${currentTrimester.nom}) en cours...`);
+    const handleDownloadBulletin = async () => {
+        if (!selectedChildId) return;
+
+        try {
+            const response = await api.get(`/parent/children/${selectedChildId}/bulletin`, {
+                responseType: 'blob',
+                params: { semestre_id: selectedTrimesterId }
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Bulletin_${currentChildData?.firstName || 'Eleve'}_${currentTrimester.nom}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            console.error("Bulletin download failed", error);
+            alert("Erreur lors du téléchargement du bulletin. Vérifiez que des notes sont disponibles.");
+        }
     };
 
     const getTrendIcon = (trend) => {

@@ -1,25 +1,46 @@
 import React, { useEffect, useState } from 'react';
 import { Bell, Mail, Info, AlertTriangle, CheckCircle, Smartphone, MessageSquare, Loader2 } from 'lucide-react';
-import api from '../../../api';
+import api from '@/api';
 import '../styles/theme.css';
 
 const Notifications = () => {
     const [notifications, setNotifications] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    const fetchNotifications = async () => {
+        try {
+            setIsLoading(true);
+            const response = await api.get('/parent/notifications');
+            setNotifications(response.data.notifications);
+            setIsLoading(false);
+        } catch (error) {
+            console.error("Failed to fetch notifications", error);
+            setIsLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchNotifications = async () => {
-            try {
-                const response = await api.get('/parent/notifications');
-                setNotifications(response.data.notifications);
-                setIsLoading(false);
-            } catch (error) {
-                console.error("Failed to fetch notifications", error);
-                setIsLoading(false);
-            }
-        };
         fetchNotifications();
     }, []);
+
+    const markAsRead = async (id) => {
+        try {
+            await api.patch(`/parent/notifications/${id}/read`);
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, lu: 1 } : n));
+        } catch (error) {
+            console.error("Failed to mark notification as read", error);
+        }
+    };
+
+    const markAllAsRead = async () => {
+        try {
+            await api.post('/parent/notifications/read-all');
+            setNotifications(prev => prev.map(n => ({ ...n, lu: 1 })));
+        } catch (error) {
+            console.error("Failed to mark all as read", error);
+        }
+    };
+
 
     const getIcon = (type) => {
         switch (type) {
@@ -57,9 +78,9 @@ const Notifications = () => {
                     <h1 className="text-3xl font-bold">Centre de Notifications</h1>
                     <p className="text-white/40 mt-1">Restez informé de tout ce qui concerne la scolarité de vos enfants.</p>
                 </div>
-                {notifications.length > 0 && (
+                {notifications.some(n => !n.lu) && (
                     <button
-                        onClick={() => alert("Toutes les notifications ont été marquées comme lues.")}
+                        onClick={markAllAsRead}
                         className="text-sm text-orange-400 font-semibold hover:underline"
                     >
                         Tout marquer comme lu
@@ -73,7 +94,11 @@ const Notifications = () => {
                         const Icon = getIcon(notif.type);
                         const colors = getColor(notif.type);
                         return (
-                            <div key={notif.id} className={`glass-card p-6 flex gap-6 hover:bg-white/5 transition-colors cursor-pointer border-l-4 ${notif.lu ? 'border-l-transparent' : 'border-l-orange-400'}`}>
+                            <div
+                                key={notif.id}
+                                onClick={() => !notif.lu && markAsRead(notif.id)}
+                                className={`glass-card p-6 flex gap-6 hover:bg-white/5 transition-colors cursor-pointer border-l-4 ${notif.lu ? 'border-l-transparent opacity-60' : 'border-l-orange-400 animate-pulse-subtle'}`}
+                            >
                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${colors}`}>
                                     <Icon size={24} />
                                 </div>

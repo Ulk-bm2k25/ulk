@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CreditCard, History, Wallet, Download, X, Smartphone, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import api from '../../../api';
+import api from '@/api';
 
 import ChildSelector from '../components/ChildSelector';
 
@@ -97,24 +97,38 @@ const Payments = ({ children, selectedChildId, setSelectedChildId }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white/5 rounded-3xl p-6 border border-white/5">
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="p-3 rounded-xl bg-green-500/10 text-green-500">
+                        <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500">
                             <Wallet size={24} />
                         </div>
-                        <span className="text-sm text-white/40 font-medium">Total Payé</span>
+                        <span className="text-sm text-white/40 font-medium">Total Dû</span>
                     </div>
                     <p className="text-2xl font-bold text-white">
-                        {isLoading ? '...' : `${Number(paymentData.summary.totalPaid).toLocaleString()} FCFA`}
+                        {isLoading ? '...' : `${Number(paymentData.summary.totalOwed).toLocaleString()} ${paymentData.summary.currency}`}
                     </p>
                 </div>
                 <div className="bg-white/5 rounded-3xl p-6 border border-white/5">
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="p-3 rounded-xl bg-orange-500/10 text-orange-500">
+                        <div className="p-3 rounded-xl bg-green-500/10 text-green-500">
                             <CreditCard size={24} />
+                        </div>
+                        <span className="text-sm text-white/40 font-medium">Total Payé</span>
+                    </div>
+                    <p className="text-2xl font-bold text-white">
+                        {isLoading ? '...' : `${Number(paymentData.summary.totalPaid).toLocaleString()} ${paymentData.summary.currency}`}
+                    </p>
+                </div>
+                <div className="bg-white/5 rounded-3xl p-6 border border-white/5 relative overflow-hidden">
+                    <div className={`absolute top-0 right-0 px-3 py-1 text-[10px] font-bold uppercase rounded-bl-xl ${paymentData.summary.status === 'soldé' ? 'bg-green-500 text-white' : 'bg-orange-500 text-white'}`}>
+                        {isLoading ? '...' : paymentData.summary.status}
+                    </div>
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 rounded-xl bg-orange-500/10 text-orange-500">
+                            <AlertCircle size={24} />
                         </div>
                         <span className="text-sm text-white/40 font-medium">Reste à payer</span>
                     </div>
                     <p className="text-2xl font-bold text-white">
-                        {isLoading ? '...' : `${Number(paymentData.summary.balance).toLocaleString()} FCFA`}
+                        {isLoading ? '...' : `${Number(paymentData.summary.balance).toLocaleString()} ${paymentData.summary.currency}`}
                     </p>
                 </div>
             </div>

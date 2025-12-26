@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft, Loader2, Check } from 'lucide-react';
-import api from '../../../api';
+import api from '@/api';
 
 const LoginPage = ({ onLogin }) => {
   const [email, setEmail] = useState('');

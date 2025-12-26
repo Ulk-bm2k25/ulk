@@ -5,6 +5,7 @@ import {
     Loader2, Filter, FileText, ArrowRight, AlertCircle, Eye,
     ClipboardCopy, CalendarCheck
 } from 'lucide-react';
+import api from '@/api';
 import GradeEntrySheet from './GradeEntrySheet';
 import AttendanceRegister from './AttendanceRegister';
 
@@ -15,6 +16,26 @@ const ClassDetail = ({ classData, onBack, onEdit }) => {
     const [openMenuId, setOpenMenuId] = useState(null);
     const [isGradeEntryOpen, setIsGradeEntryOpen] = useState(false);
     const [isAttendanceOpen, setIsAttendanceOpen] = useState(false);
+    const [matieres, setMatieres] = useState([]);
+    const [semestres, setSemestres] = useState([]);
+    const [selectedSemestre, setSelectedSemestre] = useState(1);
+
+    // Fetch matieres and semestres on mount
+    useEffect(() => {
+        const fetchGradesData = async () => {
+            try {
+                const [matieresRes, semestresRes] = await Promise.all([
+                    api.get('/admin/matieres'),
+                    api.get('/admin/semestres')
+                ]);
+                setMatieres(matieresRes.data);
+                setSemestres(semestresRes.data);
+            } catch (error) {
+                console.error('Error fetching grades data:', error);
+            }
+        };
+        fetchGradesData();
+    }, []);
 
     // Suppression chargement simulé
     useEffect(() => {
@@ -229,13 +250,16 @@ const ClassDetail = ({ classData, onBack, onEdit }) => {
                                     btn.innerHTML = `<span class="animate-spin mr-2">⏳</span>Génération...`;
                                     btn.disabled = true;
                                     try {
-                                        await api.post(`/admin/bulletins/generate/${classData.id}`, { annee_scolaire: '2024-2025' });
-                                        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-check"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/></svg> Bulletins Générés`;
+                                        const response = await api.post(`/admin/bulletins/generate/${classData.id}`, {
+                                            semestre_id: selectedSemestre
+                                        });
+                                        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-check"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/></svg> Moyennes Calculées`;
                                         btn.className = "px-4 py-2 bg-green-600 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2";
-                                        alert(`Félicitations ! Les bulletins de la classe ${classData.nom} ont été générés.`);
+                                        console.log('Bulletin results:', response.data);
+                                        alert(`Moyennes calculées pour ${response.data.results?.length || 0} élèves !`);
                                     } catch (err) {
                                         console.error(err);
-                                        alert("Erreur lors de la génération des bulletins.");
+                                        alert("Erreur lors du calcul des moyennes.");
                                         btn.innerHTML = originalContent;
                                         btn.disabled = false;
                                     }
@@ -243,7 +267,7 @@ const ClassDetail = ({ classData, onBack, onEdit }) => {
                                 className="px-4 py-2 bg-brand-primary text-white rounded-lg text-xs font-bold hover:bg-orange-600 transition-colors flex items-center gap-2 shadow-lg shadow-orange-500/20"
                             >
                                 <FileText size={14} />
-                                Générer les Bulletins
+                                Calculer Moyennes
                             </button>
                         </div>
                     )}
@@ -396,7 +420,8 @@ const ClassDetail = ({ classData, onBack, onEdit }) => {
             <GradeEntrySheet
                 isOpen={isGradeEntryOpen}
                 onClose={() => setIsGradeEntryOpen(false)}
-                className={classData.name}
+                className={classData.nom}
+                classId={classData.id}
                 students={realStudents}
             />
             {/* Modal de Présence (L'Appel) */}

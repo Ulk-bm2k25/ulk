@@ -7,7 +7,7 @@ class Attendance extends Model
 {
     protected $table = 'presence';
 
-    protected $fillable = ['classe_id', 'eleve_id', 'date', 'heure', 'present', 'justified', 'reason'];
+    protected $fillable = ['classe_id', 'cours_id', 'eleve_id', 'date', 'heure', 'present', 'status', 'justified', 'reason'];
 
     public function eleve()
     {

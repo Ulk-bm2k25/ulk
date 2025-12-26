@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Users, Bell, CreditCard, ChevronRight, Loader2 } from 'lucide-react';
-import api from '../../../api';
+import { Users, Bell, ChevronRight, Loader2 } from 'lucide-react';
+import api from '@/api';
 import '../styles/theme.css';
 
-const Dashboard = ({ onNavigate }) => {
+const Dashboard = ({ onNavigate, children: propsChildren = [] }) => {
     const [stats, setStats] = useState([]);
-    const [children, setChildren] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [parentName, setParentName] = useState('Cher Parent');
 
@@ -16,18 +15,13 @@ const Dashboard = ({ onNavigate }) => {
                 const user = JSON.parse(localStorage.getItem('user'));
                 if (user) setParentName(`${user.prenom} ${user.nom}`);
 
-                const [dashboardRes, childrenRes] = await Promise.all([
-                    api.get('/parent/dashboard'),
-                    api.get('/parent/children')
-                ]);
+                const dashboardRes = await api.get('/parent/dashboard');
 
                 setStats([
                     { label: 'Enfants inscrits', value: dashboardRes.data.summary.children_count.toString(), icon: Users, color: 'text-blue-400', bg: 'bg-white/5' },
                     { label: 'Notifications', value: dashboardRes.data.summary.notifications.toString(), icon: Bell, color: 'text-orange-400', bg: 'bg-white/5' },
-                    { label: 'Paiements dus', value: `${dashboardRes.data.summary.payments_due} FCFA`, icon: CreditCard, color: 'text-red-400', bg: 'bg-white/5' },
                 ]);
 
-                setChildren(childrenRes.data.children || []);
                 setIsLoading(false);
             } catch (error) {
                 console.error("Failed to fetch dashboard data", error);
@@ -37,6 +31,8 @@ const Dashboard = ({ onNavigate }) => {
 
         fetchDashboardData();
     }, []);
+
+    const children = propsChildren;
 
     if (isLoading) {
         return (

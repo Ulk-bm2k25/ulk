@@ -15,7 +15,7 @@ import AffectationsManager from './pages/classes/AffectationsManager';
 import SendNotification from './pages/SendNotification';
 import SystemSettings from './pages/SystemSettings';
 import DocumentsHistory from './pages/documents/DocumentsHistory';
-import api from '../../api';
+import api from '@/api';
 import { FileText, Users, School, FileCheck, Bell, Settings } from 'lucide-react';
 
 const AdminManager = () => {
@@ -72,15 +72,16 @@ const AdminManager = () => {
           prenom: t.user?.prenom || t.prenom || '',
           fullName: `${t.user?.nom || t.nom || ''} ${t.user?.prenom || t.prenom || ''}`
         })));
-        setStudentsData((studResponse.data.students || []).map(s => ({
+        const studentList = studResponse.data.data || studResponse.data.students || [];
+        setStudentsData(studentList.map(s => ({
           ...s,
           lastName: s.user?.nom || '',
           firstName: s.user?.prenom || '',
           class: s.classe?.nom || 'N/A',
           gender: s.sexe || '?',
-          parent: s.parent_nom || 'Parent',
-          phone: s.parent_phone || 'N/A',
-          status: 'active' // Default for now
+          parent: s.tuteurs && s.tuteurs.length > 0 ? `${s.tuteurs[0].user?.nom} ${s.tuteurs[0].user?.prenom}` : 'N/A',
+          phone: s.tuteurs && s.tuteurs.length > 0 ? s.tuteurs[0].telephone : 'N/A',
+          status: 'active'
         })));
         setDashboardStats(statsResponse.data);
         setIsLoading(false);
@@ -211,20 +212,71 @@ const AdminManager = () => {
       setClassesData(prev => prev.filter(c => c.id !== id));
       alert("Classe supprimée.");
     } catch (error) {
-      alert("Erreur lors de la suppression");
+      const message = error.response?.data?.error || "Erreur lors de la suppression";
+      alert(message);
     }
   };
 
   // --- LOGIQUE ÉLÈVES (CRUD) ---
-  const handleSaveStudent = (studentForm) => {
-    if (editingStudent) {
-      setStudentsData(prev => prev.map(s => s.id === editingStudent.id ? studentForm : s));
-      alert(`Dossier de ${studentForm.firstName} mis à jour !`);
-    } else {
-      setStudentsData(prev => [studentForm, ...prev]);
-      alert(`Nouvel élève inscrit : ${studentForm.firstName} ${studentForm.lastName}`);
+  const handleSaveStudent = async (studentForm) => {
+    try {
+      if (editingStudent) {
+        // Map frontend fields to backend fields
+        const payload = {
+          nom: studentForm.lastName,
+          prenom: studentForm.firstName,
+          sexe: studentForm.gender,
+          date_naissance: studentForm.birthDate,
+          lieu_naissance: studentForm.pob,
+          adresse: studentForm.address
+        };
+
+        const response = await api.put(`/admin/students/${editingStudent.id}`, payload);
+
+        setStudentsData(prev => prev.map(s => s.id === editingStudent.id ? {
+          ...s,
+          ...studentForm,
+          // Update mapping fields used for display
+          lastName: studentForm.lastName,
+          firstName: studentForm.firstName,
+          class: studentForm.class,
+          gender: studentForm.gender
+        } : s));
+
+        alert(`Dossier de ${studentForm.firstName} mis à jour avec succès !`);
+      } else {
+        // Mode création (Admission Manuelle) 
+        // Note: L'admission manuelle pourrait nécessiter un endpoint spécifique plus complexe
+        // Pour l'instant on garde la simulation ou on pourrait appeler un futur endpoint /admin/students (POST)
+        alert("La création manuelle d'élève sera bientôt disponible. Pour le moment, utilisez le portail parent pour les inscriptions.");
+      }
+      setIsStudentModalOpen(false);
+    } catch (error) {
+      console.error("Failed to save student", error);
+      alert("Erreur lors de l'enregistrement des modifications.");
     }
-    setIsStudentModalOpen(false);
+  };
+
+  const handleTransferStudent = async (studentId, newClassId) => {
+    try {
+      const response = await api.post(`/admin/students/${studentId}/transfer`, { classe_id: newClassId });
+
+      // Update local state for STUDENTS list
+      setStudentsData(prev => prev.map(s =>
+        s.id === studentId ? { ...s, class: response.data.transfer_details.to, classe_id: newClassId } : s
+      ));
+
+      // Refresh classes data to reflect changes in Class Manager
+      const classResponse = await api.get('/classes');
+      setClassesData(classResponse.data);
+
+      alert("Transfert effectué avec succès !");
+      return true;
+    } catch (error) {
+      console.error("Transfer failed", error);
+      alert("Erreur lors du transfert.");
+      return false;
+    }
   };
 
   const renderPage = () => {
@@ -262,10 +314,11 @@ const AdminManager = () => {
         }
         return (
           <StudentsList
-            students={studentsData} // On passe le state centralisé
+            students={studentsData}
+            availableClasses={classesData}
             onViewProfile={(student) => setSelectedStudent(student)}
             onNavigate={handleNavigate}
-            // On passe les handlers pour le modal
+            onTransfer={handleTransferStudent}
             onAddStudent={() => {
               setEditingStudent(null);
               setIsStudentModalOpen(true);

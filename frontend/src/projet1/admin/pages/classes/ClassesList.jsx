@@ -6,7 +6,7 @@ import {
 import ClassCard from './components/ClassCard';
 import ClassFormModal from './ClassFormModal';
 
-const ClassesList = ({ onViewDetails, onManageAffectations, onAddClass, classes }) => {
+const ClassesList = ({ onViewDetails, onManageAffectations, onAddClass, onEditClass, onDeleteClass, classes }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
@@ -109,6 +109,8 @@ const ClassesList = ({ onViewDetails, onManageAffectations, onAddClass, classes 
             key={cls.id}
             data={cls}
             onClick={() => onViewDetails && onViewDetails(cls)}
+            onEdit={() => onEditClass && onEditClass(cls)}
+            onDelete={() => onDeleteClass && onDeleteClass(cls.id)}
           />
         ))}
       </div>

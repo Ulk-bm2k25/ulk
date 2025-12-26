@@ -10,9 +10,27 @@ class Eleve extends Model
         'user_id',
         'classe_id',
         'serie_id',
+        'matricule',
+        'photo',
         'sexe',
         'age',
+        'date_naissance',
+        'lieu_naissance',
+        'adresse',
     ];
+
+    public static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($eleve) {
+            if (!$eleve->matricule) {
+                $year = date('Y');
+                $count = self::whereYear('created_at', $year)->count() + 1;
+                $eleve->matricule = 'SH-' . $year . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+            }
+        });
+    }
 
     public function user()
     {

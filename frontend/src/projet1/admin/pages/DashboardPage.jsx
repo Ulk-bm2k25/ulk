@@ -209,7 +209,6 @@ const DashboardPage = ({ onNavigate, inscriptions = [], stats }) => {
                 <th className="px-6 py-3">Élève</th>
                 <th className="px-6 py-3">Statut</th>
                 <th className="px-6 py-3 text-center">Dossier Complet</th>
-                <th className="px-6 py-3 text-center">Frais Payés</th>
                 <th className="px-6 py-3">Remarques</th>
               </tr>
             </thead>
@@ -232,11 +231,6 @@ const DashboardPage = ({ onNavigate, inscriptions = [], stats }) => {
                       }`}>
                       {row.statut === 'inscrit' ? 'Validé' : 'En attente'}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <div className={`inline-flex items-center justify-center w-6 h-6 rounded bg-orange-100 text-orange-600`}>
-                      <CheckCircle size={14} />
-                    </div>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className={`inline-flex items-center justify-center w-6 h-6 rounded bg-orange-100 text-orange-600`}>

@@ -1,27 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     IdCard, Search, Download, Printer, Filter,
     User, CheckCircle, Smartphone, MapPin, Calendar,
     CreditCard, ExternalLink, Loader2
 } from 'lucide-react';
+import api from '@/api';
 
-const StudentCardsPage = ({ students = [] }) => {
+const StudentCardsPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedLevel, setSelectedLevel] = useState('all');
     const [generatingId, setGeneratingId] = useState(null);
+    const [students, setStudents] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const handleGenerate = (id) => {
-        setGeneratingId(id);
-        setTimeout(() => {
+    useEffect(() => {
+        const fetchStudents = async () => {
+            try {
+                setIsLoading(true);
+                const response = await api.get('/admin/students');
+                setStudents(response.data.data || response.data);
+                setIsLoading(false);
+            } catch (error) {
+                console.error("Failed to fetch students", error);
+                setIsLoading(false);
+            }
+        };
+        fetchStudents();
+    }, []);
+
+    const handleGenerate = async (id, matricule) => {
+        try {
+            setGeneratingId(id);
+            const response = await api.get(`/eleves/${id}/carte`, { responseType: 'blob' });
+
+            // Download the file
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Carte_${matricule}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
             setGeneratingId(null);
-            alert("Carte scolaire générée avec succès !");
-        }, 1500);
+        } catch (error) {
+            console.error("Failed to generate ID card", error);
+            setGeneratingId(null);
+            alert("Erreur lors de la génération de la carte.");
+        }
     };
 
     const filteredStudents = students.filter(s => {
-        const fullName = (s.firstName + ' ' + s.lastName).toLowerCase();
-        const matchesSearch = fullName.includes(searchTerm.toLowerCase()) || s.id.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesLevel = selectedLevel === 'all' || s.level === selectedLevel;
+        const fullName = (s.user?.nom + ' ' + s.user?.prenom).toLowerCase();
+        const matchesSearch = fullName.includes(searchTerm.toLowerCase()) || (s.matricule && s.matricule.toLowerCase().includes(searchTerm.toLowerCase()));
+        const matchesLevel = selectedLevel === 'all' || s.classe?.niveau_scolaire?.nom === selectedLevel;
         return matchesSearch && matchesLevel;
     });
 
@@ -94,17 +126,17 @@ const StudentCardsPage = ({ students = [] }) => {
                                 <div className="space-y-2 flex-1 min-w-0">
                                     <div>
                                         <div className="text-[8px] uppercase tracking-widest text-brand-primary font-bold">Nom & Prénoms</div>
-                                        <div className="text-sm font-bold truncate leading-tight uppercase">{student.lastName}</div>
-                                        <div className="text-xs font-semibold truncate leading-tight text-white/90 uppercase">{student.firstName}</div>
+                                        <div className="text-sm font-bold truncate leading-tight uppercase">{student.user?.nom}</div>
+                                        <div className="text-xs font-semibold truncate leading-tight text-white/90 uppercase">{student.user?.prenom}</div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">
                                         <div>
                                             <div className="text-[7px] uppercase text-white/50">Classe</div>
-                                            <div className="text-xs font-bold">{student.class}</div>
+                                            <div className="text-xs font-bold">{student.classe?.nom}</div>
                                         </div>
                                         <div>
                                             <div className="text-[7px] uppercase text-white/50">Matricule</div>
-                                            <div className="text-xs font-bold">{student.id}</div>
+                                            <div className="text-[9px] font-bold">{student.matricule}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -125,17 +157,17 @@ const StudentCardsPage = ({ students = [] }) => {
                             <div className="space-y-4">
                                 <div>
                                     <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                                        {student.lastName} {student.firstName}
+                                        {student.user?.nom} {student.user?.prenom}
                                         <div className="p-1 bg-green-100 text-green-600 rounded-full">
                                             <CheckCircle size={14} />
                                         </div>
                                     </h3>
                                     <div className="flex flex-wrap gap-2 mt-2">
                                         <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
-                                            <Calendar size={10} /> Né le {student.birthDate}
+                                            <Calendar size={10} /> {student.matricule}
                                         </span>
                                         <span className="px-2 py-0.5 bg-blue-50 rounded text-[10px] font-bold text-blue-600 uppercase flex items-center gap-1">
-                                            <MapPin size={10} /> {student.level}
+                                            <MapPin size={10} /> {student.classe?.nom}
                                         </span>
                                     </div>
                                 </div>
@@ -154,7 +186,7 @@ const StudentCardsPage = ({ students = [] }) => {
 
                             <div className="flex gap-2 mt-4 md:mt-0">
                                 <button
-                                    onClick={() => handleGenerate(student.id)}
+                                    onClick={() => handleGenerate(student.id, student.matricule)}
                                     disabled={generatingId === student.id}
                                     className="flex-1 h-10 bg-brand-primary text-white text-xs font-bold rounded-lg hover:bg-orange-600 transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
                                 >

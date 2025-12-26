@@ -1,25 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { School, Calendar, Bell, Save, Shield, Mail, Database, Clock, Users, FileText } from 'lucide-react';
+import api from '@/api';
 
 const SystemSettings = () => {
     const [activeTab, setActiveTab] = useState('general');
+    const [isLoadingData, setIsLoadingData] = useState(true);
 
     const [settings, setSettings] = useState({
         // Général
-        schoolName: 'Nom de l\'établissement',
-        address: 'Adresse de l\'établissement',
-        phone: '+229 00 00 00 00',
-        email: 'administration@ecole.com',
+        schoolName: '',
+        address: '',
+        phone: '',
+        email: '',
         academicYear: '2025-2026',
 
         // Inscriptions
-        registrationOpen: true,
+        registrationOpen: false,
         allowLateRegistration: false,
         autoValidation: false,
 
         // Notifications
-        notifyParentsOnAbsence: true,
-        notifyParentsOnGrade: true,
+        notifyParentsOnAbsence: false,
+        notifyParentsOnGrade: false,
         reminderDaysBeforePayment: 7,
 
         // Système
@@ -27,6 +29,34 @@ const SystemSettings = () => {
         backupFrequency: 'daily',
         dataRetentionYears: 5
     });
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                setIsLoadingData(true);
+                const response = await api.get('/admin/settings');
+                if (response.data && Object.keys(response.data).length > 0) {
+                    // Merge fetched settings with defaults to avoid missing keys
+                    const merged = { ...settings };
+                    Object.keys(response.data).forEach(key => {
+                        let value = response.data[key];
+                        // Convert string booleans back to boolean
+                        if (value === 'true') value = true;
+                        if (value === 'false') value = false;
+                        merged[key] = value;
+                    });
+                    setSettings(merged);
+                }
+                setIsLoadingData(false);
+            } catch (error) {
+                console.error("Failed to fetch settings", error);
+                setIsLoadingData(false);
+            }
+        };
+
+        fetchSettings();
+    }, []);
+
 
     const handleToggle = (key) => {
         setSettings(prev => ({ ...prev, [key]: !prev[key] }));
@@ -37,13 +67,15 @@ const SystemSettings = () => {
         setSettings(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const btn = document.getElementById('save-btn');
         const originalText = btn.innerHTML;
         btn.innerHTML = `<span class="flex items-center gap-2"><div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Sauvegarde...</span>`;
         btn.disabled = true;
 
-        setTimeout(() => {
+        try {
+            await api.post('/admin/settings', { settings });
+
             btn.innerHTML = `<span class="flex items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg> Sauvegardé !</span>`;
             btn.classList.add('bg-green-600', 'border-green-600');
             btn.classList.remove('bg-brand-primary', 'border-brand-primary');
@@ -52,10 +84,20 @@ const SystemSettings = () => {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
                 btn.classList.remove('bg-green-600', 'border-green-600');
-                // Re-add original classes if they were removed or just let them be if they are default
+                btn.classList.add('bg-brand-primary', 'border-brand-primary');
             }, 2000);
-        }, 800);
+        } catch (error) {
+            console.error("Failed to save settings", error);
+            btn.innerHTML = `<span class="flex items-center gap-2">Erreur !</span>`;
+            btn.classList.add('bg-red-600', 'border-red-600');
+            btn.disabled = false;
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('bg-red-600', 'border-red-600');
+            }, 3000);
+        }
     };
+
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">

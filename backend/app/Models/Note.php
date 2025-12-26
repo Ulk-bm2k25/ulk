@@ -5,7 +5,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Note extends Model
 {
-    protected $fillable = ['eleve_id', 'matiere_id', 'semestre_id', 'valeur', 'date_note'];
+    protected $fillable = ['eleve_id', 'matiere_id', 'semestre_id', 'note', 'coefficient', 'appreciation'];
+
+    protected $casts = [
+        'note' => 'decimal:2',
+        'coefficient' => 'integer'
+    ];
 
     public function eleve()
     {

@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\Class;
+
 use App\Models\NiveauScolaire;
 use App\Models\Matiere;
 use App\Models\Affectation;
@@ -15,7 +15,7 @@ class ClassController extends Controller
 {
     public function index()
     {
-        return response()->json(Classe::with('niveauScolaire')->get());
+        return response()->json(Classe::with(['niveauScolaire', 'eleves.user'])->get());
     }
 
     public function store(Request $request)
@@ -36,7 +36,7 @@ class ClassController extends Controller
 
     public function show($id)
     {
-        $class = Classe::with('niveauScolaire', 'eleves', 'matieres', 'enseignants')->findOrFail($id);
+        $class = Classe::with('niveauScolaire', 'eleves.user', 'matieres', 'enseignants')->findOrFail($id);
         return response()->json($class);
     }
 
@@ -49,7 +49,11 @@ class ClassController extends Controller
 
     public function destroy($id)
     {
-        Classe::findOrFail($id)->delete();
+        $class = Classe::findOrFail($id);
+        if ($class->eleves()->count() > 0) {
+            return response()->json(['error' => 'Impossible de supprimer une classe contenant des élèves.'], 400);
+        }
+        $class->delete();
         return response()->json(['message' => 'Classe supprimée']);
     }
 
@@ -68,11 +72,9 @@ class ClassController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        Affectation::create([
-            'class_id' => $classId,
-            'eleve_id' => $request->eleve_id,
-            'type' => 'eleve',
-        ]);
+        $eleve = Eleve::findOrFail($request->eleve_id);
+        $eleve->classe_id = $classId;
+        $eleve->save();
 
         $class->incrementStudents();
         return response()->json(['message' => 'Élève affecté']);
@@ -80,8 +82,9 @@ class ClassController extends Controller
 
     public function unassignEleve($classId, $eleveId)
     {
-        $affectation = Affectation::where('class_id', $classId)->where('eleve_id', $eleveId)->firstOrFail();
-        $affectation->delete();
+        $eleve = Eleve::where('id', $eleveId)->where('classe_id', $classId)->firstOrFail();
+        $eleve->classe_id = null;
+        $eleve->save();
 
         $class = Classe::findOrFail($classId);
         $class->decrementStudents();

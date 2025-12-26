@@ -56,7 +56,7 @@ class InscriptionController extends Controller
                 if ($tuteur->user_id) {
                     DB::table('notifications')->insert([
                         'type' => $request->statut === 'inscrit' ? 'success' : 'alert',
-                        'message' => "L'inscription de " . $eleve->prenom . " " . $eleve->nom . " a été " . ($request->statut === 'inscrit' ? 'validée' : 'rejetée') . ".",
+                        'message' => "L'inscription de " . ($eleve->user->prenom ?? '') . " " . ($eleve->user->nom ?? '') . " a été " . ($request->statut === 'inscrit' ? 'validée' : 'rejetée') . ".",
                         'destinataire_id' => $tuteur->user_id,
                         'lu' => false,
                         'created_at' => now(),

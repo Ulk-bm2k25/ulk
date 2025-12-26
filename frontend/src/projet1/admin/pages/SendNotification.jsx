@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Send, Mail, MessageSquare, Users, User, CheckCircle, AlertCircle, Search, School, Eye, Clock, Trash2, Smartphone } from 'lucide-react';
-import api from '../../../api';
+import api from '@/api';
 
 const SendNotification = ({ classes = [], students = [] }) => {
     const [step, setStep] = useState(1);
@@ -19,11 +19,49 @@ const SendNotification = ({ classes = [], students = [] }) => {
         }
     });
 
-    // Historique des notifications (Vague pour l'intégration Backend)
+    // Historique des notifications
     const [sentNotifications, setSentNotifications] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // List of classes from props
-    const classesList = classes.length > 0 ? classes.map(c => c.nom) : [
+    // List of classes and students for selection
+    const [availableClasses, setAvailableClasses] = useState([]);
+    const [availableStudents, setAvailableStudents] = useState([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setIsLoading(true);
+                const [histRes, classesRes, studentsRes] = await Promise.all([
+                    api.get('/admin/notifications/history'),
+                    api.get('/classes'),
+                    api.get('/admin/students')
+                ]);
+
+                // Format history for display
+                const history = histRes.data.map(n => ({
+                    id: n.id,
+                    date: new Date(n.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                    target: n.recipient ? (n.recipient.nom + ' ' + n.recipient.prenom) : 'Inconnu',
+                    subject: n.message.split(': ')[0] || 'Note',
+                    message: n.message.split(': ').slice(1).join(': ') || n.message,
+                    channels: ['email'],
+                    status: 'sent'
+                }));
+
+                setSentNotifications(history);
+                setAvailableClasses(classesRes.data);
+                setAvailableStudents(studentsRes.data.data || studentsRes.data);
+                setIsLoading(false);
+            } catch (error) {
+                console.error("Failed to fetch notification data", error);
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    const classesList = availableClasses.length > 0 ? availableClasses.map(c => c.nom) : [
         'Maternelle', 'CI', 'CP', 'CE1', 'CE2', 'CM1', 'CM2',
         '6ème', '5ème', '4ème', '3ème',
         '2nde A', '2nde B', '2nde C', '2nde D', 'Terminale D'
@@ -186,14 +224,14 @@ const SendNotification = ({ classes = [], students = [] }) => {
                                     <input
                                         type="text"
                                         placeholder="Commencez à taper le nom de l'élève..."
-                                        value={formData.targetId}
+                                        value={formData.targetId && !availableStudents.some(s => s.user_id === formData.targetId) ? formData.targetId : (availableStudents.find(s => s.user_id === formData.targetId)?.user?.nom + ' ' + availableStudents.find(s => s.user_id === formData.targetId)?.user?.prenom || '')}
                                         onChange={(e) => setFormData({ ...formData, targetId: e.target.value })}
                                         className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-primary/20 font-medium transition-all text-slate-800 placeholder:text-slate-400"
                                     />
                                 </div>
-                                {formData.targetId.length > 1 && (
+                                {formData.targetId && !availableStudents.find(s => s.user_id === formData.targetId) && (
                                     <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg p-2 flex flex-col gap-1 overflow-hidden animate-in fade-in duration-200">
-                                        {students
+                                        {availableStudents
                                             .filter(s => (s.user?.nom + " " + s.user?.prenom).toLowerCase().includes(formData.targetId.toLowerCase()))
                                             .slice(0, 5)
                                             .map(s => (
@@ -207,11 +245,12 @@ const SendNotification = ({ classes = [], students = [] }) => {
                                                 </button>
                                             ))
                                         }
-                                        {students.filter(s => (s.user?.nom + " " + s.user?.prenom).toLowerCase().includes(formData.targetId.toLowerCase())).length === 0 && (
+                                        {availableStudents.filter(s => (s.user?.nom + " " + s.user?.prenom).toLowerCase().includes(formData.targetId.toLowerCase())).length === 0 && (
                                             <div className="p-2 text-xs text-slate-400">Aucun élève trouvé</div>
                                         )}
                                     </div>
                                 )}
+
                             </div>
                         )}
                     </div>

@@ -18,7 +18,7 @@ class Classe extends Model
 
     public function eleves()
     {
-        return $this->belongsToMany(Eleve::class, 'affectations');
+        return $this->hasMany(Eleve::class);
     }
 
     public function matieres()

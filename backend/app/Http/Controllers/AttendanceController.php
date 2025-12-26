@@ -19,7 +19,9 @@ class AttendanceController extends Controller
             'date' => 'required|date',
             'attendance' => 'required|array',
             'attendance.*.eleve_id' => 'required|exists:eleves,id',
-            'attendance.*.present' => 'required|boolean',
+            'attendance.*.status' => 'required|string|in:present,absent,late',
+            'attendance.*.reason' => 'nullable|string',
+            'attendance.*.justified' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -30,6 +32,9 @@ class AttendanceController extends Controller
             DB::beginTransaction();
 
             foreach ($request->attendance as $att) {
+                // Determine 'present' boolean for backward compatibility or simple logic
+                $isPresent = ($att['status'] === 'present' || $att['status'] === 'late');
+
                 Attendance::updateOrCreate(
                     [
                         'classe_id' => $request->classe_id,
@@ -38,7 +43,10 @@ class AttendanceController extends Controller
                         'heure' => $request->input('heure', '08:00'),
                     ],
                     [
-                        'present' => $att['present'],
+                        'present' => $isPresent,
+                        'status' => $att['status'],
+                        'reason' => $att['reason'] ?? null,
+                        'justified' => $att['justified'] ?? false,
                     ]
                 );
             }

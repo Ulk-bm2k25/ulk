@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
-import api from '../../../api';
+import api from '@/api';
 import '../styles/theme.css';
 import smilingChildren from '../assets/smiling_children.png';
 

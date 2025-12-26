@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import '../styles/theme.css';
 import smilingChildren from '../assets/smiling_children.png';
-import api from '../../../api';
+import api from '@/api';
 
 const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
     const [formData, setFormData] = useState({

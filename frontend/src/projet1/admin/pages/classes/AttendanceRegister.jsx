@@ -3,7 +3,7 @@ import {
     CalendarCheck, Search, Users, CheckCircle2,
     XCircle, AlertTriangle, Save, Filter, Clock
 } from 'lucide-react';
-import api from '../../../../api';
+import api from '@/api';
 
 const AttendanceRegister = ({ className, students = [], onClose }) => {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -49,12 +49,13 @@ const AttendanceRegister = ({ className, students = [], onClose }) => {
         try {
             const bulkAttendance = Object.keys(attendance).map(studentId => ({
                 eleve_id: studentId,
-                present: attendance[studentId].status === 'present' || attendance[studentId].status === 'late',
-                // I'm skipping 'status' for now as the backend expects boolean 'present'
+                status: attendance[studentId].status,
+                reason: attendance[studentId].reason || null,
+                justified: false, // Default for now
             }));
 
             await api.post('/admin/attendance/bulk', {
-                classe_id: students[0]?.classe_id || 1, // Fallback or pass as prop
+                classe_id: students[0]?.classe_id || students[0]?.classe?.id || 1,
                 date: selectedDate,
                 attendance: bulkAttendance
             });
@@ -69,10 +70,11 @@ const AttendanceRegister = ({ className, students = [], onClose }) => {
         }
     };
 
-    const filteredStudents = students.filter(s =>
-        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredStudents = students.filter(s => {
+        const fullName = `${s.user?.nom || ''} ${s.user?.prenom || ''}`.toLowerCase();
+        return fullName.includes(searchTerm.toLowerCase()) ||
+            String(s.id).includes(searchTerm.toLowerCase());
+    });
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
@@ -148,7 +150,7 @@ const AttendanceRegister = ({ className, students = [], onClose }) => {
                                     return (
                                         <tr key={student.id} className="hover:bg-slate-50/50 group transition-colors">
                                             <td className="px-6 py-4">
-                                                <div className="font-bold text-slate-800 text-sm italic uppercase">{student.name}</div>
+                                                <div className="font-bold text-slate-800 text-sm italic uppercase">{student.user?.nom} {student.user?.prenom}</div>
                                                 <div className="text-[10px] text-slate-400 font-mono tracking-tighter">{student.id}</div>
                                             </td>
                                             <td className="px-6 py-4">
