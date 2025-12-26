@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 
 // Import des composants 
 import Permissions from './Permissions.jsx';
 import Attendance from './Attendance.jsx';
-/*import Courses from './Courses.jsx';
-import Reports from './Reports.jsx';*/
+import Courses from './Courses.jsx';
+import Reports from './Reports.jsx';
 
 // Composants icônes SVG
 const DashboardIcon = () => (
@@ -156,7 +155,7 @@ function SchoolHub() {
   
   // Fonction pour récupérer le token d'authentification
   const getAuthToken = () => {
-    return localStorage.getItem('token') || 'YOUR_JWT_TOKEN_HERE';
+    return localStorage.getItem('token');
   };
 
   // Configuration des headers avec token
@@ -181,7 +180,7 @@ function SchoolHub() {
       setLoading(true);
       setError(null);
       
-      // Utiliser fetch comme dans Permissions.jsx
+      // Utiliser fetch 
       const statsResponse = await fetch(`${API_BASE_URL}/dashboard/stats`, {
         headers: getHeaders()
       });
@@ -228,63 +227,10 @@ function SchoolHub() {
     } catch (err) {
       console.error('Erreur API:', err);
       setError('Impossible de charger les données. Vérifiez votre connexion.');
-      
-      // Données de secours pour le développement
-      loadFallbackData();
-    } finally {
+    }
+    finally {
       setLoading(false);
     }
-  };
-
-  // Données de secours pour le développement
-  const loadFallbackData = () => {
-    const fallbackStats = {
-      attendance_today: {
-        present: 15,
-        absent: 5,
-        total: 20,
-        rate: 75
-      },
-      consecutive_absences: {
-        count: 3,
-        threshold: 3
-      },
-      pending_permissions: 5,
-      today_courses: [
-        { subject: 'Mathématiques', time: '08:00-10:00' },
-        { subject: 'Physique-Chimie', time: '10:15-12:15' },
-        { subject: 'Français', time: '13:30-15:30' }
-      ],
-      today_courses_count: 3
-    };
-
-    const fallbackStudentsAlert = [
-      { id: 3, name: 'Simplice Ahouandjinou', absences: 3, class: 'Terminale A', parent_email: 'parent3@email.bj' },
-      { id: 5, name: 'Médard Gbaguidi', absences: 4, class: 'Terminale A', parent_email: 'parent5@email.bj' }
-    ];
-
-    const fallbackNotifications = [
-      { id: 1, message: 'Simplice Ahouandjinou a 3 absences consécutives', type: 'warning', time: '10:30', read: false, created_at: new Date().toISOString() },
-      { id: 2, message: 'Nouvelle demande de permission de Médard Gbaguidi', type: 'info', time: '09:15', read: false, created_at: new Date().toISOString() },
-      { id: 3, message: 'Rapport de présence du 12 Mars généré', type: 'success', time: 'Hier', read: true, created_at: new Date().toISOString() }
-    ];
-
-    const fallbackUserInfo = {
-      id: 5,
-      name: 'M. Adébayo',
-      email: 'adebayo@schoolhub.com',
-      role: 'Professeur Principal',
-      avatar: 'MA',
-      class_assigned: 'Terminale A',
-      phone: '+229 97 11 22 33'
-    };
-
-    setDashboardData({
-      stats: fallbackStats,
-      studentsAlert: fallbackStudentsAlert
-    });
-    setNotifications(fallbackNotifications);
-    setUserInfo(fallbackUserInfo);
   };
 
   // Fonction pour marquer tous les présents via l'API
@@ -414,17 +360,16 @@ function SchoolHub() {
   // Charger les données au montage du composant
   useEffect(() => {
     const token = getAuthToken();
-    if (token && token !== 'YOUR_JWT_TOKEN_HERE') {
+    if (token) {
       fetchDashboardData();
     } else {
-      loadFallbackData();
-      setLoading(false);
+      window.location.href = '/login';
     }
     
     // Polling toutes les 30 secondes pour les mises à jour
     const interval = setInterval(() => {
       const token = getAuthToken();
-      if (token && token !== 'YOUR_JWT_TOKEN_HERE') {
+      if (token) {
         fetchDashboardData();
       }
     }, 30000);
@@ -1576,8 +1521,8 @@ function SchoolHub() {
               <UserIcon />
             </div>
             <div className="user-details">
-              <div className="user-name">{userInfo?.name || 'M. Adébayo'}</div>
-              <div className="user-role">{userInfo?.role || 'Professeur Principal'}</div>
+              <div className="user-name">{userInfo?.name || 'Chargement...'}</div>
+              <div className="user-role">{userInfo?.role || 'Chargement...'}</div>
             </div>
           </div>
           
