@@ -1,14 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     X, Save, Calculator, BookOpen, Clock,
     AlertCircle, Hash
 } from 'lucide-react';
+import api from '../../../../api';
 
 const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
-    const [selectedSubject, setSelectedSubject] = useState('Mathématiques');
-    const [selectedPeriod, setSelectedPeriod] = useState('Trimestre 1');
-    const [subjectCoeff, setSubjectCoeff] = useState(4); // L'admin choisit uniquement le coefficient de la matière
+    const [availableSubjects, setAvailableSubjects] = useState([]);
+    const [availableSemesters, setAvailableSemesters] = useState([]);
+    const [selectedSubjectId, setSelectedSubjectId] = useState('');
+    const [selectedSemesterId, setSelectedSemesterId] = useState('');
+    const [subjectCoeff, setSubjectCoeff] = useState(1);
     const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Fetch subjects and semesters
+    useEffect(() => {
+        if (isOpen) {
+            const fetchData = async () => {
+                try {
+                    setIsLoading(true);
+                    const [subResponse, semResponse] = await Promise.all([
+                        api.get('/admin/matieres'),
+                        api.get('/admin/semestres')
+                    ]);
+                    setAvailableSubjects(subResponse.data);
+                    setAvailableSemesters(semResponse.data);
+                    if (subResponse.data.length > 0) setSelectedSubjectId(subResponse.data[0].id);
+                    if (semResponse.data.length > 0) setSelectedSemesterId(semResponse.data[0].id);
+                    setIsLoading(false);
+                } catch (error) {
+                    console.error("Failed to fetch subjects/semesters", error);
+                    setIsLoading(false);
+                }
+            };
+            fetchData();
+        }
+    }, [isOpen]);
+
+    useEffect(() => {
+        const sub = availableSubjects.find(s => s.id === parseInt(selectedSubjectId));
+        if (sub) setSubjectCoeff(sub.coefficient);
+    }, [selectedSubjectId, availableSubjects]);
 
     // Mock subjects
     const subjects = [
@@ -16,19 +49,25 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
         'SVT', 'Histoire-Géo', 'Philosophie', 'EPS'
     ];
 
-    // Initialisation des notes (Mock)
-    const [grades, setGrades] = useState(
-        students.reduce((acc, student) => {
-            acc[student.id] = {
-                int1: '',
-                int2: '',
-                int3: '',
-                devoir: '',
-                compo: ''
-            };
-            return acc;
-        }, {})
-    );
+    // Initialisation des notes
+    const [grades, setGrades] = useState({});
+
+    useEffect(() => {
+        if (students.length > 0) {
+            setGrades(
+                students.reduce((acc, student) => {
+                    acc[student.id] = {
+                        int1: '',
+                        int2: '',
+                        int3: '',
+                        devoir: '',
+                        compo: ''
+                    };
+                    return acc;
+                }, {})
+            );
+        }
+    }, [students]);
 
     const handleGradeChange = (studentId, field, value) => {
         // Validation simple : 0-20
@@ -58,13 +97,33 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
         return finalAvg.toFixed(2);
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        if (!selectedSubjectId || !selectedSemesterId) {
+            alert("Veuillez sélectionner une matière et un semestre.");
+            return;
+        }
+
         setIsSaving(true);
-        setTimeout(() => {
-            setIsSaving(false);
-            alert(`Les notes de ${selectedSubject} (Coef: ${subjectCoeff}) pour le ${selectedPeriod} ont été enregistrées.`);
+        try {
+            const bulkGrades = students.map(student => {
+                const avg = calculateAverage(grades[student.id] || {});
+                return {
+                    eleve_id: student.id,
+                    matiere_id: selectedSubjectId,
+                    semestre_id: selectedSemesterId,
+                    valeur: avg === '--' ? 0 : parseFloat(avg)
+                };
+            });
+
+            await api.post('/admin/grades/bulk', { grades: bulkGrades });
+            alert(`Les notes ont été enregistrées avec succès !`);
             onClose();
-        }, 1500);
+        } catch (error) {
+            console.error("Failed to save grades", error);
+            alert("Erreur lors de l'enregistrement des notes.");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     if (!isOpen) return null;
@@ -98,11 +157,11 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
                             <div className="relative">
                                 <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                                 <select
-                                    value={selectedSubject}
-                                    onChange={(e) => setSelectedSubject(e.target.value)}
+                                    value={selectedSubjectId}
+                                    onChange={(e) => setSelectedSubjectId(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary/20 text-slate-800 font-bold appearance-none outline-none"
                                 >
-                                    {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+                                    {availableSubjects.map(s => <option key={s.id} value={s.id}>{s.nom}</option>)}
                                 </select>
                             </div>
                         </div>
@@ -112,13 +171,11 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
                             <div className="relative">
                                 <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                                 <select
-                                    value={selectedPeriod}
-                                    onChange={(e) => setSelectedPeriod(e.target.value)}
+                                    value={selectedSemesterId}
+                                    onChange={(e) => setSelectedSemesterId(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary/20 text-slate-800 font-bold appearance-none outline-none"
                                 >
-                                    <option>Trimestre 1</option>
-                                    <option>Trimestre 2</option>
-                                    <option>Trimestre 3</option>
+                                    {availableSemesters.map(s => <option key={s.id} value={s.id}>{s.nom}</option>)}
                                 </select>
                             </div>
                         </div>
@@ -186,7 +243,7 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
                                                 type="text"
                                                 className="w-14 h-10 bg-slate-50 border border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
                                                 placeholder="--"
-                                                value={grades[student.id]?.int2}
+                                                value={grades[student.id]?.int3 || ''}
                                                 onChange={(e) => handleGradeChange(student.id, 'int3', e.target.value)}
                                             />
                                         </td>

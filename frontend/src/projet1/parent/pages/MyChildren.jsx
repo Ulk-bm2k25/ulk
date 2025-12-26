@@ -1,9 +1,25 @@
-import React from 'react';
-import { User, GraduationCap, Calendar, ChevronRight, Download, FileText, UserPlus } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { User, GraduationCap, Calendar, ChevronRight, Download, FileText, UserPlus, Loader2 } from 'lucide-react';
+import api from '../../../api';
 import '../styles/theme.css';
 
 const MyChildren = ({ onNavigate }) => {
-    const children = [];
+    const [children, setChildren] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchChildren = async () => {
+            try {
+                const response = await api.get('/parent/children');
+                setChildren(response.data.children);
+                setIsLoading(false);
+            } catch (error) {
+                console.error("Failed to fetch children", error);
+                setIsLoading(false);
+            }
+        };
+        fetchChildren();
+    }, []);
 
     const handleDownload = (type, childName, event) => {
         const docName = type === 'card' ? 'Carte Scolaire' : 'Fiche d\'inscription';
@@ -21,6 +37,15 @@ const MyChildren = ({ onNavigate }) => {
             alert(`Le document "${docName}" pour ${childName} a été généré et téléchargé avec succès.`);
         }, 1500);
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <Loader2 className="animate-spin text-[#eb8e3a] mb-4" size={48} />
+                <p className="text-white/40">Chargement de vos enfants...</p>
+            </div>
+        );
+    }
 
     const ActionButton = ({ icon: Icon, label, onClick, primary = false, disabled = false, badge = null }) => (
         <button
@@ -58,21 +83,23 @@ const MyChildren = ({ onNavigate }) => {
                     <div key={child.id} className="bg-white/5 rounded-3xl p-8 border border-white/5 flex flex-col gap-6 group hover:bg-white/10 transition-all cursor-pointer">
                         <div className="flex items-start justify-between">
                             <div className="flex gap-6">
-                                <img src={child.avatar} alt={child.name} className="w-20 h-20 rounded-2xl ring-4 ring-white/5 object-cover" />
+                                <div className="w-20 h-20 rounded-2xl ring-4 ring-white/5 flex items-center justify-center bg-white/5 text-2xl font-black text-[#eb8e3a]">
+                                    {child.prenom[0]}{child.nom[0]}
+                                </div>
                                 <div className="space-y-3">
-                                    <h3 className="text-xl font-bold text-white">{child.name}</h3>
+                                    <h3 className="text-xl font-bold text-white">{child.prenom} {child.nom}</h3>
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-2 text-white/60 text-sm">
                                             <GraduationCap size={16} />
-                                            <span>Classe: {child.grade}</span>
+                                            <span>Classe: {child.inscription?.classe?.nom || 'Non assigné'}</span>
                                         </div>
                                         <div className="flex items-center gap-2 text-white/60 text-sm">
                                             <Calendar size={16} />
-                                            <span>Né le: {child.birthDate}</span>
+                                            <span>Inscrit en: {child.inscription?.annee_scolaire?.annee || 'N/A'}</span>
                                         </div>
                                         <div className="flex items-center gap-2 text-white/60 text-sm">
                                             <User size={16} />
-                                            <span>Genre: {child.gender}</span>
+                                            <span>Statut: {child.inscription?.statut || 'En attente'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -92,14 +119,14 @@ const MyChildren = ({ onNavigate }) => {
                             <ActionButton
                                 icon={Download}
                                 label="Carte Scolaire"
-                                disabled={!child.cardDelivered}
-                                onClick={(e) => handleDownload('card', child.name, e)}
+                                disabled={false}
+                                onClick={(e) => handleDownload('card', `${child.prenom} ${child.nom}`, e)}
                             />
                             <ActionButton
                                 icon={FileText}
                                 label="Fiche d'inscription"
-                                disabled={!child.registrationValidated}
-                                onClick={(e) => handleDownload('doc', child.name, e)}
+                                disabled={child.inscription?.statut !== 'inscrit'}
+                                onClick={(e) => handleDownload('doc', `${child.prenom} ${child.nom}`, e)}
                             />
                         </div>
                     </div>

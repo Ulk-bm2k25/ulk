@@ -31,6 +31,10 @@ const ParentManager = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(() => {
         return localStorage.getItem('token') !== null || sessionStorage.getItem('token') !== null;
     });
+    const [user, setUser] = useState(() => {
+        const savedUser = localStorage.getItem('user');
+        return savedUser ? JSON.parse(savedUser) : null;
+    });
     const [authMode, setAuthMode] = useState('login'); // 'login', 'register' or 'forgot-password'
     const [currentPage, setCurrentPage] = useState('dashboard');
     const [registrationParams, setRegistrationParams] = useState({ mode: 'new', childData: null });
@@ -40,18 +44,22 @@ const ParentManager = () => {
 
     const [selectedChildId, setSelectedChildId] = useState(null);
 
-    const handleLogin = (token) => {
+    const handleLogin = (token, userData) => {
         setIsAuthenticated(true);
+        setUser(userData);
         localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(userData));
     };
     const handleLogout = () => {
         setIsAuthenticated(false);
+        setUser(null);
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         sessionStorage.removeItem('token');
         setAuthMode('login');
         setCurrentPage('dashboard');
         setRegistrationParams({ mode: 'new', childData: null });
-        setSelectedChildId(children[0]?.id || null);
+        setSelectedChildId(null);
     };
 
     const handleNavigate = (page, params = { mode: 'new', childData: null }) => {
@@ -113,6 +121,7 @@ const ParentManager = () => {
             currentPage={currentPage}
             onNavigate={(page) => handleNavigate(page)}
             onLogout={handleLogout}
+            user={user}
         >
             {renderPage()}
         </ParentLayout>

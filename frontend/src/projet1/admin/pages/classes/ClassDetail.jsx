@@ -16,29 +16,31 @@ const ClassDetail = ({ classData, onBack, onEdit }) => {
     const [isGradeEntryOpen, setIsGradeEntryOpen] = useState(false);
     const [isAttendanceOpen, setIsAttendanceOpen] = useState(false);
 
-    // Simulation chargement API
+    // Suppression chargement simulé
     useEffect(() => {
-        const timer = setTimeout(() => setIsLoading(false), 600);
-        return () => clearTimeout(timer);
-    }, []);
+        if (classData) {
+            setIsLoading(false);
+        }
+    }, [classData]);
 
     if (!classData) return null;
 
-    // --- MAPPING BASE DE DONNÉES ---
-    const mockStudents = [];
+    // --- MAPPING BASE DE DONNÉES RÉEL ---
+    const realStudents = classData.eleves || [];
 
-    // Calcul dynamique des stats (Filles/Garçons)
+    // Calcul dynamique des stats
     const stats = {
-        total: mockStudents.length,
-        girls: mockStudents.filter(s => s.gender === 'F').length,
-        boys: mockStudents.filter(s => s.gender === 'M').length,
-        active: mockStudents.filter(s => s.status === 'active').length
+        total: realStudents.length,
+        girls: realStudents.filter(s => s.sexe === 'F').length,
+        boys: realStudents.filter(s => s.sexe === 'M').length,
+        active: realStudents.length // Tous considérés actifs pour le moment
     };
 
-    const filteredStudents = mockStudents.filter(s =>
-        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredStudents = realStudents.filter(s => {
+        const fullName = `${s.user?.nom || ''} ${s.user?.prenom || ''}`.toLowerCase();
+        return fullName.includes(searchTerm.toLowerCase()) ||
+            String(s.id).includes(searchTerm.toLowerCase());
+    });
 
     const toggleMenu = (id, e) => {
         e.stopPropagation();
@@ -86,12 +88,12 @@ const ClassDetail = ({ classData, onBack, onEdit }) => {
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                            Classe de {classData.name}
+                            Classe de {classData.nom}
                             <span className="text-sm font-normal bg-brand-primary/10 text-brand-primary px-2 py-0.5 rounded-full border border-brand-primary/20">
-                                {classData.level}
+                                {classData.niveau_scolaire?.nom}
                             </span>
                         </h1>
-                        <p className="text-slate-500 text-sm">Année Scolaire 2024-2025 • Série {classData.series || 'Unique'}</p>
+                        <p className="text-slate-500 text-sm">Année Scolaire 2024-2025</p>
                     </div>
                 </div>
 
@@ -221,15 +223,22 @@ const ClassDetail = ({ classData, onBack, onEdit }) => {
                                 Calculer Moyennes
                             </button>
                             <button
-                                onClick={(e) => {
+                                onClick={async (e) => {
                                     const btn = e.currentTarget;
+                                    const originalContent = btn.innerHTML;
                                     btn.innerHTML = `<span class="animate-spin mr-2">⏳</span>Génération...`;
                                     btn.disabled = true;
-                                    setTimeout(() => {
+                                    try {
+                                        await api.post(`/admin/bulletins/generate/${classData.id}`, { annee_scolaire: '2024-2025' });
                                         btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-check"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/></svg> Bulletins Générés`;
                                         btn.className = "px-4 py-2 bg-green-600 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2";
-                                        alert(`Félicitations ! Les bulletins de la classe ${classData.name} ont été générés et publiés.`);
-                                    }, 2000);
+                                        alert(`Félicitations ! Les bulletins de la classe ${classData.nom} ont été générés.`);
+                                    } catch (err) {
+                                        console.error(err);
+                                        alert("Erreur lors de la génération des bulletins.");
+                                        btn.innerHTML = originalContent;
+                                        btn.disabled = false;
+                                    }
                                 }}
                                 className="px-4 py-2 bg-brand-primary text-white rounded-lg text-xs font-bold hover:bg-orange-600 transition-colors flex items-center gap-2 shadow-lg shadow-orange-500/20"
                             >
@@ -259,19 +268,15 @@ const ClassDetail = ({ classData, onBack, onEdit }) => {
                                     filteredStudents.map((student, idx) => (
                                         <tr key={student.id} className="hover:bg-slate-50 transition-colors">
                                             <td className="px-6 py-3 text-slate-400 font-mono text-xs">{idx + 1}</td>
-                                            <td className="px-6 py-3 font-mono text-slate-600">{student.id}</td>
-                                            <td className="px-6 py-3 font-medium text-slate-800">{student.name}</td>
+                                            <td className="px-6 py-3 font-mono text-slate-600">ID-{student.id}</td>
+                                            <td className="px-6 py-3 font-medium text-slate-800">{student.user?.nom} {student.user?.prenom}</td>
                                             <td className="px-6 py-3 text-center">
-                                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${student.gender === 'M' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>
-                                                    {student.gender}
+                                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${student.sexe === 'M' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>
+                                                    {student.sexe || '?'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-3 text-center">
-                                                {student.status === 'active' ? (
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Actif</span>
-                                                ) : (
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Exclu</span>
-                                                )}
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Inscrit</span>
                                             </td>
                                             <td className="px-6 py-3 text-right relative">
                                                 <button

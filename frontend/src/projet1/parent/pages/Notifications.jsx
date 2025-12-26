@@ -1,9 +1,54 @@
-import React from 'react';
-import { Bell, Mail, Info, AlertTriangle, CheckCircle, Smartphone, MessageSquare } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Bell, Mail, Info, AlertTriangle, CheckCircle, Smartphone, MessageSquare, Loader2 } from 'lucide-react';
+import api from '../../../api';
 import '../styles/theme.css';
 
 const Notifications = () => {
-    const notifications = [];
+    const [notifications, setNotifications] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                const response = await api.get('/parent/notifications');
+                setNotifications(response.data.notifications);
+                setIsLoading(false);
+            } catch (error) {
+                console.error("Failed to fetch notifications", error);
+                setIsLoading(false);
+            }
+        };
+        fetchNotifications();
+    }, []);
+
+    const getIcon = (type) => {
+        switch (type) {
+            case 'info': return Info;
+            case 'success': return CheckCircle;
+            case 'warning': return AlertTriangle;
+            case 'alert': return Bell;
+            default: return Bell;
+        }
+    };
+
+    const getColor = (type) => {
+        switch (type) {
+            case 'info': return 'text-blue-400 bg-blue-400/10';
+            case 'success': return 'text-green-400 bg-green-400/10';
+            case 'warning': return 'text-orange-400 bg-orange-400/10';
+            case 'alert': return 'text-red-400 bg-red-400/10';
+            default: return 'text-white/40 bg-white/5';
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <Loader2 className="animate-spin text-[#eb8e3a] mb-4" size={48} />
+                <p className="text-white/40">Chargement de vos notifications...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8">
@@ -24,34 +69,28 @@ const Notifications = () => {
 
             <div className="grid grid-cols-1 gap-4">
                 {notifications.length > 0 ? (
-                    notifications.map((notif) => (
-                        <div key={notif.id} className="glass-card p-6 flex gap-6 hover:bg-white/5 transition-colors cursor-pointer border-l-4 border-l-transparent hover:border-l-orange-400">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${notif.bgColor} ${notif.color}`}>
-                                <notif.icon size={24} />
-                            </div>
-                            <div className="flex-1">
-                                <div className="flex justify-between items-start mb-1">
-                                    <h3 className="font-bold">{notif.title}</h3>
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex gap-1.5 mr-4">
-                                            {notif.channels?.includes('email') && (
-                                                <div title="Notifié par Email" className="p-1 rounded-md bg-white/5 text-white/40 group-hover:text-white/60">
-                                                    <Mail size={12} />
-                                                </div>
-                                            )}
-                                            {notif.channels?.includes('whatsapp') && (
-                                                <div title="Notifié par WhatsApp" className="p-1 rounded-md bg-green-500/10 text-green-500/60 group-hover:text-green-500">
-                                                    <MessageSquare size={12} />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <span className="text-xs text-white/20 whitespace-nowrap">{notif.date}</span>
-                                    </div>
+                    notifications.map((notif) => {
+                        const Icon = getIcon(notif.type);
+                        const colors = getColor(notif.type);
+                        return (
+                            <div key={notif.id} className={`glass-card p-6 flex gap-6 hover:bg-white/5 transition-colors cursor-pointer border-l-4 ${notif.lu ? 'border-l-transparent' : 'border-l-orange-400'}`}>
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${colors}`}>
+                                    <Icon size={24} />
                                 </div>
-                                <p className="text-white/60 leading-relaxed text-sm">{notif.message}</p>
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-start mb-1">
+                                        <h3 className="font-bold uppercase text-[10px] tracking-widest text-[#eb8e3a]">{notif.type}</h3>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xs text-white/20 whitespace-nowrap">
+                                                {new Date(notif.created_at).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p className="text-white/80 leading-relaxed font-bold">{notif.message}</p>
+                                </div>
                             </div>
-                        </div>
-                    ))
+                        );
+                    })
                 ) : (
                     <div className="p-12 text-center text-white/20 italic">
                         Aucune notification pour le moment.

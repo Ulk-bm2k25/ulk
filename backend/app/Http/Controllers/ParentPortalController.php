@@ -6,7 +6,13 @@ use Illuminate\Http\Request;
 use App\Models\ParentTuteur;
 use App\Models\Eleve;
 use App\Models\Inscription;
+use App\Models\User;
+use App\Models\AnneeScolaire;
+use App\Models\Classe;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 class ParentPortalController extends Controller
 {
@@ -27,15 +33,16 @@ class ParentPortalController extends Controller
 
         $childrenCount = $parent->eleves()->count();
         
-        // Simuler des notifications pour l'instant
-        $notificationsCount = 0; 
+        $notificationsCount = DB::table('notifications')
+            ->where('destinataire_id', $user->id)
+            ->where('lu', false)
+            ->count();
 
         return response()->json([
-            'parent' => $parent,
-            'stats' => [
+            'summary' => [
                 'children_count' => $childrenCount,
-                'notifications_count' => $notificationsCount,
-                'payments_due' => '0 FCFA'
+                'notifications' => $notificationsCount,
+                'payments_due' => 0
             ]
         ]);
     }
@@ -49,12 +56,26 @@ class ParentPortalController extends Controller
         $parent = ParentTuteur::where('user_id', $user->id)->first();
         
         if (!$parent) {
-            return response()->json([], 200);
+            return response()->json(['children' => []], 200);
         }
 
-        $children = $parent->eleves()->with(['classe.niveauScolaire'])->get();
+        $children = $parent->eleves()->with(['classe.niveauScolaire', 'inscriptions.anneeScolaire'])->get();
 
-        return response()->json($children);
+        return response()->json(['children' => $children]);
+    }
+
+    /**
+     * Get the notifications for the parent.
+     */
+    public function getNotifications(Request $request)
+    {
+        $user = Auth::user();
+        $notifications = DB::table('notifications')
+            ->where('destinataire_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json(['notifications' => $notifications]);
     }
 
     /**
@@ -74,5 +95,161 @@ class ParentPortalController extends Controller
         $eleve = Eleve::with(['user', 'classe', 'inscriptions.anneeScolaire'])->findOrFail($eleveId);
         
         return response()->json($eleve);
+    }
+    /**
+     * Enroll a new child.
+     */
+    public function enrollChild(Request $request)
+    {
+        $request->validate([
+            'parentName' => 'required|string',
+            'parentPhone' => 'required|string',
+            'parentProfession' => 'nullable|string',
+            'parentAddress' => 'nullable|string',
+            'childName' => 'required|string',
+            'childBirthDate' => 'required|date',
+            'childGender' => 'required|string',
+            'childGrade' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+        if ($user->role !== 'PARENT') {
+            return response()->json(['message' => 'Accès non autorisé'], 403);
+        }
+
+        $parent = ParentTuteur::where('user_id', $user->id)->first();
+        if (!$parent) {
+            return response()->json(['message' => 'Profil parent non trouvé'], 404);
+        }
+
+        return DB::transaction(function () use ($request, $parent) {
+            // 1. Update parent info
+            $parent->update([
+                'profession' => $request->parentProfession,
+                'adresse' => $request->parentAddress,
+                'telephone' => $request->parentPhone,
+            ]);
+
+            // 2. Split child name
+            $names = explode(' ', $request->childName, 2);
+            $prenom = $names[0];
+            $nom = isset($names[1]) ? $names[1] : '---';
+
+            // 3. Create User for child
+            $childUsername = strtolower($prenom . '.' . $nom . '.' . rand(100, 999));
+            $childUser = User::create([
+                'nom' => $nom,
+                'prenom' => $prenom,
+                'username' => $childUsername,
+                'email' => $childUsername . '@schoolhub.com',
+                'password_hash' => Hash::make('password123'),
+                'role' => 'ELEVE',
+            ]);
+
+            // 4. Find appropriate Class matching the grade
+            $classe = Classe::where('nom', 'LIKE', '%' . $request->childGrade . '%')->first();
+            if (!$classe) {
+                $classe = Classe::first(); // Fallback to first class if no match
+            }
+
+            // 5. Create Eleve
+            $eleve = Eleve::create([
+                'user_id' => $childUser->id,
+                'classe_id' => $classe->id,
+                'sexe' => $request->childGender === 'Masculin' ? 'M' : 'F',
+                'age' => Carbon::parse($request->childBirthDate)->age,
+            ]);
+
+            // 6. Link to parent
+            $parent->eleves()->attach($eleve->id, ['relation_type' => 'PARENT']);
+
+            // 7. Create Inscription
+            $anneeScolaire = AnneeScolaire::orderBy('date_debut', 'desc')->first();
+            Inscription::create([
+                'eleve_id' => $eleve->id,
+                'annee_scolaire_id' => $anneeScolaire->id,
+                'date_inscription' => now(),
+                'statut' => 'en attente',
+            ]);
+
+            return response()->json([
+                'message' => 'Inscription de l\'enfant réussie.',
+                'eleve' => $eleve->load(['user', 'classe'])
+            ], 201);
+        });
+    }
+
+    /**
+     * Get parent profile details.
+     */
+    public function getProfile()
+    {
+        $user = Auth::user();
+        $parent = ParentTuteur::where('user_id', $user->id)->first();
+
+        return response()->json([
+            'user' => $user,
+            'parent' => $parent
+        ]);
+    }
+
+    /**
+     * Update parent profile details.
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+        $parent = ParentTuteur::where('user_id', $user->id)->first();
+
+        $request->validate([
+            'nom' => 'required|string|max:255',
+            'prenom' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'telephone' => 'nullable|string',
+            'profession' => 'nullable|string',
+        ]);
+
+        DB::transaction(function () use ($request, $user, $parent) {
+            $user->update([
+                'nom' => $request->nom,
+                'prenom' => $request->prenom,
+                'email' => $request->email,
+            ]);
+
+            if ($parent) {
+                $parent->update([
+                    'nom' => $request->nom,
+                    'prenom' => $request->prenom,
+                    'email' => $request->email,
+                    'telephone' => $request->telephone,
+                    'profession' => $request->profession,
+                ]);
+            }
+        });
+
+        return response()->json(['message' => 'Profil mis à jour avec succès', 'user' => $user->fresh(), 'parent' => $parent->fresh()]);
+    }
+
+    /**
+     * Update password.
+     */
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:8|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->current_password, $user->password_hash)) {
+            return response()->json(['message' => 'Mot de passe actuel incorrect'], 422);
+        }
+
+        $user->update([
+            'password_hash' => Hash::make($request->new_password)
+        ]);
+
+        return response()->json(['message' => 'Mot de passe mis à jour avec succès']);
     }
 }

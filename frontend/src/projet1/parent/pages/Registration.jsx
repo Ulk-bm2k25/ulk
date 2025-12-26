@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { User, Users, School, CheckCircle, Smartphone, CreditCard, Image as ImageIcon, FileText } from 'lucide-react';
+import { User, Users, School, CheckCircle, Smartphone, CreditCard, Image as ImageIcon, FileText, Loader2 } from 'lucide-react';
+import api from '../../../api';
 import '../styles/theme.css';
 import FileUpload from './FileUpload';
 
@@ -10,11 +11,25 @@ const Registration = ({ mode = 'new', initialData = null, onComplete }) => {
         parentPhone: '',
         parentProfession: '',
         parentAddress: '',
-        childName: initialData?.name || '',
-        childBirthDate: initialData?.birthDate?.split('/').reverse().join('-') || '', // Convert 12/05/2012 to 2012-05-12
-        childGender: initialData?.gender || 'Masculin',
-        childGrade: initialData?.grade || '6ème'
+        childName: initialData?.prenom ? `${initialData.prenom} ${initialData.nom}` : '',
+        childBirthDate: '',
+        childGender: initialData?.sexe === 'M' ? 'Masculin' : initialData?.sexe === 'F' ? 'Féminin' : 'Masculin',
+        childGrade: initialData?.inscription?.classe?.nom || '6ème'
     });
+
+    // État pour les données parent pré-chargées
+    React.useEffect(() => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+            setFormData(prev => ({
+                ...prev,
+                parentName: `${user.prenom} ${user.nom}`,
+                parentPhone: user.phone || '',
+                parentProfession: user.profession || '',
+                parentAddress: user.adresse || ''
+            }));
+        }
+    }, []);
 
     // États pour les documents
     const [studentPhoto, setStudentPhoto] = useState(null);
@@ -29,17 +44,21 @@ const Registration = ({ mode = 'new', initialData = null, onComplete }) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handlePayment = () => {
+    const handlePayment = async () => {
         if (!paymentProvider || !phoneNumber) {
             alert("Veuillez sélectionner un opérateur et saisir votre numéro.");
             return;
         }
         setIsProcessing(true);
-        // Simulate payment process
-        setTimeout(() => {
+        try {
+            await api.post('/parent/enroll-child', formData);
             setIsProcessing(false);
             setStep(4);
-        }, 2000);
+        } catch (error) {
+            setIsProcessing(false);
+            const message = error.response?.data?.message || "Une erreur est survenue lors de l'inscription.";
+            alert(message);
+        }
     };
 
     const renderStep = () => {

@@ -109,6 +109,12 @@ class ClassController extends Controller
         return response()->json(['message' => 'Enseignant affecté']);
     }
 
+    public function teachers()
+    {
+        $teachers = User::where('role', 'ENSEIGNANT')->get();
+        return response()->json(['teachers' => $teachers]);
+    }
+
     public function niveaux()
     {
         return response()->json(NiveauScolaire::all());

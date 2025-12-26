@@ -3,6 +3,7 @@ import {
     CalendarCheck, Search, Users, CheckCircle2,
     XCircle, AlertTriangle, Save, Filter, Clock
 } from 'lucide-react';
+import api from '../../../../api';
 
 const AttendanceRegister = ({ className, students = [], onClose }) => {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -43,13 +44,29 @@ const AttendanceRegister = ({ className, students = [], onClose }) => {
         return acc;
     }, { present: 0, absent: 0, late: 0 });
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setIsSaving(true);
-        setTimeout(() => {
-            setIsSaving(false);
-            alert(`Registre d'appel du ${selectedDate} enregistré pour la classe ${className}.`);
+        try {
+            const bulkAttendance = Object.keys(attendance).map(studentId => ({
+                eleve_id: studentId,
+                present: attendance[studentId].status === 'present' || attendance[studentId].status === 'late',
+                // I'm skipping 'status' for now as the backend expects boolean 'present'
+            }));
+
+            await api.post('/admin/attendance/bulk', {
+                classe_id: students[0]?.classe_id || 1, // Fallback or pass as prop
+                date: selectedDate,
+                attendance: bulkAttendance
+            });
+
+            alert(`Registre d'appel du ${selectedDate} enregistré avec succès !`);
             onClose();
-        }, 1200);
+        } catch (error) {
+            console.error("Failed to save attendance", error);
+            alert("Erreur lors de l'enregistrement des présences.");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const filteredStudents = students.filter(s =>

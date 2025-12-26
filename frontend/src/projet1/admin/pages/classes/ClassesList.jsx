@@ -11,19 +11,19 @@ const ClassesList = ({ onViewDetails, onManageAffectations, onAddClass, classes 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
 
-  // Simulation chargement API
+  // Suppression chargement simulé
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
+    if (classes?.length >= 0) {
+      setIsLoading(false);
+    }
+  }, [classes]);
 
-
-  const sourceData = classes || []; // Utiliser les classes passées en props si disponibles
+  const sourceData = classes || [];
 
   // Logique de filtrage
   const filteredClasses = sourceData.filter(cls => {
-    const matchesSearch = cls.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLevel = selectedLevel === 'all' || cls.level === selectedLevel;
+    const matchesSearch = (cls.nom || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLevel = selectedLevel === 'all' || cls.niveau_scolaire?.nom === selectedLevel;
     return matchesSearch && matchesLevel;
   });
 

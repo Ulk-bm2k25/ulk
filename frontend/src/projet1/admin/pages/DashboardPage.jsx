@@ -1,28 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Users, AlertCircle, TrendingUp, Bell, Download, ChevronRight, CheckCircle, Clock, FileText, Plus, Send, Loader2, IdCard } from 'lucide-react';
 
-const DashboardPage = ({ onNavigate }) => {
+const DashboardPage = ({ onNavigate, inscriptions = [], stats }) => {
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simulation des données (State)
-  // Dans le futur, ces états seront remplis par un useEffect + fetch()
-  // Données initiales (Vides pour l'intégration Backend)
-  const [inscriptions] = useState([]);
+  // Calcul dynamique des KPIs
+  const kpis = {
+    totalEleves: stats?.totalStudents || inscriptions.filter(i => i.statut === 'inscrit').length,
+    inscriptionsAttente: stats?.pendingInscriptions || inscriptions.filter(i => i.statut === 'en attente').length,
+    tauxPresence: stats?.attendanceRate || 0,
+    classesSaturees: stats?.saturatedClasses || 0
+  };
 
-  const [kpis] = useState({
-    totalEleves: 0,
-    inscriptionsAttente: 0,
-    tauxPresence: 0,
-    classesSaturees: 0
-  });
-
-  // Simulation du chargement des données (1.5 secondes)
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (inscriptions) {
       setIsLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, []);
+    }
+  }, [inscriptions]);
 
   // --- GÉNÉRATION DYNAMIQUE DES ALERTES ---
   const generateAlerts = () => {
@@ -220,35 +214,37 @@ const DashboardPage = ({ onNavigate }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {inscriptions.map((row) => (
+              {inscriptions.slice(0, 5).map((row) => (
                 <tr
                   key={row.id}
-                  onClick={() => onNavigate('inscriptions')} // Rend la ligne cliquable
+                  onClick={() => onNavigate('inscriptions')}
                   className="hover:bg-slate-50 transition-colors cursor-pointer"
                   title="Cliquez pour gérer les inscriptions"
                 >
                   <td className="px-6 py-4">
-                    <div className="font-medium text-slate-900">{row.name}</div>
-                    <div className="text-xs text-slate-400">{row.id}</div>
+                    <div className="font-medium text-slate-900">
+                      {row.eleve?.user?.nom} {row.eleve?.user?.prenom}
+                    </div>
+                    <div className="text-xs text-slate-400">INS-{row.id}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${row.status === 'Validé' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${row.statut === 'inscrit' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
                       }`}>
-                      {row.status}
+                      {row.statut === 'inscrit' ? 'Validé' : 'En attente'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <div className={`inline-flex items-center justify-center w-6 h-6 rounded ${row.complete ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-300'}`}>
+                    <div className={`inline-flex items-center justify-center w-6 h-6 rounded bg-orange-100 text-orange-600`}>
                       <CheckCircle size={14} />
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <div className={`inline-flex items-center justify-center w-6 h-6 rounded ${row.paid ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-300'}`}>
+                    <div className={`inline-flex items-center justify-center w-6 h-6 rounded bg-orange-100 text-orange-600`}>
                       <CheckCircle size={14} />
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-slate-500 italic">
-                    {row.note || '-'}
+                  <td className="px-6 py-4 text-slate-500 italic text-xs">
+                    {row.eleve?.classe?.nom || '--'}
                   </td>
                 </tr>
               ))}

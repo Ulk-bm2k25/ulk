@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Send, Mail, MessageSquare, Users, User, CheckCircle, AlertCircle, Search, School, Eye, Clock, Trash2, Smartphone } from 'lucide-react';
+import api from '../../../api';
 
-const SendNotification = () => {
+const SendNotification = ({ classes = [], students = [] }) => {
     const [step, setStep] = useState(1);
     const [sending, setSending] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -21,12 +22,11 @@ const SendNotification = () => {
     // Historique des notifications (Vague pour l'intégration Backend)
     const [sentNotifications, setSentNotifications] = useState([]);
 
-    const classes = [
+    // List of classes from props
+    const classesList = classes.length > 0 ? classes.map(c => c.nom) : [
         'Maternelle', 'CI', 'CP', 'CE1', 'CE2', 'CM1', 'CM2',
         '6ème', '5ème', '4ème', '3ème',
-        '2nde A', '2nde B', '2nde C', '2nde D', '2nde G1', '2nde G2',
-        '1ère A', '1ère B', '1ère C', '1ère D', '1ère G1', '1ère G2',
-        'Terminale A', 'Terminale B', 'Terminale C', 'Terminale D', 'Terminale G1', 'Terminale G2'
+        '2nde A', '2nde B', '2nde C', '2nde D', 'Terminale D'
     ];
 
     const templates = [
@@ -58,12 +58,13 @@ const SendNotification = () => {
         }));
     };
 
-    const handleSend = () => {
+    const handleSend = async () => {
         if (!formData.message || (!formData.channels.email && !formData.channels.whatsapp)) return;
 
         setSending(true);
-        // Simulation d'envoi API
-        setTimeout(() => {
+        try {
+            await api.post('/admin/notifications/send', formData);
+
             const newNotif = {
                 id: Date.now(),
                 date: new Date().toLocaleString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
@@ -90,7 +91,11 @@ const SendNotification = () => {
                     channels: { email: true, whatsapp: false }
                 });
             }, 3000);
-        }, 1500);
+        } catch (error) {
+            console.error("Failed to send notification", error);
+            setSending(false);
+            alert("Erreur lors de l'envoi de la notification");
+        }
     };
 
     const deleteFromHistory = (id) => {
@@ -168,7 +173,7 @@ const SendNotification = () => {
                                     value={formData.targetId}
                                 >
                                     <option value="" className="text-slate-400">-- Choisir une classe --</option>
-                                    {classes.map(cls => <option key={cls} value={cls} className="text-slate-800">{cls}</option>)}
+                                    {classesList.map(cls => <option key={cls} value={cls} className="text-slate-800">{cls}</option>)}
                                 </select>
                             </div>
                         )}
@@ -186,22 +191,25 @@ const SendNotification = () => {
                                         className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-primary/20 font-medium transition-all text-slate-800 placeholder:text-slate-400"
                                     />
                                 </div>
-                                {formData.targetId.length > 2 && (
+                                {formData.targetId.length > 1 && (
                                     <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg p-2 flex flex-col gap-1 overflow-hidden animate-in fade-in duration-200">
-                                        <button
-                                            onClick={() => setFormData({ ...formData, targetId: 'KOUE Jean-Baptiste (6ème)' })}
-                                            className="p-2 hover:bg-slate-50 rounded-lg text-left text-sm font-medium flex justify-between items-center group text-slate-700 hover:text-slate-900"
-                                        >
-                                            <span>KOUE Jean-Baptiste <span className="text-slate-400 font-normal ml-2">6ème</span></span>
-                                            <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">Sélectionner</span>
-                                        </button>
-                                        <button
-                                            onClick={() => setFormData({ ...formData, targetId: 'KADI Aminata (Terminale D)' })}
-                                            className="p-2 hover:bg-slate-50 rounded-lg text-left text-sm font-medium flex justify-between items-center group text-slate-700 hover:text-slate-900"
-                                        >
-                                            <span>KADI Aminata <span className="text-slate-400 font-normal ml-2">Terminale D</span></span>
-                                            <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">Sélectionner</span>
-                                        </button>
+                                        {students
+                                            .filter(s => (s.user?.nom + " " + s.user?.prenom).toLowerCase().includes(formData.targetId.toLowerCase()))
+                                            .slice(0, 5)
+                                            .map(s => (
+                                                <button
+                                                    key={s.id}
+                                                    onClick={() => setFormData({ ...formData, targetId: s.user_id })}
+                                                    className="p-2 hover:bg-slate-50 rounded-lg text-left text-sm font-medium flex justify-between items-center group text-slate-700 hover:text-slate-900"
+                                                >
+                                                    <span>{s.user?.nom} {s.user?.prenom} <span className="text-slate-400 font-normal ml-2">{s.classe?.nom}</span></span>
+                                                    <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">Sélectionner</span>
+                                                </button>
+                                            ))
+                                        }
+                                        {students.filter(s => (s.user?.nom + " " + s.user?.prenom).toLowerCase().includes(formData.targetId.toLowerCase())).length === 0 && (
+                                            <div className="p-2 text-xs text-slate-400">Aucun élève trouvé</div>
+                                        )}
                                     </div>
                                 )}
                             </div>

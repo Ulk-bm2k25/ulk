@@ -16,18 +16,19 @@ const ParentLogin = ({ onLogin, onNavigateToRegister, onNavigateToForgotPassword
         e.preventDefault();
         setIsLoading(true);
         try {
-            // Simulation d'appel API - À décommenter lors de l'intégration réelle
-            // const response = await api.post('/login', { email, password });
-            // onLogin(response.data.token);
+            const response = await api.post('/login', { email, password });
 
-            // Pour l'instant, on simule une réussite avec un faux token
-            setTimeout(() => {
-                onLogin("mock-token-parent");
-                setIsLoading(false);
-            }, 1000);
+            // Check if it's a parent role (optional but good for safety)
+            if (response.data.user && response.data.user.role !== 'PARENT') {
+                throw new Error("Accès non autorisé. Réservé aux parents.");
+            }
+
+            onLogin(response.data.token, response.data.user);
+            setIsLoading(false);
         } catch (error) {
             setIsLoading(false);
-            alert("Erreur de connexion. Veuillez vérifier vos identifiants.");
+            const message = error.response?.data?.message || error.message || "Erreur de connexion. Veuillez vérifier vos identifiants.";
+            alert(message);
         }
     };
 

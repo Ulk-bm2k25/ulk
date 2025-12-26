@@ -5,30 +5,47 @@ import {
   Trash2, Mail, Loader2
 } from 'lucide-react';
 
-const InscriptionsList = ({ 
-  inscriptions = [], 
+const InscriptionsList = ({
+  inscriptions = [],
   onViewDetails,
-  onQuickValidate, 
-  onDelete, 
-  onRelance 
+  onQuickValidate,
+  onDelete,
+  onRelance
 }) => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simulation chargement API
+  // Suppression du timer de simulation
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
+    if (inscriptions?.length >= 0) {
+      setIsLoading(false);
+    }
+  }, [inscriptions]);
 
-  const filteredData = inscriptions.filter(item => {
-    const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
+  const mapStatus = (backendStatus) => {
+    switch (backendStatus) {
+      case 'inscrit': return 'validated';
+      case 'rejete': return 'rejected';
+      case 'en attente': return 'pending';
+      default: return 'pending';
+    }
+  };
+
+  const filteredData = (inscriptions || []).filter(item => {
+    const uiStatus = mapStatus(item.statut);
+    const matchesStatus = filterStatus === 'all' || uiStatus === filterStatus;
+
+    // Safely access names
+    const firstName = item.eleve?.user?.prenom || '';
+    const lastName = item.eleve?.user?.nom || '';
+    const inscriptionId = String(item.id);
+
     const matchesSearch =
-      item.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.id.toLowerCase().includes(searchTerm.toLowerCase());
+      lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      inscriptionId.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -147,43 +164,41 @@ const InscriptionsList = ({
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs border border-slate-200">
-                          {item.firstName[0]}{item.lastName[0]}
+                          {item.eleve?.user?.prenom?.[0] || '?'}{item.eleve?.user?.nom?.[0] || '?'}
                         </div>
                         <div>
-                          <div className="font-medium text-slate-900">{item.lastName} {item.firstName}</div>
-                          <div className="text-xs text-slate-500">{item.id}</div>
+                          <div className="font-medium text-slate-900">
+                            {item.eleve?.user?.nom} {item.eleve?.user?.prenom}
+                          </div>
+                          <div className="text-xs text-slate-500">INS-{item.id}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-slate-600 text-xs font-medium">
-                        {item.class}
+                        {item.eleve?.classe?.nom || 'Non assigné'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-sm text-slate-600">
                         <Calendar size={14} className="text-slate-400" />
-                        {item.date}
+                        {new Date(item.created_at).toLocaleDateString()}
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-1.5 text-xs">
-                          <span className={`w-1.5 h-1.5 rounded-full ${item.docs === 'complete' ? 'bg-green-500' : 'bg-orange-500'}`}></span>
-                          <span className={item.docs === 'complete' ? 'text-slate-600' : 'text-orange-600 font-medium'}>
-                            {item.docs === 'complete' ? 'Docs complets' : 'Docs manquants'}
-                          </span>
+                          <span className={`w-1.5 h-1.5 rounded-full bg-green-500`}></span>
+                          <span className='text-slate-600'>Docs complets</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-xs">
-                          <span className={`w-1.5 h-1.5 rounded-full ${item.payment === 'paid' ? 'bg-green-500' : (item.payment === 'partial' ? 'bg-blue-500' : 'bg-red-500')}`}></span>
-                          <span className="text-slate-500">
-                            {item.payment === 'paid' ? 'Payé' : (item.payment === 'partial' ? 'Avance versée' : 'Non payé')}
-                          </span>
+                          <span className={`w-1.5 h-1.5 rounded-full bg-green-500`}></span>
+                          <span className="text-slate-500">Payé</span>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <StatusBadge status={item.status} />
+                      <StatusBadge status={mapStatus(item.statut)} />
                     </td>
                     <td className="px-6 py-4 text-right relative">
                       <div className="flex items-center justify-end gap-2">
@@ -211,40 +226,40 @@ const InscriptionsList = ({
                               <div className="py-1">
                                 {/* BOUTON VALIDER RAPIDEMENT */}
                                 {item.status === 'pending' && (
-                                    <button 
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onQuickValidate(item.id);
-                                            setOpenMenuId(null);
-                                        }}
-                                        className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                    >
-                                        <CheckCircle size={16} className="text-green-600" />
-                                        Valider rapidement
-                                    </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onQuickValidate(item.id);
+                                      setOpenMenuId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                  >
+                                    <CheckCircle size={16} className="text-green-600" />
+                                    Valider rapidement
+                                  </button>
                                 )}
 
                                 {/* BOUTON RELANCER */}
-                                <button 
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onRelance(item);
-                                        setOpenMenuId(null);
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRelance(item);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                                 >
                                   <Mail size={16} className="text-blue-600" />
                                   Relancer parent
                                 </button>
 
                                 {/* BOUTON TÉLÉCHARGER (Simulation) */}
-                                <button 
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        alert("Téléchargement du dossier PDF...");
-                                        setOpenMenuId(null);
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    alert("Téléchargement du dossier PDF...");
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                                 >
                                   <Download size={16} className="text-slate-500" />
                                   Télécharger PDF
@@ -253,13 +268,13 @@ const InscriptionsList = ({
 
                               <div className="border-t border-slate-100 py-1">
                                 {/* BOUTON SUPPRIMER */}
-                                <button 
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onDelete(item.id);
-                                        setOpenMenuId(null);
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete(item.id);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                                 >
                                   <Trash2 size={16} />
                                   Supprimer

@@ -41,6 +41,11 @@ class RegisterController extends Controller
 
             $token = $user->createToken('auth_token')->plainTextToken;
 
+            // Merge profile for frontend
+            $user->phone = $request->phone;
+            $user->adresse = $request->parentAddress ?? null;
+            $user->profession = $request->parentProfession ?? null;
+
             return response()->json([
                 'message' => 'Compte parent créé avec succès',
                 'user' => $user,

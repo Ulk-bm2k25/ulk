@@ -19,6 +19,17 @@ class LoginController extends Controller
         }
 
         $user = Auth::user();
+        
+        // Load parent profile if applicable
+        if ($user->role === 'PARENT') {
+            $profile = \App\Models\ParentTuteur::where('user_id', $user->id)->first();
+            if ($profile) {
+                $user->phone = $profile->telephone;
+                $user->adresse = $profile->adresse;
+                $user->profession = $profile->profession;
+            }
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([

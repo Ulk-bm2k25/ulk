@@ -15,6 +15,7 @@ import AffectationsManager from './pages/classes/AffectationsManager';
 import SendNotification from './pages/SendNotification';
 import SystemSettings from './pages/SystemSettings';
 import DocumentsHistory from './pages/documents/DocumentsHistory';
+import api from '../../api';
 import { FileText, Users, School, FileCheck, Bell, Settings } from 'lucide-react';
 
 const AdminManager = () => {
@@ -37,6 +38,52 @@ const AdminManager = () => {
   const [inscriptions, setInscriptions] = useState([]);
   const [classesData, setClassesData] = useState([]);
   const [studentsData, setStudentsData] = useState([]);
+  const [teachersData, setTeachersData] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // FETCH DATA FROM API
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const [inscResponse, classResponse, teachResponse, studResponse, statsResponse] = await Promise.all([
+          api.get('/admin/inscriptions'),
+          api.get('/classes'),
+          api.get('/admin/teachers'),
+          api.get('/admin/students'),
+          api.get('/admin/dashboard/stats')
+        ]);
+        setInscriptions(inscResponse.data.inscriptions);
+        setClassesData(classResponse.data);
+        setTeachersData((teachResponse.data.teachers || []).map(t => ({
+          ...t,
+          nom: t.user?.nom || t.nom,
+          prenom: t.user?.prenom || t.prenom,
+          fullName: `${t.user?.nom || t.nom} ${t.user?.prenom || t.prenom}`
+        })));
+        setStudentsData((studResponse.data.students || []).map(s => ({
+          ...s,
+          lastName: s.user?.nom || '',
+          firstName: s.user?.prenom || '',
+          class: s.classe?.nom || 'N/A',
+          gender: s.sexe || '?',
+          parent: s.parent_nom || 'Parent',
+          phone: s.parent_phone || 'N/A',
+          status: 'active' // Default for now
+        })));
+        setDashboardStats(statsResponse.data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch admin data", error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [isAuthenticated]);
 
   // 2. MODIFICATION DE LA FONCTION LOGIN
   const handleLogin = (token, rememberMe = false) => {
@@ -80,37 +127,32 @@ const AdminManager = () => {
     setSelectedInscription(null);
   };
 
-  // --- NOUVEAU : Logique de validation ---
-  const handleValidateInscription = (id) => {
-    const inscription = inscriptions.find(i => i.id === id);
-    if (!inscription) return;
-
-    setInscriptions(prev => prev.map(item =>
-      item.id === id ? { ...item, status: 'validated' } : item
-    ));
-
-    const newStudent = {
-      id: `MAT-25-${id.split('-')[2]}`, 
-      firstName: inscription.firstName,
-      lastName: inscription.lastName,
-      class: inscription.class, // La classe est déjà le nom complet ex: "2nde C"
-      gender: 'M', // Par défaut pour la démo
-      parent: inscription.lastName + ' Parent',
-      phone: '0102030405',
-      status: 'active',
-      level: inscription.class.includes('ème') || inscription.class.includes('CM') ? 'Collège' : 'Lycée', // Adapter la détection du niveau
-      birthDate: '01/01/2010'
-    };
-
-    setStudentsData(prev => [...prev, newStudent]); // Correction de la variable ici aussi
-    setSelectedInscription(null);
+  // --- NOUVEAU : Logique de validation réelle ---
+  const handleValidateInscription = async (id) => {
+    try {
+      const response = await api.patch(`/admin/inscriptions/${id}/status`, { statut: 'inscrit' });
+      setInscriptions(prev => prev.map(item =>
+        item.id === id ? response.data.inscription : item
+      ));
+      alert("Inscription validée avec succès !");
+      setSelectedInscription(null);
+    } catch (error) {
+      alert("Erreur lors de la validation");
+    }
   };
 
-  const handleRejectInscription = (id) => {
-    setInscriptions(prev => prev.map(item =>
-      item.id === id ? { ...item, status: 'rejected' } : item
-    ));
-    setSelectedInscription(null);
+  const handleRejectInscription = async (id) => {
+    if (!window.confirm("Voulez-vous vraiment rejeter cette inscription ?")) return;
+    try {
+      const response = await api.patch(`/admin/inscriptions/${id}/status`, { statut: 'rejete' });
+      setInscriptions(prev => prev.map(item =>
+        item.id === id ? response.data.inscription : item
+      ));
+      alert("Inscription rejetée.");
+      setSelectedInscription(null);
+    } catch (error) {
+      alert("Erreur lors du rejet");
+    }
   };
 
   const handleDeleteInscription = (id) => {
@@ -126,53 +168,34 @@ const AdminManager = () => {
   };
 
 
-  // --- LOGIQUE CLASSES (CRUD & NOMMAGE AUTO) ---
-  const handleSaveClass = (classForm) => {
-    // 1. Construction du nom de base (Ex: "2nde C" ou "6ème")
-    let baseName = `${classForm.root} ${classForm.series || ''}`.trim();
-    
-    // 2. Algorithme de nommage unique (Ex: 2nde C -> 2nde C2 -> 2nde C3)
-    let finalName = baseName;
-    let counter = 2; // On commence à incrémenter à partir de 2
-
-    // On récupère toutes les classes SAUF celle qu'on est en train de modifier (si édition)
-    const otherClasses = editingClass 
-        ? classesData.filter(c => c.id !== editingClass.id)
-        : classesData;
-
-    // Tant qu'une classe porte ce nom, on incrémente
-    while (otherClasses.some(c => c.name === finalName)) {
-        finalName = `${baseName}${counter}`; // Ex: 2nde C2
-        counter++;
+  // --- LOGIQUE CLASSES REELLE ---
+  const handleSaveClass = async (classForm) => {
+    try {
+      let response;
+      if (editingClass) {
+        response = await api.patch(`/classes/${editingClass.id}`, classForm);
+        setClassesData(prev => prev.map(c => c.id === editingClass.id ? response.data : c));
+        alert("Classe mise à jour avec succès !");
+      } else {
+        response = await api.post('/classes', classForm);
+        setClassesData(prev => [...prev, response.data]);
+        alert("Nouvelle classe créée !");
+      }
+      setIsClassModalOpen(false);
+    } catch (error) {
+      alert("Erreur lors de l'enregistrement de la classe");
     }
+  };
 
-    // 3. Construction de l'objet final
-    const finalClassData = {
-        ...classForm,
-        name: finalName, // On force le nom calculé
-        series: classForm.series || null // Nettoyage si vide
-    };
-
-    if (editingClass) {
-      // UPDATE
-      setClassesData(prev => prev.map(c => 
-        c.id === editingClass.id 
-          ? { ...finalClassData, id: editingClass.id, studentCount: c.studentCount } 
-          : c
-      ));
-      alert(`Classe mise à jour : ${finalName}`);
-    } else {
-      // CREATE
-      const newClass = { 
-          ...finalClassData, 
-          id: Date.now(), 
-          studentCount: 0 
-      };
-      setClassesData(prev => [...prev, newClass]);
-      alert(`Nouvelle classe créée : ${finalName}`);
+  const handleDeleteClass = async (id) => {
+    if (!window.confirm("Supprimer cette classe ?")) return;
+    try {
+      await api.delete(`/classes/${id}`);
+      setClassesData(prev => prev.filter(c => c.id !== id));
+      alert("Classe supprimée.");
+    } catch (error) {
+      alert("Erreur lors de la suppression");
     }
-    
-    setIsClassModalOpen(false);
   };
 
   // --- LOGIQUE ÉLÈVES (CRUD) ---
@@ -190,7 +213,7 @@ const AdminManager = () => {
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <DashboardPage onNavigate={handleNavigate} />;
+        return <DashboardPage onNavigate={handleNavigate} inscriptions={inscriptions} stats={dashboardStats} />;
 
       case 'inscriptions':
         if (selectedInscription) {
@@ -227,12 +250,12 @@ const AdminManager = () => {
             onNavigate={handleNavigate}
             // On passe les handlers pour le modal
             onAddStudent={() => {
-                setEditingStudent(null);
-                setIsStudentModalOpen(true);
+              setEditingStudent(null);
+              setIsStudentModalOpen(true);
             }}
             onEditStudent={(student) => {
-                setEditingStudent(student);
-                setIsStudentModalOpen(true);
+              setEditingStudent(student);
+              setIsStudentModalOpen(true);
             }}
           />
         );
@@ -240,35 +263,40 @@ const AdminManager = () => {
       case 'classes':
         if (isAffectationMode) return <AffectationsManager onBack={() => setIsAffectationMode(false)} />;
         if (selectedClass) {
-            return (
-                <ClassDetail 
-                   classData={selectedClass} 
-                   onBack={() => setSelectedClass(null)} 
-                   onEdit={(cls) => {
-                       setEditingClass(cls);
-                       setIsClassModalOpen(true);
-                   }}
-                />
-            );
+          return (
+            <ClassDetail
+              classData={selectedClass}
+              onBack={() => setSelectedClass(null)}
+              onEdit={(cls) => {
+                setEditingClass(cls);
+                setIsClassModalOpen(true);
+              }}
+            />
+          );
         }
         return (
           <ClassesList
-            classes={classesData} // IMPORTANT : ClassesList doit accepter cette prop maintenant !
+            classes={classesData}
             onViewDetails={(cls) => setSelectedClass(cls)}
             onManageAffectations={() => setIsAffectationMode(true)}
             onAddClass={() => {
               setEditingClass(null);
               setIsClassModalOpen(true);
             }}
+            onEditClass={(cls) => {
+              setEditingClass(cls);
+              setIsClassModalOpen(true);
+            }}
+            onDeleteClass={handleDeleteClass}
           />
         );
-        
+
       case 'cartes':
         return <StudentCardsPage students={studentsData} />;
       case 'documents':
         return <DocumentsHistory />;
       case 'notifications':
-        return <SendNotification />;
+        return <SendNotification classes={classesData} students={studentsData} />;
       case 'parametres':
         return <SystemSettings />;
       default:

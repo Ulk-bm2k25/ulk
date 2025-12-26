@@ -14,4 +14,9 @@ class Matiere extends Model
     {
         return $this->belongsToMany(Classe::class, 'affectations');
     }
+
+    public function notes()
+    {
+        return $this->hasMany(Note::class);
+    }
 }

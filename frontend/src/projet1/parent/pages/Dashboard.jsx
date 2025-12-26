@@ -1,18 +1,56 @@
-import React from 'react';
-import { Users, Bell, CreditCard, ChevronRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Users, Bell, CreditCard, ChevronRight, Loader2 } from 'lucide-react';
+import api from '../../../api';
 import '../styles/theme.css';
 
-const Dashboard = ({ children, onNavigate }) => {
-    const stats = [
-        { label: 'Enfants inscrits', value: children.length.toString(), icon: Users, color: 'text-blue-400', bg: 'bg-white/5' },
-        { label: 'Notifications', value: '0', icon: Bell, color: 'text-orange-400', bg: 'bg-white/5' },
-        { label: 'Paiements dus', value: '0 FCFA', icon: CreditCard, color: 'text-red-400', bg: 'bg-white/5' },
-    ];
+const Dashboard = ({ onNavigate }) => {
+    const [stats, setStats] = useState([]);
+    const [children, setChildren] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [parentName, setParentName] = useState('Cher Parent');
+
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                // Get user info from localStorage
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user) setParentName(`${user.prenom} ${user.nom}`);
+
+                const [dashboardRes, childrenRes] = await Promise.all([
+                    api.get('/parent/dashboard'),
+                    api.get('/parent/children')
+                ]);
+
+                setStats([
+                    { label: 'Enfants inscrits', value: dashboardRes.data.summary.children_count.toString(), icon: Users, color: 'text-blue-400', bg: 'bg-white/5' },
+                    { label: 'Notifications', value: dashboardRes.data.summary.notifications.toString(), icon: Bell, color: 'text-orange-400', bg: 'bg-white/5' },
+                    { label: 'Paiements dus', value: `${dashboardRes.data.summary.payments_due} FCFA`, icon: CreditCard, color: 'text-red-400', bg: 'bg-white/5' },
+                ]);
+
+                setChildren(childrenRes.data.children);
+                setIsLoading(false);
+            } catch (error) {
+                console.error("Failed to fetch dashboard data", error);
+                setIsLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, []);
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <Loader2 className="animate-spin text-[#eb8e3a] mb-4" size={48} />
+                <p className="text-white/40">Chargement de votre tableau de bord...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 text-white">
             <header>
-                <h1 className="text-3xl font-black">Bonjour, Cher Parent</h1>
+                <h1 className="text-3xl font-black">Bonjour, {parentName}</h1>
                 <p className="text-white/40 mt-1 font-medium">Voici un résumé de l'activité scolaire de vos enfants.</p>
             </header>
 
@@ -46,10 +84,14 @@ const Dashboard = ({ children, onNavigate }) => {
                                 className="flex items-center justify-between p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer group"
                             >
                                 <div className="flex items-center gap-4">
-                                    <img src={child.photo} alt={child.name} className="w-14 h-14 rounded-full ring-2 ring-white/10 shadow-sm object-cover" />
+                                    <div className="w-14 h-14 rounded-full ring-2 ring-white/10 flex items-center justify-center bg-white/5 text-xl font-black text-[#eb8e3a]">
+                                        {child.prenom[0]}{child.nom[0]}
+                                    </div>
                                     <div>
-                                        <h3 className="font-bold">{child.name}</h3>
-                                        <p className="text-xs text-white/40 font-bold uppercase tracking-tight">{child.grade} • {child.registrationValidated ? 'Inscrit' : 'En attente'}</p>
+                                        <h3 className="font-bold">{child.prenom} {child.nom}</h3>
+                                        <p className="text-xs text-white/40 font-bold uppercase tracking-tight">
+                                            {child.inscription?.classe?.nom || 'Sans classe'} • {child.inscription?.statut || 'En attente'}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 group-hover:bg-[#eb8e3a] group-hover:text-white transition-all">

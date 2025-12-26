@@ -31,18 +31,28 @@ const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
 
         setIsLoading(true);
         try {
-            // simulation d'appel API - À décommenter lors de l'intégration réelle
-            // const response = await api.post('/register', formData);
-            // onRegister(response.data.token);
+            // Split fullName into nom and prenom
+            const names = formData.fullName.trim().split(' ');
+            const nom = names.length > 1 ? names[names.length - 1] : formData.fullName;
+            const prenom = names.length > 1 ? names.slice(0, -1).join(' ') : '---';
+            const username = formData.email.split('@')[0] + "_" + Math.floor(Math.random() * 1000);
 
-            // Simulation temporaire
-            setTimeout(() => {
-                setIsLoading(false);
-                onRegister("mock-token-parent-new");
-            }, 1000);
+            const response = await api.post('/register', {
+                nom,
+                prenom,
+                username,
+                email: formData.email,
+                phone: formData.phone,
+                password: formData.password,
+                password_confirmation: formData.confirmPassword,
+            });
+
+            onRegister(response.data.token, response.data.user);
+            setIsLoading(false);
         } catch (error) {
             setIsLoading(false);
-            alert("Une erreur est survenue lors de l'inscription.");
+            const message = error.response?.data?.message || "Une erreur est survenue lors de l'inscription.";
+            alert(message);
         }
     };
 

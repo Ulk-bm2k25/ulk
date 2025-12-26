@@ -22,7 +22,7 @@ const ClassFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   // --- CONFIGURATION DES SÉRIES PAR CYCLE (MODIFIÉ) ---
   const seriesConfig = {
     // Pour le Collège (4ème et 3ème) : Séries A et E uniquement
-    'Collège': ['A', 'E'], 
+    'Collège': ['A', 'E'],
     // Pour le Lycée
     'Lycée': ['A', 'B', 'C', 'D', 'G1', 'G2', 'F3', 'F4']
   };
@@ -31,12 +31,12 @@ const ClassFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     if (initialData) {
       setFormData(initialData);
     } else {
-      setFormData({ 
-        level: 'Collège', 
-        root: '6ème', 
-        series: '', 
-        capacity: 40, 
-        mainTeacher: '' 
+      setFormData({
+        level: 'Collège',
+        root: '6ème',
+        series: '',
+        capacity: 40,
+        mainTeacher: ''
       });
     }
   }, [initialData, isOpen]);
@@ -52,19 +52,29 @@ const ClassFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+
+    // Map level names to IDs (In a real app, these should come from the API)
+    const levelMap = { 'Maternelle': 1, 'Primaire': 2, 'Collège': 3, 'Lycée': 4 };
+
+    const preparedData = {
+      nom: `${formData.root} ${formData.series}`.trim(),
+      niveau_id: levelMap[formData.level] || 3,
+      capacity_max: formData.capacity
+    };
+
+    onSubmit(preparedData);
     onClose();
   };
 
   // --- LOGIQUE D'AFFICHAGE DES SÉRIES ---
   // On affiche les séries si c'est le Lycée OU si c'est 4ème/3ème au Collège
-  const shouldShowSeries = 
-    formData.level === 'Lycée' || 
+  const shouldShowSeries =
+    formData.level === 'Lycée' ||
     (formData.level === 'Collège' && ['4ème', '3ème'].includes(formData.root));
 
   // On récupère la bonne liste de séries
-  const availableSeries = formData.level === 'Lycée' 
-    ? seriesConfig['Lycée'] 
+  const availableSeries = formData.level === 'Lycée'
+    ? seriesConfig['Lycée']
     : seriesConfig['Collège'];
 
   if (!isOpen) return null;
@@ -86,70 +96,69 @@ const ClassFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
 
           <div className="bg-brand-primary/5 p-4 rounded-xl border border-brand-primary/10 space-y-4">
             <div className="flex items-center gap-2 text-brand-primary mb-2">
-                <Layers size={18} />
-                <span className="font-bold text-sm uppercase">Structure de la classe</span>
+              <Layers size={18} />
+              <span className="font-bold text-sm uppercase">Structure de la classe</span>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-                {/* Cycle */}
-                <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Cycle</label>
-                    <select
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20 font-medium text-slate-800"
-                        value={formData.level}
-                        onChange={(e) => handleLevelChange(e.target.value)}
-                    >
-                        {Object.keys(structures).map(lvl => (
-                            <option key={lvl} value={lvl}>{lvl}</option>
-                        ))}
-                    </select>
-                </div>
 
-                {/* Niveau */}
-                <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Niveau</label>
-                    <select
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20 font-bold text-slate-800"
-                        value={formData.root}
-                        onChange={(e) => setFormData({...formData, root: e.target.value, series: ''})}
-                    >
-                        {structures[formData.level].map(cls => (
-                            <option key={cls} value={cls}>{cls}</option>
-                        ))}
-                    </select>
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Cycle */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase">Cycle</label>
+                <select
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20 font-medium text-slate-800"
+                  value={formData.level}
+                  onChange={(e) => handleLevelChange(e.target.value)}
+                >
+                  {Object.keys(structures).map(lvl => (
+                    <option key={lvl} value={lvl}>{lvl}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Niveau */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase">Niveau</label>
+                <select
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20 font-bold text-slate-800"
+                  value={formData.root}
+                  onChange={(e) => setFormData({ ...formData, root: e.target.value, series: '' })}
+                >
+                  {structures[formData.level].map(cls => (
+                    <option key={cls} value={cls}>{cls}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* SÉRIE (Dynamique) */}
             {shouldShowSeries && (
-                <div className="space-y-1.5 animate-in slide-in-from-top-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase">
-                        {formData.level === 'Lycée' ? 'Série' : 'Option (Langue)'}
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                        {availableSeries.map(s => (
-                            <button
-                                key={s}
-                                type="button"
-                                onClick={() => setFormData({...formData, series: formData.series === s ? '' : s})}
-                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all border ${
-                                    formData.series === s 
-                                    ? 'bg-brand-primary text-white border-brand-primary' 
-                                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
-                                }`}
-                            >
-                                {s}
-                            </button>
-                        ))}
-                    </div>
+              <div className="space-y-1.5 animate-in slide-in-from-top-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">
+                  {formData.level === 'Lycée' ? 'Série' : 'Option (Langue)'}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {availableSeries.map(s => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, series: formData.series === s ? '' : s })}
+                      className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all border ${formData.series === s
+                          ? 'bg-brand-primary text-white border-brand-primary'
+                          : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                        }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
                 </div>
+              </div>
             )}
-            
+
             <div className="text-center pt-2">
-                <span className="text-xs text-slate-400">Aperçu : </span>
-                <span className="font-black text-slate-800 text-lg">
-                    {formData.root} {formData.series} <span className="text-slate-400 font-normal italic opacity-50 text-xs">(Auto-incrémenté)</span>
-                </span>
+              <span className="text-xs text-slate-400">Aperçu : </span>
+              <span className="font-black text-slate-800 text-lg">
+                {formData.root} {formData.series} <span className="text-slate-400 font-normal italic opacity-50 text-xs">(Auto-incrémenté)</span>
+              </span>
             </div>
           </div>
 

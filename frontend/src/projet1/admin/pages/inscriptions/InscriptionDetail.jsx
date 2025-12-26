@@ -7,28 +7,44 @@ import {
 const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) => {
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1. Simulation du chargement des détails complets
+  // Suppression du chargement simulé
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 600);
-    return () => clearTimeout(timer);
-  }, []);
+    if (data) {
+      setIsLoading(false);
+    }
+  }, [data]);
 
   if (!data) return null;
 
-  // 2. Utilisation des données réelles (sera hydraté par l'API)
+  const mapStatus = (backendStatus) => {
+    switch (backendStatus) {
+      case 'inscrit': return 'validated';
+      case 'rejete': return 'rejected';
+      case 'en attente': return 'pending';
+      default: return 'pending';
+    }
+  };
+
+  const currentTuteur = data.eleve?.tuteurs?.[0] || {};
+
+  // 2. Utilisation des données réelles
   const fullData = {
-    ...data,
-    birthDate: data.birthDate || '--',
-    birthPlace: data.birthPlace || '--',
-    gender: data.gender || '--',
-    previousSchool: data.previousSchool || '--',
-    parent: data.parent || {
-      name: '--',
-      job: '--',
-      phone: '--',
-      email: data.email || '--'
+    id: data.id,
+    firstName: data.eleve?.user?.prenom || '--',
+    lastName: data.eleve?.user?.nom || '--',
+    birthDate: data.eleve?.age ? `${data.eleve.age} ans` : '--',
+    birthPlace: '--',
+    gender: data.eleve?.sexe === 'M' ? 'Masculin' : data.eleve?.sexe === 'F' ? 'Féminin' : '--',
+    previousSchool: '--',
+    status: mapStatus(data.statut),
+    class: data.eleve?.classe?.nom || '--',
+    parent: {
+      name: `${currentTuteur.prenom || ''} ${currentTuteur.nom || '--'}`.trim(),
+      job: currentTuteur.profession || '--',
+      phone: currentTuteur.telephone || '--',
+      email: currentTuteur.email || '--'
     },
-    documents: data.documents || []
+    documents: []
   };
 
   const getStatusColor = (status) => {
@@ -96,7 +112,7 @@ const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) =
                 <div>
                   <h1 className="text-2xl font-bold text-slate-800">{fullData.firstName} {fullData.lastName}</h1>
                   <div className="text-slate-500 mt-1 flex items-center gap-2">
-                    <span className="font-mono bg-slate-100 px-2 py-0.5 rounded text-xs">{fullData.id}</span>
+                    <span className="font-mono bg-slate-100 px-2 py-0.5 rounded text-xs">INS-{fullData.id}</span>
                     <span>•</span>
                     <span>Classe demandée : <strong className="text-slate-800">{fullData.class}</strong></span>
                   </div>

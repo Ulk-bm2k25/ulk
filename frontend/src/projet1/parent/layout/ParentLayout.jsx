@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import '../styles/theme.css';
 
-const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
+const ParentLayout = ({ children, currentPage, onNavigate, onLogout, user }) => {
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const menuItems = [
     { id: 'dashboard', label: 'Tableau de bord', icon: LayoutGrid },
@@ -102,6 +102,20 @@ const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
             </div>
           </div>
 
+          {/* User Profile Card */}
+          <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#eb8e3a]/20 flex items-center justify-center text-[#eb8e3a] font-black">
+              {user ? `${user.prenom[0]}${user.nom[0]}` : '??'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white truncate">
+                {user ? `${user.prenom} ${user.nom}` : 'Utilisateur'}
+              </p>
+              <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">
+                Parent
+              </p>
+            </div>
+          </div>
         </div>
       </aside>
 
