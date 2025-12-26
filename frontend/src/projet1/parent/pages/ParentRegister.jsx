@@ -47,7 +47,7 @@ const ParentRegister = ({ onRegister, onNavigateToLogin }) => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-parent-bg-dark text-white">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-parent-portal text-white">
             <div className="max-w-4xl w-full flex glass-card overflow-hidden shadow-2xl">
                 {/* Left Side: Image/Decor (Hidden on mobile) */}
                 <div className="hidden md:block w-1/2 relative">

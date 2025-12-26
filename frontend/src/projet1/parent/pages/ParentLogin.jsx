@@ -5,7 +5,7 @@ import api from '../../../api';
 import '../styles/theme.css';
 import smilingChildren from '../assets/smiling_children.png';
 
-const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
+const ParentLogin = ({ onLogin, onNavigateToRegister, onNavigateToForgotPassword }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -32,7 +32,7 @@ const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-parent-bg-dark text-white relative">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-parent-portal text-white relative">
             {/* Bouton Retour à l'accueil */}
             <Link
                 to="/"
@@ -67,7 +67,13 @@ const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
                         <div>
                             <div className="flex justify-between mb-2">
                                 <label className="block text-sm font-semibold text-white/60">Mot de passe</label>
-                                <a href="#" className="text-xs text-orange-400 hover:underline">Mot de passe oublié ?</a>
+                                <button
+                                    type="button"
+                                    onClick={onNavigateToForgotPassword}
+                                    className="text-xs text-orange-400 hover:underline bg-transparent border-none p-0"
+                                >
+                                    Mot de passe oublié ?
+                                </button>
                             </div>
                             <div className="relative group">
                                 <input

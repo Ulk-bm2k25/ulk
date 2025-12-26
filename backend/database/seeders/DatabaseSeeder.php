@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,30 +17,46 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        
         // AnneeScolaires
-        DB::table('annee_scolaires')->insert([
+        $anneeId = DB::table('annee_scolaires_table')->insertGetId([
             'annee' => '2025-2026',
             'date_debut' => '2025-09-01',
             'date_fin' => '2026-06-30',
-        ]);
-
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'username' => 'Test User',
-            'email' => 'test@example.com',
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         // Users
-        DB::table('users')->insert([
-            ['username' => 'admin', 'password_hash' => Hash::make('password123'), 'email' => 'admin@example.com', 'role' => 'admin'],
-            ['username' => 'parent1', 'password_hash' => Hash::make('password456'), 'email' => 'parent1@example.com', 'role' => 'parent'],
+        $adminId = DB::table('users')->insertGetId([
+            'nom' => 'Admin',
+            'prenom' => 'System',
+            'username' => 'admin',
+            'password_hash' => Hash::make('password123'),
+            'email' => 'admin@example.com',
+            'role' => 'RESPONSABLE',
+        ]);
+
+        $parentId = DB::table('users')->insertGetId([
+            'nom' => 'Doe',
+            'prenom' => 'John',
+            'username' => 'parent1',
+            'password_hash' => Hash::make('password456'),
+            'email' => 'parent1@example.com',
+            'role' => 'PARENT',
+        ]);
+
+        $eleveUserId = DB::table('users')->insertGetId([
+            'nom' => 'Smith',
+            'prenom' => 'Alice',
+            'username' => 'alice',
+            'password_hash' => Hash::make('password789'),
+            'email' => 'alice_test@example.com',
+            'role' => 'ELEVE',
         ]);
 
         // ParentsTuteurs
         DB::table('parents_tuteurs')->insert([
-            'user_id' => 2,
+            'user_id' => $parentId,
             'nom' => 'Doe',
             'prenom' => 'John',
             'telephone' => '123456789',
@@ -48,100 +65,55 @@ class DatabaseSeeder extends Seeder
             'profession' => 'Ingénieur',
         ]);
 
-        // Eleves
-        DB::table('eleves')->insert([
-            'nom' => 'Smith',
-            'prenom' => 'Alice',
-            'date_naissance' => '2010-05-15',
-            'sexe' => 'F',
-            'matricule' => 'MAT001',
-            'lieu_naissance' => 'Paris',
-        ]);
-
-        // RelationsEleveTuteur
-        DB::table('relations_eleve_tuteur')->insert([
-            'eleve_id' => 1,
-            'tuteur_id' => 1,
-            'relation_type' => 'pere',
-        ]);
-
         // NiveauxScolaires
-        DB::table('niveaux_scolaires')->insert([
+        $niveauId = DB::table('niveaux_scolaires')->insertGetId([
             'nom' => 'Primaire',
             'description' => 'Niveau primaire',
         ]);
 
         // Cycles
-        DB::table('cycles')->insert([
+        $cycleId = DB::table('cycles')->insertGetId([
             'nom' => 'Cycle 1',
-            'niveau_id' => 1,
+            'niveau_id' => $niveauId,
             'description' => 'Premier cycle primaire',
         ]);
 
         // Classes
-        DB::table('classes')->insert([
+        $classeId = DB::table('classes')->insertGetId([
             'nom' => 'Classe 1A',
-            'capacite' => 25,
-            'cycle_id' => 1,
-            'annee_scolaire_id' => 1,
+            'niveau_id' => $niveauId,
+            'annee_scolaire' => '2025-2026',
+            'description' => 'Classe de test',
         ]);
 
-        // AffectationsClasses
-        DB::table('affectations_classes')->insert([
-            'eleve_id' => 1,
-            'classe_id' => 1,
-            'statut' => 'affecte',
+        // Eleves
+        $eleveId = DB::table('eleves')->insertGetId([
+            'user_id' => $eleveUserId,
+            'classe_id' => $classeId,
+            'sexe' => 'F',
+            'age' => 10,
         ]);
 
         // Inscriptions
         DB::table('inscriptions')->insert([
-            'eleve_id' => 1,
-            'annee_scolaire_id' => 1,
+            'eleve_id' => $eleveId,
+            'annee_scolaire_id' => $anneeId,
             'statut' => 'inscrit',
-        ]);
-
-        // DocumentsEleves
-        DB::table('documents_eleves')->insert([
-            'eleve_id' => 1,
-            'type' => 'certificat_naissance',
-            'url' => '/docs/certificat.jpg',
-        ]);
-
-        // FichesInscription
-        DB::table('fiches_inscription')->insert([
-            'inscription_id' => 1,
-            'details' => 'Détails de la fiche: signature parent',
-            'url' => '/fiches/fiche1.pdf',
-        ]);
-
-        // CartesScolarite
-        DB::table('cartes_scolarite')->insert([
-            'eleve_id' => 1,
-            'numero_carte' => 'CARD001',
-            'date_expiration' => '2026-06-30',
-            'statut' => 'valide',
         ]);
 
         // Notifications
         DB::table('notifications')->insert([
             'type' => 'info',
             'message' => 'Nouvelle inscription confirmée',
-            'destinataire_id' => 2,
+            'destinataire_id' => $parentId,
             'lu' => false,
-        ]);
-
-        // PreferencesNotifications
-        DB::table('preferences_notifications')->insert([
-            'user_id' => 2,
-            'notification_type' => 'info',
-            'via_email' => true,
-            'via_sms' => true,
         ]);
 
         // LogsActivite
         DB::table('logs_activite')->insert([
-            ['user_id' => 1, 'action' => 'login', 'details' => 'Admin connecté avec succès'],
-            ['user_id' => 2, 'action' => 'view_inscription', 'details' => 'Parent a vu l\'inscription de l\'élève'],
+            ['user_id' => $adminId, 'action' => 'login', 'details' => 'Admin connecté avec succès'],
+            ['user_id' => $parentId, 'action' => 'view_inscription', 'details' => 'Parent a vu l\'inscription de l\'élève'],
         ]);
     }
 }
+

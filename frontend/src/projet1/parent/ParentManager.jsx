@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import ParentLayout from './layout/ParentLayout';
 import ParentLogin from './pages/ParentLogin';
 import ParentRegister from './pages/ParentRegister';
+import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import Registration from './pages/Registration';
 import Notifications from './pages/Notifications';
@@ -30,7 +31,7 @@ const ParentManager = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(() => {
         return localStorage.getItem('token') !== null || sessionStorage.getItem('token') !== null;
     });
-    const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+    const [authMode, setAuthMode] = useState('login'); // 'login', 'register' or 'forgot-password'
     const [currentPage, setCurrentPage] = useState('dashboard');
     const [registrationParams, setRegistrationParams] = useState({ mode: 'new', childData: null });
 
@@ -94,9 +95,17 @@ const ParentManager = () => {
     };
 
     if (!isAuthenticated) {
-        return authMode === 'login'
-            ? <ParentLogin onLogin={handleLogin} onNavigateToRegister={() => setAuthMode('register')} />
-            : <ParentRegister onRegister={handleLogin} onNavigateToLogin={() => setAuthMode('login')} />;
+        if (authMode === 'register') {
+            return <ParentRegister onRegister={handleLogin} onNavigateToLogin={() => setAuthMode('login')} />;
+        }
+        if (authMode === 'forgot-password') {
+            return <ForgotPassword onNavigateToLogin={() => setAuthMode('login')} />;
+        }
+        return <ParentLogin
+            onLogin={handleLogin}
+            onNavigateToRegister={() => setAuthMode('register')}
+            onNavigateToForgotPassword={() => setAuthMode('forgot-password')}
+        />;
     }
 
     return (

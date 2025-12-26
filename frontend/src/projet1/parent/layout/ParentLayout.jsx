@@ -26,9 +26,9 @@ const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
 
 
   return (
-    <div className="parent-portal">
+    <div className="parent-portal bg-parent-portal">
       {/* Sidebar */}
-      <aside className="w-72 border-r border-white/5 p-6 flex flex-col bg-[#1a2035]">
+      <aside className="w-72 border-r border-white/5 p-6 flex flex-col bg-black/20 backdrop-blur-xl">
         {/* Logo */}
         <div className="mb-10 px-2">
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
@@ -106,7 +106,7 @@ const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-[#1a2035]">
+      <main className="flex-1 overflow-y-auto bg-transparent">
         <div className="p-10 max-w-7xl mx-auto">
           {children}
         </div>

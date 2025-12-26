@@ -153,10 +153,6 @@ const LoginPage = ({ onLogin }) => {
                 />
                 <span className="text-sm text-slate-600 font-medium">Se souvenir de moi</span>
               </label>
-
-              <a href="#" className="text-sm font-medium text-brand-primary hover:text-orange-600 transition-colors">
-                Mot de passe oublié ?
-              </a>
             </div>
 
             <button
