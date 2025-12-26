@@ -72,7 +72,7 @@ class DashboardController extends Controller
             $studentsData[] = [
                 'id' => $eleve->id,
                 'name' => $eleve->user->name ?? 'Nom inconnu',
-                'absences' => 3,
+                'absences' => $eleve->presences->where('present', false)->count(),
                 'class' => $eleve->classe->nom ?? 'Classe inconnue',
                 'parent_email' => $eleve->parentTuteur->email ?? 'parent@example.com',
                 'parent_phone' => $eleve->parentTuteur->telephone ?? '+229 00 00 00 00'
@@ -107,13 +107,20 @@ class DashboardController extends Controller
      */
     private function getStudentsWithConsecutiveAbsences($threshold)
     {
-        return Eleve::has('presences', '>=', $threshold)
-                   ->whereHas('presences', function($query) {
-                       $query->where('present', false)
-                             ->whereDate('date', '>=', Carbon::today()->subDays(7));
-                   })
-                   ->with(['user', 'classe', 'parentTuteur'])
-                   ->take(10)
-                   ->get();
+        return Eleve::whereHas('presences', function ($q) {
+                $q->where('present', false)
+                ->whereDate('date', '>=', Carbon::today()->subDays(7));
+            }, '>=', $threshold)
+            ->with([
+                'user',
+                'classe',
+                'parentTuteur',
+                'presences' => function ($q) {
+                    $q->where('present', false);
+                }
+            ])
+            ->take(10)
+            ->get();
     }
+
 }
