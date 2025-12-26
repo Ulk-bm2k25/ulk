@@ -11,7 +11,7 @@ const AdminLayout = ({ children, currentPage, onNavigate, onLogout }) => {
     { id: 'eleves', label: 'Élèves', icon: Users, available: true },
     { id: 'classes', label: 'Classes', icon: School, available: true },
     { id: 'documents', label: 'Documents', icon: FileCheck, available: true },
-    { id: 'qr', label: 'Cartes Scolaires', icon: IdCard, available: true },
+    { id: 'cartes', label: 'Cartes Scolaires', icon: IdCard, available: true },
     { id: 'notifications', label: 'Notifications', icon: Bell, available: true },
     { id: 'parametres', label: 'Paramètres', icon: Settings, available: true }
   ];
