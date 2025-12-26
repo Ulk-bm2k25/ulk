@@ -87,4 +87,10 @@ class EleveController extends Controller
 
         return response()->json(['message' => 'Élève supprimé avec succès'], 200);
     }
+
+    public function presences()
+    {
+        return $this->hasMany(Presence::class);
+    }
+
 }

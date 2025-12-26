@@ -9,30 +9,35 @@ class Course extends Model
 {
     use HasFactory;
 
-    protected $table = 'cours'; // si tu gardes le nom français
+    protected $table = 'cours';
+    
+    protected $fillable = [
+        'classe_id',
+        'matiere_id',
+        'enseignant_id',
+        'jour',
+        'heure_debut',
+        'heure_fin',
+        'salle'
+    ];
 
-    protected $fillable = ['subject', 'classe_id', 'teacher_id'];
-
-    // Relation avec la classe
     public function classe()
     {
         return $this->belongsTo(Classe::class, 'classe_id');
     }
 
-    // Relation avec le professeur
-    public function teacher()
+    public function matiere()
     {
-        return $this->belongsTo(User::class, 'teacher_id');
+        return $this->belongsTo(Matiere::class, 'matiere_id');
     }
 
-    // Relation avec les permissions
-    public function permissions()
+    public function enseignant()
     {
-        return $this->hasMany(Permission::class);
-    }
-    public function programmes()
-    {
-        return $this->hasMany(Programme::class);
+        return $this->belongsTo(Enseignant::class, 'enseignant_id');
     }
 
+    public function presences()
+    {
+        return $this->hasMany(Presence::class, 'cours_id');
+    }
 }

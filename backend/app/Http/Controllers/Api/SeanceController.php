@@ -56,6 +56,11 @@ class SeanceController extends Controller
         return response()->json($seance, 200);
     }
 
+    public function cours()
+    {
+        return $this->belongsTo(Cours::class);
+    }
+
     /**
      * (Optionnel) Mettre à jour une séance
      * (À implémenter plus tard)
