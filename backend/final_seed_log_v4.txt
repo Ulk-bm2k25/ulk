@@ -1,0 +1,52 @@
+﻿
+   INFO  Preparing database.  
+
+  Creating migration table  21.01ms DONE
+
+   INFO  Running migrations.  
+
+  0001_01_01_000000_create_users_table  85.07ms DONE
+  0001_01_01_000001_create_cache_table  26.35ms DONE
+  0001_01_01_000002_create_jobs_table  75.87ms DONE
+  2025_12_16_195002_create_personal_access_tokens_table  47.36ms DONE
+  2025_12_17_160405_create_annee_scolaires_table  14.28ms DONE
+  2025_12_17_160500_create_niveaux_scolaires_table  28.28ms DONE
+  2025_12_17_160600_create_series_table  17.10ms DONE
+  2025_12_17_160700_create_classes_table  40.14ms DONE
+  2025_12_17_160710_create_parents_tuteurs_table  35.85ms DONE
+  2025_12_17_160800_create_eleves_table  60.55ms DONE
+  2025_12_17_161000_create_relations_eleve_tuteur_table  50.15ms DONE
+  2025_12_17_161100_create_inscriptions_table  63.24ms DONE
+  2025_12_17_161347_create_cycles_table  28.94ms DONE
+  2025_12_17_161620_create_affectations__classes_table  54.33ms DONE
+  2025_12_17_162114_create_documents_eleves_table  26.86ms DONE
+  2025_12_17_162333_create_fiches_inscription_table  28.83ms DONE
+  2025_12_17_162439_create_cartes_scolarite_table  45.83ms DONE
+  2025_12_17_162557_create_notifications_table  65.60ms DONE
+  2025_12_17_162820_create_preferences_notifications_table  38.73ms DONE
+  2025_12_17_162948_create_logs_activite_table  38.64ms DONE
+  2025_12_17_163308_create_cours_table  27.74ms DONE
+  2025_12_17_163441_create_presence_table  71.97ms DONE
+  2025_12_17_163518_create_requetes_table  29.85ms DONE
+  2025_12_17_163606_create_permission_table  28.00ms DONE
+  2025_12_17_164217_create_responsables_table  46.74ms DONE
+  2025_12_17_164346_create_enseignants_table  66.20ms DONE
+  2025_12_17_165335_create_matieres_table  20.23ms DONE
+  2025_12_17_165427_create_coefficients_table  33.86ms DONE
+  2025_12_17_165520_create_semestres_table  15.25ms DONE
+  2025_12_17_165606_create_notes_table  76.61ms DONE
+  2025_12_17_165700_create_evaluations_table  81.65ms DONE
+  2025_12_17_165746_create_bulletins_table  44.20ms DONE
+  2025_12_17_165955_create_statistiques_table  46.14ms DONE
+  2025_12_17_170347_add_foreign_keys_to_eleves_table  120.35ms DONE
+  2025_12_17_171738_create_frais_type_table  26.04ms DONE
+  2025_12_17_172029_create_tranche_paiement_table  39.67ms DONE
+  2025_12_17_172129_create_paiement_table  77.69ms DONE
+  2025_12_17_172230_create_remboursement_table  43.97ms DONE
+  2025_12_17_172325_create_statistique_financiere_table  23.87ms DONE
+  2025_12_23_000000_add_capacity_to_classes_table  27.82ms DONE
+  2025_12_23_000001_create_affectations_table  13.46ms DONE
+
+
+   INFO  Seeding database.  
+

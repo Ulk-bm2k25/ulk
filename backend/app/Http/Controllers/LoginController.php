@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\app\Http;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
@@ -19,8 +18,15 @@ class LoginController extends Controller
             return response()->json(['message' => 'Identifiants invalides'], 401);
         }
 
-    // Pour SPA : Sanctum gère le cookie de session automatiquement
-        return response()->json(['message' => 'Connecté', 'user' => Auth::user()]);
+        $user = Auth::user();
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Connecté',
+            'user' => $user,
+            'token' => $token,
+            'token_type' => 'Bearer',
+        ]);
     }
 
     public function logout(Request $request)

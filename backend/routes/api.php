@@ -4,9 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PdfController;
 use App\Http\Controllers\ClassController;
-use App\Http\Controllers\app\RegisterController;
-use App\Http\Controllers\app\Http\LoginController;
-use App\Http\Controllers\app\ParentController;
+use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\ParentPortalController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -20,7 +20,13 @@ Route::post('/login', [LoginController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout']);
     Route::get('/user', [LoginController::class, 'user']);
-    // Tes autres routes protégées pour les parents
+    
+    // Routes Espace Parent
+    Route::prefix('parent')->group(function () {
+        Route::get('/dashboard', [ParentPortalController::class, 'getDashboardSummary']);
+        Route::get('/children', [ParentPortalController::class, 'getChildren']);
+        Route::get('/children/{id}', [ParentPortalController::class, 'getChildDetails']);
+    });
 });
 
 Route::middleware('auth:sanctum')->group(function () {

@@ -8,6 +8,8 @@ class NiveauScolaire extends Model
 {
     use HasFactory;
 
+    protected $table = 'niveaux_scolaires';
+
     protected $fillable = ['nom', 'description'];
 
     public function classes()

@@ -9,7 +9,9 @@ class Eleve extends Model
     protected $fillable = [
         'user_id',
         'classe_id',
-        'serie_id'
+        'serie_id',
+        'sexe',
+        'age',
     ];
 
     public function user()
@@ -22,7 +24,7 @@ class Eleve extends Model
         return $this->belongsTo(Classe::class);
     }
 
-    public function inscription()
+    public function inscriptions()
     {
         return $this->hasMany(Inscription::class);
     }
