@@ -29,7 +29,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->group(function () {
         Route::get('/inscriptions', [InscriptionController::class, 'index']);
         Route::patch('/inscriptions/{id}/status', [InscriptionController::class, 'updateStatus']);
-        Route::get('/teachers', [ClassController::class, 'teachers']);
         
         // Grades & Bulletins
         Route::get('/grades/class/{classId}', [NoteController::class, 'getGradesByClass']);
@@ -42,7 +41,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/attendance/class/{classId}', [AttendanceController::class, 'getClassAttendance']);
         Route::post('/attendance/bulk', [AttendanceController::class, 'storeBulk']);
 
-        // Payments
         // Admin specific
         Route::get('/dashboard/stats', [AdminController::class, 'getDashboardStats']);
         Route::get('/students', [AdminController::class, 'getStudents']);

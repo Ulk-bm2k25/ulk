@@ -86,24 +86,25 @@ body.parent-body {
 }
 
 .parent-input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   padding: 14px 20px;
-  color: white !important;
-  /* Force white text to override global index.css */
+  color: #000000 !important;
+  /* Black text as requested */
   width: 100%;
   transition: all 0.2s ease;
   font-size: 1rem;
 }
 
 .parent-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: #4b5563;
+  /* Darker placeholder for contrast */
 }
 
 .parent-input:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.08);
+  background: #ffffff;
   border-color: var(--parent-accent);
-  box-shadow: 0 0 0 4px rgba(249, 177, 122, 0.1);
+  box-shadow: 0 0 0 4px rgba(249, 177, 122, 0.2);
 }

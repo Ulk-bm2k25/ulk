@@ -29,7 +29,22 @@ const ClassFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      // Transform database structure to form structure
+      const levelMap = { 1: 'Maternelle', 2: 'Primaire', 3: 'Collège', 4: 'Lycée' };
+      const level = levelMap[initialData.niveau_id] || 'Collège';
+
+      // Parse class name (e.g., "6ème A" -> root: "6ème", series: "A")
+      const nameParts = (initialData.nom || '').split(' ');
+      const root = nameParts[0] || '6ème';
+      const series = nameParts[1] || '';
+
+      setFormData({
+        level: level,
+        root: root,
+        series: series,
+        capacity: initialData.capacity_max || initialData.capacity || 40,
+        mainTeacher: initialData.mainTeacher || ''
+      });
     } else {
       setFormData({
         level: 'Collège',
@@ -143,8 +158,8 @@ const ClassFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
                       type="button"
                       onClick={() => setFormData({ ...formData, series: formData.series === s ? '' : s })}
                       className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all border ${formData.series === s
-                          ? 'bg-brand-primary text-white border-brand-primary'
-                          : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                        ? 'bg-brand-primary text-white border-brand-primary'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
                         }`}
                     >
                       {s}

@@ -11,7 +11,7 @@ const MyChildren = ({ onNavigate }) => {
         const fetchChildren = async () => {
             try {
                 const response = await api.get('/parent/children');
-                setChildren(response.data.children);
+                setChildren(response.data.children || []);
                 setIsLoading(false);
             } catch (error) {
                 console.error("Failed to fetch children", error);
@@ -84,22 +84,22 @@ const MyChildren = ({ onNavigate }) => {
                         <div className="flex items-start justify-between">
                             <div className="flex gap-6">
                                 <div className="w-20 h-20 rounded-2xl ring-4 ring-white/5 flex items-center justify-center bg-white/5 text-2xl font-black text-[#eb8e3a]">
-                                    {child.prenom[0]}{child.nom[0]}
+                                    {child.user?.prenom?.[0] || '?'}{child.user?.nom?.[0] || '?'}
                                 </div>
                                 <div className="space-y-3">
-                                    <h3 className="text-xl font-bold text-white">{child.prenom} {child.nom}</h3>
+                                    <h3 className="text-xl font-bold text-white">{child.user?.prenom} {child.user?.nom}</h3>
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-2 text-white/60 text-sm">
                                             <GraduationCap size={16} />
-                                            <span>Classe: {child.inscription?.classe?.nom || 'Non assigné'}</span>
+                                            <span>Classe: {child.classe?.nom || 'Non assigné'}</span>
                                         </div>
                                         <div className="flex items-center gap-2 text-white/60 text-sm">
                                             <Calendar size={16} />
-                                            <span>Inscrit en: {child.inscription?.annee_scolaire?.annee || 'N/A'}</span>
+                                            <span>Inscrit en: {child.inscriptions?.[0]?.annee_scolaire?.annee || 'N/A'}</span>
                                         </div>
                                         <div className="flex items-center gap-2 text-white/60 text-sm">
                                             <User size={16} />
-                                            <span>Statut: {child.inscription?.statut || 'En attente'}</span>
+                                            <span>Statut: {child.inscriptions?.[0]?.statut || 'En attente'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -120,13 +120,13 @@ const MyChildren = ({ onNavigate }) => {
                                 icon={Download}
                                 label="Carte Scolaire"
                                 disabled={false}
-                                onClick={(e) => handleDownload('card', `${child.prenom} ${child.nom}`, e)}
+                                onClick={(e) => handleDownload('card', `${child.user?.prenom} ${child.user?.nom}`, e)}
                             />
                             <ActionButton
                                 icon={FileText}
                                 label="Fiche d'inscription"
-                                disabled={child.inscription?.statut !== 'inscrit'}
-                                onClick={(e) => handleDownload('doc', `${child.prenom} ${child.nom}`, e)}
+                                disabled={child.inscriptions?.[0]?.statut !== 'inscrit'}
+                                onClick={(e) => handleDownload('doc', `${child.user?.prenom} ${child.user?.nom}`, e)}
                             />
                         </div>
                     </div>

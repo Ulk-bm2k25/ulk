@@ -42,9 +42,17 @@ const AdminManager = () => {
   const [dashboardStats, setDashboardStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // FETCH DATA FROM API
+  // CHECK ROLE & FETCH DATA FROM API
   useEffect(() => {
     if (!isAuthenticated) return;
+
+    // Check if user is actually admin
+    const storedUser = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user'));
+    if (storedUser && storedUser.role !== 'RESPONSABLE' && storedUser.role !== 'ADMIN') {
+      alert("Accès refusé. Vous êtes connecté en tant que " + storedUser.role + ". Veuillez vous connecter avec un compte Administrateur.");
+      handleLogout();
+      return;
+    }
 
     const fetchData = async () => {
       try {
@@ -60,9 +68,9 @@ const AdminManager = () => {
         setClassesData(classResponse.data);
         setTeachersData((teachResponse.data.teachers || []).map(t => ({
           ...t,
-          nom: t.user?.nom || t.nom,
-          prenom: t.user?.prenom || t.prenom,
-          fullName: `${t.user?.nom || t.nom} ${t.user?.prenom || t.prenom}`
+          nom: t.user?.nom || t.nom || 'Sans nom',
+          prenom: t.user?.prenom || t.prenom || '',
+          fullName: `${t.user?.nom || t.nom || ''} ${t.user?.prenom || t.prenom || ''}`
         })));
         setStudentsData((studResponse.data.students || []).map(s => ({
           ...s,
@@ -78,6 +86,10 @@ const AdminManager = () => {
         setIsLoading(false);
       } catch (error) {
         console.error("Failed to fetch admin data", error);
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          alert("Session expirée ou non autorisée. Veuillez vous reconnecter.");
+          handleLogout();
+        }
         setIsLoading(false);
       }
     };
@@ -86,14 +98,17 @@ const AdminManager = () => {
   }, [isAuthenticated]);
 
   // 2. MODIFICATION DE LA FONCTION LOGIN
-  const handleLogin = (token, rememberMe = false) => {
+  const handleLogin = (token, user, rememberMe = false) => {
     setIsAuthenticated(true);
 
-    if (rememberMe) {
-      localStorage.setItem('token', token);
-    } else {
-      sessionStorage.setItem('token', token);
-    }
+    const storage = rememberMe ? localStorage : sessionStorage;
+    storage.setItem('token', token);
+    storage.setItem('user', JSON.stringify(user));
+
+    // Clear other storage to avoid conflicts
+    const otherStorage = rememberMe ? sessionStorage : localStorage;
+    otherStorage.removeItem('token');
+    otherStorage.removeItem('user');
   };
 
   // 3. MODIFICATION DU LOGOUT
@@ -101,7 +116,9 @@ const AdminManager = () => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     setCurrentPage('dashboard');
     setSelectedInscription(null);
     setSelectedStudent(null);

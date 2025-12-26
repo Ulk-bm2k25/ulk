@@ -32,18 +32,18 @@ const LoginPage = ({ onLogin }) => {
     if (validateForm()) {
       setIsLoading(true);
       try {
-        // simulation d'appel API - À décommenter lors de l'intégration réelle
-        // const response = await api.post('/login', { email, password });
-        // onLogin(response.data.token, rememberMe);
+        // Appel API réel
+        const response = await api.post('/login', { email, password });
+        // Vérification basique du rôle (le backend doit aussi le faire, mais on filtre ici)
+        if (response.data.user.role !== 'ADMIN' && response.data.user.role !== 'RESPONSABLE') {
+          throw new Error("Accès interdit: Ce compte n'est pas administrateur.");
+        }
 
-        // Simulation temporaire
-        setTimeout(() => {
-          setIsLoading(false);
-          onLogin("mock-token-admin", rememberMe);
-        }, 1000);
+        onLogin(response.data.token, response.data.user, rememberMe);
       } catch (error) {
         setIsLoading(false);
-        setErrors({ general: "Erreur de connexion serveur." });
+        const msg = error.response?.data?.message || error.message || "Erreur de connexion serveur.";
+        setErrors({ general: msg });
       }
     }
   };

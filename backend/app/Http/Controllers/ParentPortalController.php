@@ -59,7 +59,7 @@ class ParentPortalController extends Controller
             return response()->json(['children' => []], 200);
         }
 
-        $children = $parent->eleves()->with(['classe.niveauScolaire', 'inscriptions.anneeScolaire'])->get();
+        $children = $parent->eleves()->with(['user', 'classe.niveauScolaire', 'inscriptions.anneeScolaire'])->get();
 
         return response()->json(['children' => $children]);
     }
@@ -110,6 +110,8 @@ class ParentPortalController extends Controller
             'childBirthDate' => 'required|date',
             'childGender' => 'required|string',
             'childGrade' => 'required|string',
+            'paymentProvider' => 'required|string',
+            'paymentPhone' => 'required|string',
         ]);
 
         $user = Auth::user();
@@ -142,7 +144,7 @@ class ParentPortalController extends Controller
                 'prenom' => $prenom,
                 'username' => $childUsername,
                 'email' => $childUsername . '@schoolhub.com',
-                'password_hash' => Hash::make('password123'),
+                'password_hash' => 'password123',
                 'role' => 'ELEVE',
             ]);
 
@@ -153,9 +155,11 @@ class ParentPortalController extends Controller
             }
 
             // 5. Create Eleve
+            $defaultSerie = \App\Models\Series::first();
             $eleve = Eleve::create([
                 'user_id' => $childUser->id,
                 'classe_id' => $classe->id,
+                'serie_id' => $defaultSerie ? $defaultSerie->id : 1, // Fallback to 1 if no series found
                 'sexe' => $request->childGender === 'Masculin' ? 'M' : 'F',
                 'age' => Carbon::parse($request->childBirthDate)->age,
             ]);
@@ -169,8 +173,28 @@ class ParentPortalController extends Controller
                 'eleve_id' => $eleve->id,
                 'annee_scolaire_id' => $anneeScolaire->id,
                 'date_inscription' => now(),
-                'statut' => 'en attente',
+                'statut' => 'inscrit', // Validated immediately after payment
             ]);
+
+            // 8. Find Tranche and Create Payment
+            $tranche = \App\Models\TranchePaiement::where('nom_tranche', 'LIKE', '%Inscription%')->first();
+            
+            // Fallback if no tranche seeded (create dummy one or pick first)
+            if (!$tranche) {
+                 $tranche = \App\Models\TranchePaiement::first();
+            }
+
+            if ($tranche) {
+                \App\Models\Paiement::create([
+                    'eleve_id' => $eleve->id,
+                    'tranche_id' => $tranche->id,
+                    'montant_paye' => 50000,
+                    'mode_paiement' => 'Mobile Money (' . $request->paymentProvider . ')',
+                    'reference_paiement' => 'PAY-' . strtoupper(uniqid()),
+                    'statut' => 'payé',
+                    'date_paiement' => now(),
+                ]);
+            }
 
             return response()->json([
                 'message' => 'Inscription de l\'enfant réussie.',
@@ -247,7 +271,7 @@ class ParentPortalController extends Controller
         }
 
         $user->update([
-            'password_hash' => Hash::make($request->new_password)
+            'password_hash' => $request->new_password
         ]);
 
         return response()->json(['message' => 'Mot de passe mis à jour avec succès']);

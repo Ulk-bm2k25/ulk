@@ -27,7 +27,7 @@ const Dashboard = ({ onNavigate }) => {
                     { label: 'Paiements dus', value: `${dashboardRes.data.summary.payments_due} FCFA`, icon: CreditCard, color: 'text-red-400', bg: 'bg-white/5' },
                 ]);
 
-                setChildren(childrenRes.data.children);
+                setChildren(childrenRes.data.children || []);
                 setIsLoading(false);
             } catch (error) {
                 console.error("Failed to fetch dashboard data", error);
@@ -85,12 +85,12 @@ const Dashboard = ({ onNavigate }) => {
                             >
                                 <div className="flex items-center gap-4">
                                     <div className="w-14 h-14 rounded-full ring-2 ring-white/10 flex items-center justify-center bg-white/5 text-xl font-black text-[#eb8e3a]">
-                                        {child.prenom[0]}{child.nom[0]}
+                                        {child.user?.prenom?.[0] || '?'}{child.user?.nom?.[0] || '?'}
                                     </div>
                                     <div>
-                                        <h3 className="font-bold">{child.prenom} {child.nom}</h3>
+                                        <h3 className="font-bold">{child.user?.prenom} {child.user?.nom}</h3>
                                         <p className="text-xs text-white/40 font-bold uppercase tracking-tight">
-                                            {child.inscription?.classe?.nom || 'Sans classe'} • {child.inscription?.statut || 'En attente'}
+                                            {child.classe?.nom || 'Sans classe'} • {child.inscriptions?.[0]?.statut || 'En attente'}
                                         </p>
                                     </div>
                                 </div>

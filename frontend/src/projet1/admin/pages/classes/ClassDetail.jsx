@@ -342,9 +342,9 @@ const ClassDetail = ({ classData, onBack, onEdit }) => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {mockStudents.map((student) => (
+                                {realStudents.map((student) => (
                                     <tr key={student.id} className="hover:bg-slate-50 transition-colors">
-                                        <td className="px-6 py-4 font-medium text-slate-800">{student.name}</td>
+                                        <td className="px-6 py-4 font-medium text-slate-800">{student.user?.nom} {student.user?.prenom}</td>
                                         <td className="px-6 py-4">
                                             <input
                                                 type="text"
@@ -397,13 +397,13 @@ const ClassDetail = ({ classData, onBack, onEdit }) => {
                 isOpen={isGradeEntryOpen}
                 onClose={() => setIsGradeEntryOpen(false)}
                 className={classData.name}
-                students={mockStudents}
+                students={realStudents}
             />
             {/* Modal de Présence (L'Appel) */}
             {isAttendanceOpen && (
                 <AttendanceRegister
                     className={classData.name}
-                    students={mockStudents}
+                    students={realStudents}
                     onClose={() => setIsAttendanceOpen(false)}
                 />
             )}

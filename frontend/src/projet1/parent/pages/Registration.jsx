@@ -51,7 +51,11 @@ const Registration = ({ mode = 'new', initialData = null, onComplete }) => {
         }
         setIsProcessing(true);
         try {
-            await api.post('/parent/enroll-child', formData);
+            await api.post('/parent/enroll-child', {
+                ...formData,
+                paymentProvider,
+                paymentPhone: phoneNumber
+            });
             setIsProcessing(false);
             setStep(4);
         } catch (error) {

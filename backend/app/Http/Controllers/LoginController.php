@@ -14,9 +14,14 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
+        \Illuminate\Support\Facades\Log::info('Login attempt', ['email' => $request->email, 'password_length' => strlen($request->password)]);
+
         if (!Auth::attempt($request->only('email', 'password'))) {
+            \Illuminate\Support\Facades\Log::warning('Login failed for email: ' . $request->email);
             return response()->json(['message' => 'Identifiants invalides'], 401);
         }
+        
+        \Illuminate\Support\Facades\Log::info('Login successful for: ' . $request->email);
 
         $user = Auth::user();
         

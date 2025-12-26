@@ -27,7 +27,7 @@ class RegisterController extends Controller
                 'prenom' => $request->prenom,
                 'username' => $request->username,
                 'email' => $request->email,
-                'password_hash' => Hash::make($request->password),
+                'password_hash' => $request->password,
                 'role' => 'PARENT',
             ]);
 
