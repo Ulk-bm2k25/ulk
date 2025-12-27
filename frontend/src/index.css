@@ -1,7 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
+@import "tailwindcss";
 
 @theme {
   /* Vos variables de thème existantes */
@@ -12,12 +9,18 @@
 
 
 @layer base {
-  input, textarea, select {
-    color: #1f2937; /* C'est l'équivalent de text-gray-800 */
+
+  input,
+  textarea,
+  select {
+    color: #1f2937;
+    /* C'est l'équivalent de text-gray-800 */
   }
 
   /* Si vous voulez être sûr que le placeholder (texte fantôme) soit visible aussi */
-  input::placeholder, textarea::placeholder {
-    color: #9ca3af; /* gray-400 */
+  input::placeholder,
+  textarea::placeholder {
+    color: #9ca3af;
+    /* gray-400 */
   }
 }

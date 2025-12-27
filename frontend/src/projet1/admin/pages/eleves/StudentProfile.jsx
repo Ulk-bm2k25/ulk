@@ -9,7 +9,7 @@ import {
 const StudentProfile = ({ student, onBack }) => {
     const [activeTab, setActiveTab] = useState('infos');
     const [showCard, setShowCard] = useState(false);
-    const [isLoading, setIsLoading] = useState(true); // 1. État de chargement
+    const [isLoading, setIsLoading] = useState(true);
 
     // Simulation chargement API
     useEffect(() => {
@@ -19,13 +19,18 @@ const StudentProfile = ({ student, onBack }) => {
 
     if (!student) return null;
 
-    // --- MAPPING BASE DE DONNÉES ---
+    // --- MAPPING BASE DE DONNÉES (CORRIGÉ) ---
+    // On priorise les données existantes dans 'student'
     const fullData = {
         ...student,
-        dob: '--/--/----',
-        pob: '--',
-        address: '--',
-        email: '--',
+        // Utilisation des données existantes OU valeur par défaut
+        dob: student.birthDate || '--/--/----',
+        pob: student.pob || '--', // Lieu de naissance
+        address: student.address || '--',
+        email: student.email || '--', 
+        phone: student.phone || '--',
+        
+        // Données fictives pour l'instant (car non gérées par AdminManager)
         history: [],
         documents: [],
         finance: {
@@ -39,7 +44,6 @@ const StudentProfile = ({ student, onBack }) => {
         }
     };
 
-    // 2. Loader
     if (isLoading) {
         return (
             <div className="h-[calc(100vh-150px)] flex items-center justify-center">
@@ -73,7 +77,10 @@ const StudentProfile = ({ student, onBack }) => {
                 <div className="flex flex-col md:flex-row gap-6 items-start md:items-center relative z-10">
                     {/* Avatar */}
                     <div className="w-24 h-24 bg-slate-100 rounded-2xl border-4 border-white shadow-lg flex items-center justify-center text-3xl font-bold text-slate-400">
-                        {fullData.firstName[0]}{fullData.lastName[0]}
+                        {fullData.firstName && fullData.lastName 
+                            ? `${fullData.firstName[0]}${fullData.lastName[0]}`
+                            : <User size={40} />
+                        }
                     </div>
 
                     {/* Infos Principales */}
@@ -107,7 +114,7 @@ const StudentProfile = ({ student, onBack }) => {
                     {/* Actions Rapides En-tête */}
                     <div className="flex gap-3">
                         <button
-                            onClick={() => alert(`Ouverture du mode modification pour ${fullData.firstName} ${fullData.lastName}`)}
+                            onClick={() => alert(`Pour modifier, veuillez retourner à la liste et cliquer sur "Modifier" dans le menu.`)}
                             className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors shadow-sm"
                         >
                             <Edit size={16} />
@@ -157,7 +164,7 @@ const StudentProfile = ({ student, onBack }) => {
                                 <div>
                                     <h3 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">État Civil</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <InfoItem icon={Calendar} label="Date de naissance" value={`${fullData.dob} (16 ans)`} />
+                                        <InfoItem icon={Calendar} label="Date de naissance" value={fullData.dob} />
                                         <InfoItem icon={MapPin} label="Lieu de naissance" value={fullData.pob} />
                                         <InfoItem icon={User} label="Genre" value={fullData.gender === 'M' ? 'Masculin' : 'Féminin'} />
                                         <InfoItem icon={MapPin} label="Adresse de résidence" value={fullData.address} />
@@ -181,24 +188,30 @@ const StudentProfile = ({ student, onBack }) => {
                         {activeTab === 'scolarite' && (
                             <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
                                 <h3 className="text-lg font-bold text-slate-800 mb-4">Historique académique</h3>
-                                <div className="relative border-l-2 border-slate-200 ml-3 space-y-8 pb-4">
-                                    {fullData.history.map((item, idx) => (
-                                        <div key={idx} className="relative pl-8">
-                                            <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-white ${idx === 0 ? 'bg-brand-primary' : 'bg-slate-300'}`}></div>
-                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-slate-50 p-4 rounded-lg border border-slate-100">
-                                                <div>
-                                                    <span className="text-sm font-bold text-brand-primary">{item.year}</span>
-                                                    <div className="font-bold text-slate-800 text-lg">{item.class}</div>
-                                                </div>
-                                                <div className="mt-2 sm:mt-0">
-                                                    <span className={`px-3 py-1 rounded text-xs font-bold ${item.result.includes('En cours') ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
-                                                        {item.result}
-                                                    </span>
+                                {fullData.history.length > 0 ? (
+                                    <div className="relative border-l-2 border-slate-200 ml-3 space-y-8 pb-4">
+                                        {fullData.history.map((item, idx) => (
+                                            <div key={idx} className="relative pl-8">
+                                                <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-white ${idx === 0 ? 'bg-brand-primary' : 'bg-slate-300'}`}></div>
+                                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                                    <div>
+                                                        <span className="text-sm font-bold text-brand-primary">{item.year}</span>
+                                                        <div className="font-bold text-slate-800 text-lg">{item.class}</div>
+                                                    </div>
+                                                    <div className="mt-2 sm:mt-0">
+                                                        <span className={`px-3 py-1 rounded text-xs font-bold ${item.result.includes('En cours') ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                                                            {item.result}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-slate-400 italic">
+                                        Aucun historique disponible.
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -214,25 +227,31 @@ const StudentProfile = ({ student, onBack }) => {
                                         + Ajouter un document
                                     </button>
                                 </div>
-                                {fullData.documents.map((doc, i) => (
-                                    <div key={i} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <div className="p-3 bg-red-50 text-red-600 rounded-lg">
-                                                <FileText size={20} />
+                                {fullData.documents.length > 0 ? (
+                                    fullData.documents.map((doc, i) => (
+                                        <div key={i} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                                            <div className="flex items-center gap-4">
+                                                <div className="p-3 bg-red-50 text-red-600 rounded-lg">
+                                                    <FileText size={20} />
+                                                </div>
+                                                <div>
+                                                    <div className="font-medium text-slate-800">{doc.name}</div>
+                                                    <div className="text-xs text-slate-500">{doc.date}</div>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <div className="font-medium text-slate-800">{doc.name}</div>
-                                                <div className="text-xs text-slate-500">{doc.date}</div>
-                                            </div>
+                                            <button
+                                                onClick={() => alert(`Téléchargement de : ${doc.name}`)}
+                                                className="p-2 text-slate-400 hover:text-slate-800"
+                                            >
+                                                <Download size={18} />
+                                            </button>
                                         </div>
-                                        <button
-                                            onClick={() => alert(`Téléchargement de : ${doc.name}`)}
-                                            className="p-2 text-slate-400 hover:text-slate-800"
-                                        >
-                                            <Download size={18} />
-                                        </button>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-8 text-slate-400 italic">
+                                        Aucun document numérisé.
                                     </div>
-                                ))}
+                                )}
                             </div>
                         )}
 
@@ -242,7 +261,7 @@ const StudentProfile = ({ student, onBack }) => {
                 {/* COLONNE DROITE (Actions & Stats) */}
                 <div className="space-y-6">
 
-                    {/* Widget Présence (Lien avec table `presence`) */}
+                    {/* Widget Présence */}
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                         <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
                             <Clock size={18} className="text-brand-primary" />
@@ -251,7 +270,9 @@ const StudentProfile = ({ student, onBack }) => {
                         <div className="space-y-4">
                             <div className="flex justify-between items-end">
                                 <div className="text-3xl font-bold text-slate-800">{fullData.attendance.rate}%</div>
-                                <div className="text-xs text-green-600 font-bold mb-1">Excellent</div>
+                                <div className="text-xs text-green-600 font-bold mb-1">
+                                    {fullData.attendance.rate > 90 ? 'Excellent' : 'Moyen'}
+                                </div>
                             </div>
                             <div className="w-full bg-slate-100 rounded-full h-2">
                                 <div className="bg-green-500 h-2 rounded-full" style={{ width: `${fullData.attendance.rate}%` }}></div>
@@ -263,7 +284,7 @@ const StudentProfile = ({ student, onBack }) => {
                         </div>
                     </div>
 
-                    {/* Widget Paiement (Lien avec table `paiement`) */}
+                    {/* Widget Paiement */}
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                         <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
                             <CreditCard size={18} className="text-brand-primary" />

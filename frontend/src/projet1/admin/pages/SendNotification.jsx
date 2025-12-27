@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Send, Mail, MessageSquare, Users, User, CheckCircle, AlertCircle, Search, School, Eye, Clock, Trash2, Smartphone } from 'lucide-react';
+import { Send, Mail, Users, User, CheckCircle, AlertCircle, Search, School, Eye, Clock, Trash2, Smartphone } from 'lucide-react';
 
-const SendNotification = () => {
-    const [step, setStep] = useState(1);
+// Modification : Ajout de la prop availableClasses pour la cohérence
+const SendNotification = ({ availableClasses = [] }) => {
     const [sending, setSending] = useState(false);
     const [success, setSuccess] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
@@ -18,16 +18,31 @@ const SendNotification = () => {
         }
     });
 
-    // Historique des notifications (Vague pour l'intégration Backend)
-    const [sentNotifications, setSentNotifications] = useState([]);
+    // Historique des notifications
+    const [sentNotifications, setSentNotifications] = useState([
+        {
+            id: 1,
+            date: '24 Déc 2025, 10:30',
+            target: '6ème A',
+            subject: 'Réunion des parents',
+            message: 'Bonjour chers parents, une réunion est prévue ce vendredi à 16h...',
+            channels: ['email', 'whatsapp'],
+            status: 'sent'
+        }
+    ]);
 
-    const classes = [
+    // LOGIQUE DE LISTE DES CLASSES :
+    // 1. Si AdminManager nous passe des classes réelles (availableClasses), on utilise leurs noms.
+    // 2. Sinon, on utilise une liste par défaut (Fallback) pour éviter un écran vide.
+    const defaultClasses = [
         'Maternelle', 'CI', 'CP', 'CE1', 'CE2', 'CM1', 'CM2',
         '6ème', '5ème', '4ème', '3ème',
-        '2nde A', '2nde B', '2nde C', '2nde D', '2nde G1', '2nde G2',
-        '1ère A', '1ère B', '1ère C', '1ère D', '1ère G1', '1ère G2',
-        'Terminale A', 'Terminale B', 'Terminale C', 'Terminale D', 'Terminale G1', 'Terminale G2'
+        '2nde', '1ère', 'Terminale'
     ];
+
+    const classOptions = availableClasses.length > 0 
+        ? availableClasses.map(c => c.name).sort() 
+        : defaultClasses;
 
     const templates = [
         { id: 'custom', label: 'Message Personnalisé', subject: '', message: '' },
@@ -168,7 +183,7 @@ const SendNotification = () => {
                                     value={formData.targetId}
                                 >
                                     <option value="" className="text-slate-400">-- Choisir une classe --</option>
-                                    {classes.map(cls => <option key={cls} value={cls} className="text-slate-800">{cls}</option>)}
+                                    {classOptions.map(cls => <option key={cls} value={cls} className="text-slate-800">{cls}</option>)}
                                 </select>
                             </div>
                         )}
@@ -437,4 +452,3 @@ const SendNotification = () => {
 };
 
 export default SendNotification;
-

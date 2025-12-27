@@ -7,16 +7,15 @@ import {
 const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
     const [selectedSubject, setSelectedSubject] = useState('Mathématiques');
     const [selectedPeriod, setSelectedPeriod] = useState('Trimestre 1');
-    const [subjectCoeff, setSubjectCoeff] = useState(4); // L'admin choisit uniquement le coefficient de la matière
+    const [subjectCoeff, setSubjectCoeff] = useState(4);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Mock subjects
     const subjects = [
         'Mathématiques', 'Français', 'Anglais', 'Physique-Chimie',
         'SVT', 'Histoire-Géo', 'Philosophie', 'EPS'
     ];
 
-    // Initialisation des notes (Mock)
+    // Initialisation des notes
     const [grades, setGrades] = useState(
         students.reduce((acc, student) => {
             acc[student.id] = {
@@ -44,6 +43,9 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
     };
 
     const calculateAverage = (studentGrades) => {
+        // Sécurité si l'élève n'a pas encore de notes initialisées
+        if (!studentGrades) return '--';
+
         const { int1, int2, int3, devoir, compo } = studentGrades;
         const vals = [int1, int2, int3].filter(v => v !== '').map(v => parseFloat(v));
 
@@ -53,7 +55,7 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
         const d = devoir !== '' ? parseFloat(devoir) : 0;
         const c = compo !== '' ? parseFloat(compo) : 0;
 
-        // Formule FIXE interne : (Moy Interros + Devoir + 2*Composition) / 4
+        // Formule : (Moy Interros + Devoir + 2*Composition) / 4
         const finalAvg = (interroAvg + d + (2 * c)) / 4;
         return finalAvg.toFixed(2);
     };
@@ -74,11 +76,11 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
             <div className="w-full max-w-5xl h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
 
                 {/* Header Rapide */}
-                <div className="bg-brand-dark p-6 text-white flex justify-between items-center shrink-0">
+                <div className="bg-slate-900 p-6 text-white flex justify-between items-center shrink-0">
                     <div>
-                        <div className="flex items-center gap-2 text-brand-primary mb-1">
+                        <div className="flex items-center gap-2 text-orange-500 mb-1">
                             <Calculator size={20} />
-                            <span className="text-sm font-bold uppercase tracking-widest text-brand-primary">Saisie des Notes (Trimestrielle)</span>
+                            <span className="text-sm font-bold uppercase tracking-widest">Saisie des Notes (Trimestrielle)</span>
                         </div>
                         <h2 className="text-2xl font-bold">Classe de {className}</h2>
                     </div>
@@ -100,7 +102,7 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
                                 <select
                                     value={selectedSubject}
                                     onChange={(e) => setSelectedSubject(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary/20 text-slate-800 font-bold appearance-none outline-none"
+                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 text-slate-800 font-bold appearance-none outline-none"
                                 >
                                     {subjects.map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
@@ -114,7 +116,7 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
                                 <select
                                     value={selectedPeriod}
                                     onChange={(e) => setSelectedPeriod(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary/20 text-slate-800 font-bold appearance-none outline-none"
+                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 text-slate-800 font-bold appearance-none outline-none"
                                 >
                                     <option>Trimestre 1</option>
                                     <option>Trimestre 2</option>
@@ -126,14 +128,14 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
                         {/* RÉGLAGE DU COEFFICIENT DE LA MATIÈRE */}
                         <div className="w-56 bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                             <div className="flex items-center gap-2 text-slate-600 font-bold text-[10px] uppercase">
-                                <Hash size={16} className="text-brand-primary" />
+                                <Hash size={16} className="text-orange-600" />
                                 Coeff. Matière :
                             </div>
                             <input
                                 type="number"
                                 min="1"
                                 max="10"
-                                className="w-14 h-9 text-center text-sm font-bold border-b-2 border-brand-primary/30 focus:border-brand-primary outline-none"
+                                className="w-14 h-9 text-center text-sm font-bold border-b-2 border-orange-200 focus:border-orange-500 outline-none"
                                 value={subjectCoeff}
                                 onChange={(e) => setSubjectCoeff(parseInt(e.target.value) || 1)}
                             />
@@ -152,7 +154,7 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
                                     <th className="px-4 py-4 text-center">Interro 2</th>
                                     <th className="px-4 py-4 text-center">Interro 3</th>
                                     <th className="px-4 py-4 text-center bg-orange-50/50">Devoir</th>
-                                    <th className="px-4 py-4 text-center bg-brand-primary/5">Composition</th>
+                                    <th className="px-4 py-4 text-center bg-slate-100">Composition</th>
                                     <th className="px-6 py-4 text-right bg-slate-50 sticky right-0 z-10">Moy. /20</th>
                                 </tr>
                             </thead>
@@ -160,13 +162,14 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
                                 {students.map((student) => (
                                     <tr key={student.id} className="hover:bg-slate-50/50 transition-colors group">
                                         <td className="px-6 py-4 sticky left-0 bg-white z-10 border-r border-slate-100 group-hover:bg-slate-50">
-                                            <div className="font-bold text-slate-800 uppercase text-xs">{student.name}</div>
+                                            {/* CORRECTION : Affichage Nom + Prénom */}
+                                            <div className="font-bold text-slate-800 uppercase text-xs">{student.lastName} {student.firstName}</div>
                                             <div className="text-[10px] text-slate-400 font-mono">{student.id}</div>
                                         </td>
                                         <td className="px-4 py-4">
                                             <input
                                                 type="text"
-                                                className="w-14 h-10 bg-slate-50 border border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                                                className="w-14 h-10 bg-slate-50 border border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
                                                 placeholder="--"
                                                 value={grades[student.id]?.int1}
                                                 onChange={(e) => handleGradeChange(student.id, 'int1', e.target.value)}
@@ -175,7 +178,7 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
                                         <td className="px-4 py-4">
                                             <input
                                                 type="text"
-                                                className="w-14 h-10 bg-slate-50 border border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                                                className="w-14 h-10 bg-slate-50 border border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
                                                 placeholder="--"
                                                 value={grades[student.id]?.int2}
                                                 onChange={(e) => handleGradeChange(student.id, 'int2', e.target.value)}
@@ -184,25 +187,26 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
                                         <td className="px-4 py-4">
                                             <input
                                                 type="text"
-                                                className="w-14 h-10 bg-slate-50 border border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                                                className="w-14 h-10 bg-slate-50 border border-slate-200 rounded-lg text-center font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
                                                 placeholder="--"
-                                                value={grades[student.id]?.int2}
+                                                // CORRECTION BUG : Utilisation de int3 ici
+                                                value={grades[student.id]?.int3}
                                                 onChange={(e) => handleGradeChange(student.id, 'int3', e.target.value)}
                                             />
                                         </td>
                                         <td className="px-4 py-4 bg-orange-50/20">
                                             <input
                                                 type="text"
-                                                className="w-14 h-10 bg-white border border-orange-200 rounded-lg text-center font-bold text-orange-700 focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                                                className="w-14 h-10 bg-white border border-orange-200 rounded-lg text-center font-bold text-orange-700 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
                                                 placeholder="--"
                                                 value={grades[student.id]?.devoir}
                                                 onChange={(e) => handleGradeChange(student.id, 'devoir', e.target.value)}
                                             />
                                         </td>
-                                        <td className="px-4 py-4 bg-brand-primary/5">
+                                        <td className="px-4 py-4 bg-slate-50">
                                             <input
                                                 type="text"
-                                                className="w-16 h-10 bg-white border border-brand-primary/30 rounded-lg text-center font-bold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                                                className="w-16 h-10 bg-white border border-slate-300 rounded-lg text-center font-bold text-slate-800 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
                                                 placeholder="--"
                                                 value={grades[student.id]?.compo}
                                                 onChange={(e) => handleGradeChange(student.id, 'compo', e.target.value)}
@@ -242,12 +246,12 @@ const GradeEntrySheet = ({ isOpen, onClose, className, students = [] }) => {
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="px-8 py-2.5 bg-brand-primary text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50"
+                            className="px-8 py-2.5 bg-orange-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 hover:bg-orange-700 transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50"
                         >
                             {isSaving ? (
                                 <>
                                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                    <span>Calcul & Enregistrement...</span>
+                                    <span>Enregistrement...</span>
                                 </>
                             ) : (
                                 <>

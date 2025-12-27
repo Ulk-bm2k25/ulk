@@ -7,7 +7,6 @@ import {
 const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) => {
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1. Simulation du chargement des détails complets
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
     return () => clearTimeout(timer);
@@ -15,7 +14,6 @@ const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) =
 
   if (!data) return null;
 
-  // 2. Utilisation des données réelles (sera hydraté par l'API)
   const fullData = {
     ...data,
     birthDate: data.birthDate || '--',
@@ -183,8 +181,9 @@ const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) =
                   <CheckCircle size={16} />
                   <span>Ce dossier est déjà validé.</span>
                 </div>
+                {/* CORRECTION ICI : 'cartes' au lieu de 'qr' */}
                 <button
-                  onClick={() => onNavigate('qr')}
+                  onClick={() => onNavigate('cartes')}
                   className="w-full h-12 flex items-center justify-center gap-3 bg-brand-dark text-white rounded-lg font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10"
                 >
                   <IdCard size={20} className="text-brand-primary" />

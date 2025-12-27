@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, User, MapPin, Phone, Calendar, School, Mail } from 'lucide-react';
 
-const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
-  // Structure initiale vide
+const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, availableClasses = [] }) => {
+  
+  // 1. Structure initiale (Dynamique selon les classes disponibles)
   const emptyForm = {
     firstName: '',
     lastName: '',
     gender: 'M',
-    dob: '', // Date naissance
-    pob: '', // Lieu naissance
-    class: '6ème A', // Valeur par défaut
-    matricule: '', // Laisser vide pour génération auto
+    dob: '',
+    pob: '',
+    // Si des classes existent, on prend la première par défaut, sinon vide
+    class: availableClasses.length > 0 ? availableClasses[0].name : '', 
+    matricule: '',
     parentName: '',
     parentPhone: '',
     parentEmail: '',
@@ -19,27 +21,33 @@ const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => 
 
   const [formData, setFormData] = useState(emptyForm);
 
-  // Remplissage si mode Édition
+  // 2. Remplissage si mode Édition ou Réinitialisation
   useEffect(() => {
-    if (initialData) {
-      // On adapte les données reçues au format du formulaire
-      setFormData({
-        firstName: initialData.firstName || '',
-        lastName: initialData.lastName || '',
-        gender: initialData.gender || 'M',
-        dob: initialData.birthDate || '', // Attention au format date selon votre BDD
-        pob: initialData.pob || '',
-        class: initialData.class || '6ème A',
-        matricule: initialData.id || '',
-        parentName: typeof initialData.parent === 'object' ? initialData.parent.name : initialData.parent || '',
-        parentPhone: typeof initialData.parent === 'object' ? initialData.parent.phone : initialData.phone || '',
-        parentEmail: initialData.email || '',
-        address: initialData.address || ''
-      });
-    } else {
-      setFormData(emptyForm);
+    if (isOpen) {
+      if (initialData) {
+        // Mode Édition
+        setFormData({
+          firstName: initialData.firstName || '',
+          lastName: initialData.lastName || '',
+          gender: initialData.gender || 'M',
+          dob: initialData.birthDate || '',
+          pob: initialData.pob || '',
+          class: initialData.class || (availableClasses.length > 0 ? availableClasses[0].name : ''),
+          matricule: initialData.id || '',
+          parentName: typeof initialData.parent === 'object' ? initialData.parent.name : initialData.parent || '',
+          parentPhone: typeof initialData.parent === 'object' ? initialData.parent.phone : initialData.phone || '',
+          parentEmail: initialData.email || '',
+          address: initialData.address || ''
+        });
+      } else {
+        // Mode Création (Reset)
+        setFormData({
+            ...emptyForm,
+            class: availableClasses.length > 0 ? availableClasses[0].name : ''
+        });
+      }
     }
-  }, [initialData, isOpen]);
+  }, [initialData, isOpen, availableClasses]); // Ajout de availableClasses aux dépendances
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,22 +56,23 @@ const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Reconstitution de l'objet élève pour le parent
+    
+    // Construction de l'objet élève
     const studentPayload = {
-      id: formData.matricule || `MAT-${Math.floor(Math.random() * 10000)}`, // Génération ID simu
+      id: formData.matricule || `MAT-${Math.floor(Math.random() * 10000)}`,
       firstName: formData.firstName,
       lastName: formData.lastName,
       gender: formData.gender,
       class: formData.class,
       birthDate: formData.dob,
       pob: formData.pob,
-      // Pour l'affichage liste simple
       parent: formData.parentName, 
       phone: formData.parentPhone,
-      // Pour l'objet complet
       email: formData.parentEmail,
       address: formData.address,
-      status: 'active'
+      status: 'active',
+      // Déduction simple du niveau pour l'affichage (optionnel)
+      level: formData.class.startsWith('6') || formData.class.startsWith('5') || formData.class.startsWith('4') || formData.class.startsWith('3') ? 'Collège' : 'Lycée'
     };
     
     onSubmit(studentPayload);
@@ -117,14 +126,24 @@ const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => 
                   <label className="text-sm font-semibold text-slate-700">Classe d'affectation</label>
                   <div className="relative">
                      <School size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
-                     <select name="class" value={formData.class} onChange={handleChange} className="w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary/20 outline-none bg-white font-medium">
-                        <option>6ème A</option>
-                        <option>6ème B</option>
-                        <option>5ème A</option>
-                        <option>3ème A</option>
-                        <option>2nde C</option>
-                        <option>Tle D</option>
-                        {/* Liste à dynamiser plus tard via props */}
+                     
+                     {/* 3. LISTE DÉROULANTE DYNAMIQUE */}
+                     <select 
+                        name="class" 
+                        value={formData.class} 
+                        onChange={handleChange} 
+                        className="w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary/20 outline-none bg-white font-medium"
+                     >
+                        <option value="">-- Choisir une classe --</option>
+                        {availableClasses && availableClasses.length > 0 ? (
+                            availableClasses.map(cls => (
+                                <option key={cls.id} value={cls.name}>
+                                    {cls.name}
+                                </option>
+                            ))
+                        ) : (
+                            <option disabled>Aucune classe disponible</option>
+                        )}
                      </select>
                   </div>
                 </div>

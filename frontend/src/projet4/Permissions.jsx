@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { 
+  FileText, Calendar, CheckCircle, XCircle, Clock, 
+  Search, Plus, User, FileInput, Send, AlertTriangle, 
+  Download, Filter 
+} from 'lucide-react';
 
-// IMPORTANT : Le nom de la fonction doit commencer par une majuscule
-function Permissions() {
+const PermissionsManager = () => {
   const [permissionRequests, setPermissionRequests] = useState([]);
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [currentClass, setCurrentClass] = useState('Terminale A');
   
   const [formData, setFormData] = useState({
     student_id: '',
@@ -19,752 +21,277 @@ function Permissions() {
     notify_sms: false
   });
 
-  const API_BASE_URL = 'http://localhost:8000/api';
-  const TOKEN = localStorage.getItem('token');
-
+  // --- SIMULATION DES DONNÉES (Pour affichage immédiat sans Backend) ---
   useEffect(() => {
-    fetchPermissionRequests();
-    fetchStudents();
-    fetchCourses();
+    // Simulation du délai réseau
+    setTimeout(() => {
+        // Mock Demandes
+        setPermissionRequests([
+            { id: 1, student: { name: 'Koffi Alain', class: '6ème A' }, absence_date: '2025-12-20', reason: 'Rendez-vous médical', status: 'pending', course: { subject: 'Mathématiques' } },
+            { id: 2, student: { name: 'Sena Béatrice', class: 'Tle D' }, absence_date: '2025-12-18', reason: 'Maladie (Certificat)', status: 'approved', course: { subject: 'Physique' } },
+            { id: 3, student: { name: 'Paul Pierre', class: '3ème A' }, absence_date: '2025-12-15', reason: 'Voyage familial', status: 'rejected', course: { subject: 'Anglais' } },
+        ]);
+        
+        // Mock Élèves
+        setStudents([
+            { id: 1, name: 'Koffi Alain' },
+            { id: 2, name: 'Sena Béatrice' },
+            { id: 3, name: 'Paul Pierre' }
+        ]);
+
+        // Mock Cours
+        setCourses([
+            { id: 1, subject: 'Mathématiques' },
+            { id: 2, subject: 'Physique' },
+            { id: 3, subject: 'Français' }
+        ]);
+
+        setLoading(false);
+    }, 800);
   }, []);
 
-  const fetchPermissionRequests = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/permissions`, {
-        headers: {
-          'Authorization': `Bearer ${TOKEN}`,
-          'Content-Type': 'application/json'
-        }
-      });
+  // --- LOGIQUE MÉTIER CONSERVÉE ---
 
-      if (!response.ok) throw new Error('Erreur de récupération des demandes');
-      
-      const data = await response.json();
-      setPermissionRequests(data);
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-      console.error('Erreur:', err);
-    } finally {
-      setLoading(false);
-    }
+  const handlePermissionAction = (requestId, status) => {
+    // Simulation mise à jour locale
+    setPermissionRequests(prev => prev.map(req => 
+        req.id === requestId ? { ...req, status: status } : req
+    ));
+    alert(`Demande ${status === 'approved' ? 'approuvée' : 'refusée'} avec succès`);
   };
 
-  const fetchStudents = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/students`, {
-        headers: {
-          'Authorization': `Bearer ${TOKEN}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error('Erreur de récupération des élèves');
-      
-      const data = await response.json();
-      setStudents(data);
-    } catch (err) {
-      console.error('Erreur:', err);
-    }
+  const resendNotification = (requestId) => {
+    alert('Notification renvoyée avec succès au parent.');
   };
 
-  const fetchCourses = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/courses`, {
-        headers: {
-          'Authorization': `Bearer ${TOKEN}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error('Erreur de récupération des cours');
-      
-      const data = await response.json();
-      setCourses(data);
-    } catch (err) {
-      console.error('Erreur:', err);
-    }
-  };
-
-  const handlePermissionAction = async (requestId, status) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/permissions/${requestId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status })
-      });
-
-      if (!response.ok) throw new Error('Erreur de traitement de la demande');
-
-      await fetchPermissionRequests();
-      
-      alert(`Demande ${status === 'approved' ? 'approuvée' : 'refusée'} avec succès`);
-    } catch (err) {
-      alert('Erreur: ' + err.message);
-      console.error('Erreur:', err);
-    }
-  };
-
-  const resendNotification = async (requestId) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/permissions/${requestId}/notify`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${TOKEN}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error('Erreur d\'envoi de notification');
-      
-      alert('Notification envoyée avec succès');
-    } catch (err) {
-      alert('Erreur: ' + err.message);
-      console.error('Erreur:', err);
-    }
-  };
-
-  const handleSubmitRequest = async (e) => {
+  const handleSubmitRequest = (e) => {
     e.preventDefault();
-
-    try {
-      const formDataToSend = new FormData();
-      Object.keys(formData).forEach(key => {
-        if (formData[key] !== null && formData[key] !== '') {
-          formDataToSend.append(key, formData[key]);
-        }
-      });
-
-      const response = await fetch(`${API_BASE_URL}/permissions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${TOKEN}`
-        },
-        body: formDataToSend
-      });
-
-      if (!response.ok) throw new Error('Erreur de création de la demande');
-
-      setFormData({
-        student_id: '',
-        absence_date: '',
-        course_id: '',
-        reason: '',
-        attachment: null,
-        notify_email: false,
-        notify_sms: false
-      });
-
-      await fetchPermissionRequests();
-      
-      alert('Demande créée avec succès');
-    } catch (err) {
-      alert('Erreur: ' + err.message);
-      console.error('Erreur:', err);
-    }
+    // Simulation création
+    const newReq = {
+        id: Date.now(),
+        student: students.find(s => s.id === parseInt(formData.student_id)) || { name: 'Nouveau', class: '?' },
+        absence_date: formData.absence_date,
+        course: courses.find(c => c.id === parseInt(formData.course_id)) || { subject: '?' },
+        reason: formData.reason,
+        status: 'pending'
+    };
+    setPermissionRequests([newReq, ...permissionRequests]);
+    
+    // Reset form
+    setFormData({
+        student_id: '', absence_date: '', course_id: '', reason: '',
+        attachment: null, notify_email: false, notify_sms: false
+    });
+    alert('Demande créée avec succès');
   };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked, files } = e.target;
-    
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : type === 'file' ? files[0] : value
     }));
   };
 
-  if (loading) {
+  const StatusBadge = ({ status }) => {
+    const styles = {
+        pending: 'bg-orange-100 text-orange-700',
+        approved: 'bg-green-100 text-green-700',
+        rejected: 'bg-red-100 text-red-700'
+    };
+    const labels = {
+        pending: 'En attente',
+        approved: 'Approuvée',
+        rejected: 'Refusée'
+    };
     return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Chargement des données...</p>
-      </div>
+        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${styles[status] || 'bg-gray-100'}`}>
+            {labels[status]}
+        </span>
     );
-  }
+  };
 
-  if (error) {
-    return (
-      <div className="error-container">
-        <p>❌ Erreur: {error}</p>
-        <button onClick={fetchPermissionRequests}>Réessayer</button>
-      </div>
-    );
-  }
-
+  // Séparation des listes comme dans le fichier original
   const pendingRequests = permissionRequests.filter(r => r.status === 'pending');
   const processedRequests = permissionRequests.filter(r => r.status !== 'pending');
 
+  if (loading) return <div className="p-10 text-center">Chargement des permissions...</div>;
+
   return (
-    <div className="permissions-container">
-      <style>{`
-        .permissions-container {
-          padding: 2rem;
-          max-width: 1400px;
-          margin: 0 auto;
-        }
-
-        .permissions-header {
-          margin-bottom: 2rem;
-        }
-
-        .permissions-header h1 {
-          color: #2d3250;
-          font-size: 1.75rem;
-          font-weight: 700;
-          margin-bottom: 0.5rem;
-        }
-
-        .permissions-header p {
-          color: #666;
-          font-size: 0.95rem;
-        }
-
-        .loading-container, .error-container {
-          text-align: center;
-          padding: 3rem;
-        }
-
-        .spinner {
-          width: 40px;
-          height: 40px;
-          border: 4px solid #f3f3f3;
-          border-top: 4px solid #f8b179;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin: 0 auto 1rem;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        .requests-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 2rem;
-          margin-bottom: 2rem;
-        }
-
-        .requests-section {
-          background: #fff;
-          border-radius: 8px;
-          padding: 1.5rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .section-header {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .section-header h2 {
-          color: #2d3250;
-          font-size: 1.25rem;
-          font-weight: 600;
-        }
-
-        .badge {
-          background: #f8b179;
-          color: #2d3250;
-          font-size: 0.8rem;
-          min-width: 24px;
-          height: 24px;
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 700;
-        }
-
-        .request-card {
-          background: #fafafa;
-          border-radius: 8px;
-          padding: 1.25rem;
-          margin-bottom: 1rem;
-          border-left: 4px solid #f8b179;
-        }
-
-        .request-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 1rem;
-        }
-
-        .student-info h3 {
-          color: #2d3250;
-          font-size: 1.1rem;
-          font-weight: 600;
-          margin-bottom: 0.25rem;
-        }
-
-        .request-date {
-          color: #666;
-          font-size: 0.85rem;
-        }
-
-        .status-badge {
-          padding: 0.375rem 0.75rem;
-          border-radius: 6px;
-          font-size: 0.8rem;
-          font-weight: 600;
-        }
-
-        .status-badge.pending {
-          background: #fff3cd;
-          color: #856404;
-        }
-
-        .status-badge.approved {
-          background: #d4edda;
-          color: #155724;
-        }
-
-        .status-badge.rejected {
-          background: #f8d7da;
-          color: #721c24;
-        }
-
-        .request-body {
-          margin-bottom: 1rem;
-        }
-
-        .request-reason {
-          background: #fff;
-          padding: 1rem;
-          border-radius: 6px;
-          border: 1px solid #e5e5e5;
-          margin-bottom: 1rem;
-          color: #2d3250;
-          line-height: 1.6;
-        }
-
-        .request-details {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 1rem;
-        }
-
-        .detail-item {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-        }
-
-        .detail-label {
-          font-size: 0.75rem;
-          color: #666;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .detail-value {
-          font-weight: 600;
-          color: #2d3250;
-        }
-
-        .request-actions {
-          display: flex;
-          gap: 0.75rem;
-          flex-wrap: wrap;
-        }
-
-        .btn {
-          padding: 0.5rem 1rem;
-          border: none;
-          border-radius: 6px;
-          cursor: pointer;
-          font-weight: 500;
-          font-size: 0.875rem;
-          transition: all 0.2s;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .btn-success {
-          background: #28a745;
-          color: white;
-        }
-
-        .btn-success:hover {
-          background: #218838;
-        }
-
-        .btn-danger {
-          background: #dc3545;
-          color: white;
-        }
-
-        .btn-danger:hover {
-          background: #c82333;
-        }
-
-        .btn-secondary {
-          background: #6c757d;
-          color: white;
-        }
-
-        .btn-secondary:hover {
-          background: #5a6268;
-        }
-
-        .btn-small {
-          padding: 0.375rem 0.75rem;
-          font-size: 0.8rem;
-        }
-
-        .empty-state {
-          text-align: center;
-          padding: 3rem 1rem;
-          color: #999;
-        }
-
-        .empty-icon {
-          font-size: 3rem;
-          margin-bottom: 1rem;
-        }
-
-        .history-table {
-          overflow-x: auto;
-        }
-
-        table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-
-        th {
-          background: #fafafa;
-          padding: 0.875rem;
-          text-align: left;
-          font-weight: 600;
-          color: #2d3250;
-          border-bottom: 2px solid #e5e5e5;
-          font-size: 0.85rem;
-        }
-
-        td {
-          padding: 0.875rem;
-          border-bottom: 1px solid #e5e5e5;
-          color: #2d3250;
-        }
-
-        .new-request-form {
-          background: #fff;
-          border-radius: 8px;
-          padding: 1.5rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .new-request-form h2 {
-          color: #2d3250;
-          font-size: 1.25rem;
-          font-weight: 600;
-          margin-bottom: 1.5rem;
-        }
-
-        .form-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 1.25rem;
-          margin-bottom: 1.25rem;
-        }
-
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-
-        .form-group.full-width {
-          grid-column: 1 / -1;
-        }
-
-        .form-group label {
-          font-weight: 500;
-          color: #2d3250;
-          font-size: 0.9rem;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-          padding: 0.625rem;
-          border: 1px solid #ddd;
-          border-radius: 6px;
-          font-size: 0.9rem;
-          font-family: inherit;
-          color: #2d3250;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-          outline: none;
-          border-color: #f8b179;
-        }
-
-        .checkbox-group {
-          display: flex;
-          gap: 1.5rem;
-          margin-top: 0.5rem;
-        }
-
-        .checkbox-label {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          cursor: pointer;
-          color: #2d3250;
-        }
-
-        .checkbox-label input[type="checkbox"] {
-          width: 18px;
-          height: 18px;
-          cursor: pointer;
-        }
-
-        .btn-primary {
-          background: #f8b179;
-          color: #2d3250;
-          font-weight: 600;
-        }
-
-        .btn-primary:hover {
-          background: #f5a05e;
-        }
-
-        @media (max-width: 1024px) {
-          .requests-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .form-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
-
-      <div className="permissions-header">
-        <h1>Demandes de Permission</h1>
-        <p>Gérez les demandes d'absence et de permission des élèves</p>
+    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+      
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+            <FileText className="text-orange-600" size={28} />
+            Demandes de Permission
+        </h1>
+        <p className="text-slate-500 text-sm mt-1">Gérez les demandes d'absence et de permission des élèves.</p>
       </div>
 
-      <div className="requests-grid">
-        <div className="requests-section">
-          <div className="section-header">
-            <h2>En attente</h2>
-            {pendingRequests.length > 0 && (
-              <span className="badge">{pendingRequests.length}</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        {/* COLONNE GAUCHE : EN ATTENTE */}
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm h-fit">
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    En attente
+                    {pendingRequests.length > 0 && (
+                        <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">{pendingRequests.length}</span>
+                    )}
+                </h2>
+            </div>
+
+            {pendingRequests.length === 0 ? (
+                <div className="text-center py-10 text-slate-400 border-2 border-dashed border-slate-100 rounded-xl">
+                    <CheckCircle size={32} className="mx-auto mb-2 opacity-50" />
+                    <p>Aucune demande en attente</p>
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {pendingRequests.map(request => (
+                        <div key={request.id} className="bg-slate-50 border-l-4 border-l-orange-500 rounded-r-xl p-4 shadow-sm">
+                            <div className="flex justify-between items-start mb-3">
+                                <div>
+                                    <h3 className="font-bold text-slate-800 text-lg">{request.student?.name}</h3>
+                                    <div className="text-sm text-slate-500 flex items-center gap-2">
+                                        <Clock size={14} /> {request.absence_date}
+                                    </div>
+                                </div>
+                                <StatusBadge status="pending" />
+                            </div>
+
+                            <div className="bg-white p-3 rounded border border-slate-200 text-sm text-slate-700 italic mb-3">
+                                "{request.reason}"
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 text-xs text-slate-500 mb-4">
+                                <div>
+                                    <span className="block font-bold uppercase text-[10px]">Classe</span>
+                                    {request.student?.class || 'N/A'}
+                                </div>
+                                <div>
+                                    <span className="block font-bold uppercase text-[10px]">Cours</span>
+                                    {request.course?.subject || 'N/A'}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => handlePermissionAction(request.id, 'approved')}
+                                    className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold transition-colors"
+                                >
+                                    ✓ Approuver
+                                </button>
+                                <button 
+                                    onClick={() => handlePermissionAction(request.id, 'rejected')}
+                                    className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold transition-colors"
+                                >
+                                    ✗ Refuser
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             )}
-          </div>
+        </div>
 
-          {pendingRequests.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">📋</div>
-              <p>Aucune demande en attente</p>
+        {/* COLONNE DROITE : HISTORIQUE */}
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm h-fit">
+            <h2 className="text-lg font-bold text-slate-800 mb-6">Historique</h2>
+            
+            <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+                        <tr>
+                            <th className="p-3">Élève</th>
+                            <th className="p-3">Date</th>
+                            <th className="p-3">Statut</th>
+                            <th className="p-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                        {processedRequests.map(request => (
+                            <tr key={request.id} className="hover:bg-slate-50">
+                                <td className="p-3 font-medium text-slate-800">{request.student?.name}</td>
+                                <td className="p-3 text-slate-500">{request.absence_date}</td>
+                                <td className="p-3"><StatusBadge status={request.status} /></td>
+                                <td className="p-3 text-right">
+                                    <button 
+                                        onClick={() => resendNotification(request.id)}
+                                        className="p-1.5 text-slate-400 hover:text-blue-600 bg-slate-50 hover:bg-blue-50 rounded transition-colors"
+                                        title="Renvoyer notif"
+                                    >
+                                        <Send size={14} />
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
-          ) : (
-            pendingRequests.map(request => (
-              <div key={request.id} className="request-card">
-                <div className="request-header">
-                  <div className="student-info">
-                    <h3>{request.student?.name || 'Élève inconnu'}</h3>
-                    <div className="request-date">Date: {request.absence_date}</div>
-                  </div>
-                  <span className="status-badge pending">En attente</span>
-                </div>
-
-                <div className="request-body">
-                  <div className="request-reason">
-                    <strong>Raison:</strong> {request.reason}
-                  </div>
-
-                  <div className="request-details">
-                    <div className="detail-item">
-                      <span className="detail-label">Classe</span>
-                      <span className="detail-value">{request.student?.class || 'N/A'}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Cours concerné</span>
-                      <span className="detail-value">{request.course?.subject || 'N/A'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="request-actions">
-                  <button
-                    className="btn btn-success"
-                    onClick={() => handlePermissionAction(request.id, 'approved')}
-                  >
-                    ✓ Approuver
-                  </button>
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => handlePermissionAction(request.id, 'rejected')}
-                  >
-                    ✗ Refuser
-                  </button>
-                  <button className="btn btn-secondary">
-                    💬 Contacter parent
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
         </div>
 
-        <div className="requests-section">
-          <div className="section-header">
-            <h2>Historique</h2>
-          </div>
-
-          <div className="history-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Élève</th>
-                  <th>Date</th>
-                  <th>Statut</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {processedRequests.map(request => (
-                  <tr key={request.id}>
-                    <td>{request.student?.name || 'N/A'}</td>
-                    <td>{request.absence_date}</td>
-                    <td>
-                      <span className={`status-badge ${request.status}`}>
-                        {request.status === 'approved' ? 'Approuvé' : 'Refusé'}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-secondary btn-small"
-                        onClick={() => resendNotification(request.id)}
-                      >
-                        Renvoyer notification
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
 
-      <div className="new-request-form">
-        <h2>Nouvelle demande de permission</h2>
-        <form onSubmit={handleSubmitRequest}>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Élève *</label>
-              <select
-                name="student_id"
-                value={formData.student_id}
-                onChange={handleInputChange}
-                required
-              >
-                <option value="">Sélectionner un élève</option>
-                {students.map(student => (
-                  <option key={student.id} value={student.id}>
-                    {student.name}
-                  </option>
-                ))}
-              </select>
+      {/* FORMULAIRE NOUVELLE DEMANDE */}
+      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <Plus size={20} className="text-orange-600" />
+            Nouvelle demande de permission
+        </h2>
+
+        <form onSubmit={handleSubmitRequest} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                    <label className="text-sm font-medium text-slate-700">Élève *</label>
+                    <select name="student_id" value={formData.student_id} onChange={handleInputChange} required className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500/20 outline-none">
+                        <option value="">Sélectionner...</option>
+                        {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                </div>
+                <div className="space-y-1">
+                    <label className="text-sm font-medium text-slate-700">Date d'absence *</label>
+                    <input type="date" name="absence_date" value={formData.absence_date} onChange={handleInputChange} required className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500/20 outline-none" />
+                </div>
+                <div className="space-y-1">
+                    <label className="text-sm font-medium text-slate-700">Cours concerné *</label>
+                    <select name="course_id" value={formData.course_id} onChange={handleInputChange} required className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500/20 outline-none">
+                        <option value="">Sélectionner...</option>
+                        {courses.map(c => <option key={c.id} value={c.id}>{c.subject}</option>)}
+                    </select>
+                </div>
             </div>
 
-            <div className="form-group">
-              <label>Date d'absence *</label>
-              <input
-                type="date"
-                name="absence_date"
-                value={formData.absence_date}
-                onChange={handleInputChange}
-                required
-              />
+            <div className="space-y-1">
+                <label className="text-sm font-medium text-slate-700">Raison *</label>
+                <textarea name="reason" value={formData.reason} onChange={handleInputChange} rows="3" required className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500/20 outline-none" placeholder="Motif de l'absence..."></textarea>
             </div>
 
-            <div className="form-group">
-              <label>Cours concerné *</label>
-              <select
-                name="course_id"
-                value={formData.course_id}
-                onChange={handleInputChange}
-                required
-              >
-                <option value="">Sélectionner un cours</option>
-                {courses.map(course => (
-                  <option key={course.id} value={course.id}>
-                    {course.subject}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
+                <div className="space-y-1">
+                     <label className="text-sm font-medium text-slate-700 block mb-1">Options de notification</label>
+                     <div className="flex gap-4">
+                        <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                            <input type="checkbox" name="notify_email" checked={formData.notify_email} onChange={handleInputChange} className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500" />
+                            Email
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                            <input type="checkbox" name="notify_sms" checked={formData.notify_sms} onChange={handleInputChange} className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500" />
+                            SMS
+                        </label>
+                     </div>
+                </div>
 
-            <div className="form-group full-width">
-              <label>Raison de l'absence *</label>
-              <textarea
-                name="reason"
-                value={formData.reason}
-                onChange={handleInputChange}
-                placeholder="Décrivez la raison de l'absence..."
-                rows="4"
-                required
-              />
+                <button type="submit" className="px-6 py-3 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 transition-colors shadow-lg">
+                    Soumettre la demande
+                </button>
             </div>
-
-            <div className="form-group">
-              <label>Pièce jointe (optionnel)</label>
-              <input
-                type="file"
-                name="attachment"
-                onChange={handleInputChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Notifier les parents</label>
-              <div className="checkbox-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="notify_email"
-                    checked={formData.notify_email}
-                    onChange={handleInputChange}
-                  />
-                  Par email
-                </label>
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="notify_sms"
-                    checked={formData.notify_sms}
-                    onChange={handleInputChange}
-                  />
-                  Par SMS
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <button type="submit" className="btn btn-primary">
-            Soumettre la demande
-          </button>
         </form>
       </div>
+
     </div>
   );
-}
+};
 
-export default Permissions;
+export default PermissionsManager;

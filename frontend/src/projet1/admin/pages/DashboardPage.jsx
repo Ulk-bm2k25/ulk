@@ -4,8 +4,6 @@ import { Users, AlertCircle, TrendingUp, Bell, Download, ChevronRight, CheckCirc
 const DashboardPage = ({ onNavigate }) => {
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simulation des données (State)
-  // Dans le futur, ces états seront remplis par un useEffect + fetch()
   // Données initiales (Vides pour l'intégration Backend)
   const [inscriptions] = useState([]);
 
@@ -16,7 +14,6 @@ const DashboardPage = ({ onNavigate }) => {
     classesSaturees: 0
   });
 
-  // Simulation du chargement des données (1.5 secondes)
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
@@ -24,7 +21,6 @@ const DashboardPage = ({ onNavigate }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // --- GÉNÉRATION DYNAMIQUE DES ALERTES ---
   const generateAlerts = () => {
     const activeAlerts = [];
 
@@ -78,7 +74,6 @@ const DashboardPage = ({ onNavigate }) => {
     }
   };
 
-  // Si chargement, afficher un loader centré
   if (isLoading) {
     return (
       <div className="h-[calc(100vh-150px)] flex items-center justify-center">
@@ -112,7 +107,7 @@ const DashboardPage = ({ onNavigate }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="Total Élèves"
-          value={kpis.totalEleves.toLocaleString()} // Formatage 1 248
+          value={kpis.totalEleves.toLocaleString()}
           sub="+12% vs N-1"
           color="text-green-600"
           icon={Users}
@@ -191,7 +186,8 @@ const DashboardPage = ({ onNavigate }) => {
             <QuickAction icon={CheckCircle} label="Valider inscriptions" color="text-orange-600" bg="bg-orange-100" onClick={() => onNavigate('inscriptions')} />
             <QuickAction icon={Plus} label="Créer une classe" color="text-blue-600" bg="bg-blue-100" onClick={() => onNavigate('classes')} />
             <QuickAction icon={Send} label="Envoi rapide" color="text-green-600" bg="bg-green-100" onClick={() => onNavigate('notifications')} />
-            <QuickAction icon={IdCard} label="Cartes scolaires" color="text-red-600" bg="bg-red-100" onClick={() => onNavigate('qr')} />
+            {/* CORRECTION ICI : 'cartes' au lieu de 'qr' */}
+            <QuickAction icon={IdCard} label="Cartes scolaires" color="text-red-600" bg="bg-red-100" onClick={() => onNavigate('cartes')} />
             <QuickAction icon={FileText} label="Historique docs" color="text-purple-600" bg="bg-purple-100" onClick={() => onNavigate('documents')} />
           </div>
         </div>
@@ -223,7 +219,7 @@ const DashboardPage = ({ onNavigate }) => {
               {inscriptions.map((row) => (
                 <tr
                   key={row.id}
-                  onClick={() => onNavigate('inscriptions')} // Rend la ligne cliquable
+                  onClick={() => onNavigate('inscriptions')}
                   className="hover:bg-slate-50 transition-colors cursor-pointer"
                   title="Cliquez pour gérer les inscriptions"
                 >
@@ -260,8 +256,6 @@ const DashboardPage = ({ onNavigate }) => {
     </div>
   );
 };
-
-// --- Petits Composants ---
 
 const StatCard = ({ label, value, sub, color, icon: Icon }) => (
   <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
