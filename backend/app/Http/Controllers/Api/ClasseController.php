@@ -28,11 +28,33 @@ class ClasseController extends Controller
      */
     public function store(Request $request)
     {
-        // Validation des données entrantes
-        $data = $request->validate([
-            'nom'    => 'required|string', // nom de la classe, ex: "Terminale A"
-            'niveau' => 'required|string', // niveau de la classe, ex: "Terminale"
-        ]);
+        // Validation flexible pour supporter l'ancien front (niveau) et le nouveau (niveau_id)
+        $rules = [
+            'nom'            => 'required|string',
+            'description'    => 'nullable|string',
+            'annee_scolaire' => 'required|string',
+        ];
+
+        if ($request->has('niveau_id')) {
+            $rules['niveau_id'] = 'required|integer|exists:niveaux_scolaires,id';
+        } else {
+            $rules['niveau'] = 'required|string';
+        }
+
+        $data = $request->validate($rules);
+
+        // Si on a reçu 'niveau' au lieu de 'niveau_id', on tente la résolution
+        if (!isset($data['niveau_id']) && isset($data['niveau'])) {
+            $niveau = \App\Models\NiveauScolaire::where('nom', $data['niveau'])->first();
+            if ($niveau) {
+                $data['niveau_id'] = $niveau->id;
+            } else {
+                return response()->json([
+                    'message' => "Le niveau scolaire '{$data['niveau']}' n'a pas été trouvé. Veuillez utiliser un ID valide."
+                ], 422);
+            }
+            unset($data['niveau']);
+        }
 
         $classe = Classe::create($data);
 
@@ -63,10 +85,28 @@ class ClasseController extends Controller
     {
         $classe = Classe::findOrFail($id);
 
-        $validatedData = $request->validate([
-            'nom'    => 'required|string',
-            'niveau' => 'required|string',
-        ]);
+        $rules = [
+            'nom'            => 'required|string',
+            'description'    => 'nullable|string',
+            'annee_scolaire' => 'required|string',
+        ];
+
+        if ($request->has('niveau_id')) {
+            $rules['niveau_id'] = 'required|integer|exists:niveaux_scolaires,id';
+        } else if ($request->has('niveau')) {
+            $rules['niveau'] = 'required|string';
+        }
+
+        $validatedData = $request->validate($rules);
+
+        // Résolution de niveau -> niveau_id si nécessaire
+        if (!isset($validatedData['niveau_id']) && isset($validatedData['niveau'])) {
+            $niveau = \App\Models\NiveauScolaire::where('nom', $validatedData['niveau'])->first();
+            if ($niveau) {
+                $validatedData['niveau_id'] = $niveau->id;
+            }
+            unset($validatedData['niveau']);
+        }
 
         $classe->update($validatedData);
 

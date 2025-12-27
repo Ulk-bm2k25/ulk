@@ -67,6 +67,22 @@ class Eleve extends Model
     }
 
     /**
+     * Relation: Un élève a plusieurs permissions
+     */
+    public function permissions(): HasMany
+    {
+        return $this->hasMany(Permission::class, 'eleve_id');
+    }
+
+    /**
+     * Relation: Un élève appartient à une série
+     */
+    public function serie(): BelongsTo
+    {
+        return $this->belongsTo(Serie::class, 'serie_id');
+    }
+
+    /**
      * Helper: Obtenir le premier tuteur (utilisé comme alias dans certains contrôleurs)
      */
     public function getParentTuteurAttribute()

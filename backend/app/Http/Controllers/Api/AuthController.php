@@ -239,6 +239,9 @@ class AuthController extends Controller
             ], 403);
         }
 
+        // Définir le nom de l'appareil
+        $deviceName = $request->device_name ?? 'web';
+
         // Vérifier si 2FA est activé
         if ($user->two_factor_confirmed_at) {
             // Créer un token temporaire sans les permissions complètes

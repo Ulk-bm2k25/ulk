@@ -30,7 +30,7 @@ class Classe extends Model
     }
     public function getLibelleAttribute(): string
     {
-        return "{$this->nom} ({$this->niveau->libelle ?? 'N/A'}) - {$this->annee_scolaire}";
+        return "{$this->nom} ({$this->niveau->nom ?? 'N/A'}) - {$this->annee_scolaire}";
     }
 
 }

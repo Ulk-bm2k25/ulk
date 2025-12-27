@@ -40,4 +40,9 @@ class Course extends Model
     {
         return $this->hasMany(Presence::class, 'cours_id');
     }
+
+    public function getSubjectAttribute()
+    {
+        return $this->matiere->nom ?? 'Cours';
+    }
 }

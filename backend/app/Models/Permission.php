@@ -86,6 +86,6 @@ class Permission extends Model
      */
     public function getLabelAttribute(): string
     {
-        return "Permission pour le cours {$this->course->nom} demandée par {$this->eleve->nom_complet}";
+        return "Permission pour le cours " . ($this->course->matiere->nom ?? 'Inconnu') . " demandée par " . ($this->eleve->user->name ?? 'Inconnu');
     }
 }

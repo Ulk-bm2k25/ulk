@@ -10,6 +10,9 @@ use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Notifications\AbsenceNotification;
+use App\Notifications\AbsenceAlertNotification;
+use Illuminate\Support\Facades\Notification;
 
 class PresenceController extends Controller
 {
@@ -44,6 +47,7 @@ class PresenceController extends Controller
                 'nom' => $eleve->user->name ?? 'Inconnu',
                 'present' => $existing ? (bool)$existing->present : null,
                 'heure' => $existing ? $existing->heure : null,
+                'absences_count' => $eleve->presences()->where('present', false)->count(),
                 'parent_email' => $parent->email ?? null,
                 'parent_phone' => $parent->telephone ?? null
             ];
@@ -319,9 +323,6 @@ class PresenceController extends Controller
     
     /**
      * Récupérer les cours d'une classe pour une date spécifique
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function getCoursesOfDay(Request $request)
     {
@@ -348,5 +349,37 @@ class PresenceController extends Controller
             'success' => true,
             'courses' => $courses
         ]);
+    }
+
+    /**
+     * PRIVATE: ENVOYER LES NOTIFICATIONS
+     */
+    private function notifyAbsence($presence)
+    {
+        $eleve = $presence->eleve;
+        if (!$eleve) return;
+
+        $tuteur = $eleve->tuteurs->first();
+        if (!$tuteur) return;
+
+        $courseName = $presence->course->matiere->nom ?? 'Cours';
+
+        // Calcul du nombre de TOTAL d'absences (Merge User Logic)
+        $totalAbsences = Presence::where('eleve_id', $eleve->id)
+            ->where('present', false)
+            ->count();
+
+        // 1. Notification d'absence simple (inclut le cumul)
+        $tuteur->notify(new AbsenceNotification($courseName, $totalAbsences));
+
+        // 2. Vérification des absences successives (Alerte si >= 3 en 7 jours)
+        $recentAbsences = Presence::where('eleve_id', $eleve->id)
+            ->where('present', false)
+            ->whereDate('date', '>=', now()->subDays(7))
+            ->count();
+
+        if ($recentAbsences >= 3) {
+            $tuteur->notify(new AbsenceAlertNotification($eleve->user->name, $totalAbsences));
+        }
     }
 }

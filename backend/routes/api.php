@@ -271,6 +271,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/activities', [DashboardController::class, 'getRecentActivities']);
     Route::get('/dashboard/attention', [DashboardController::class, 'getStudentsNeedingAttention']);
     Route::get('/notifications', [DashboardController::class, 'getRecentActivities']);
+    Route::put('/notifications/{id}/read', [DashboardController::class, 'markAsRead']);
 });
 
 // ----------------------------------------
