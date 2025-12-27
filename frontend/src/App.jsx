@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import projet1Routes from './projet1/projet1Routes.jsx';
+import { useState, useEffect } from 'react';
+import ApiService from './utils/api';
 
 
 // Simple Landing Page for development
@@ -51,8 +53,6 @@ function App() {
     </BrowserRouter>
   )
 }
-import { useState, useEffect } from 'react';
-import ApiService from './utils/api';
 
 function App() {
     const [remboursements, setRemboursements] = useState([]);
@@ -235,7 +235,7 @@ function App() {
                 }
             }, 'Créer un nouveau remboursement')
         )
-    );
+    ); 
 }
 
 // Styles
