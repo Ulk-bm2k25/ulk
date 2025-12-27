@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '@/api';
 import ParentLayout from './layout/ParentLayout';
 import ParentLogin from './pages/ParentLogin';
 import ParentRegister from './pages/ParentRegister';
