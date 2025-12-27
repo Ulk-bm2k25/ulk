@@ -25,6 +25,10 @@ class Eleve extends Model
         'user_id',
         'classe_id',
         'serie_id',
+        'sexe',
+        'age',
+        'photo', // Added photo as well just in case for future
+        'matricule' // Added matricule
     ];
 
     /**
@@ -47,5 +51,20 @@ class Eleve extends Model
             'tuteur_id'
         )->withPivot('relation_type')
           ->withTimestamps();
+    }
+    /**
+     * Relation: Un élève appartient à une classe
+     */
+    public function classe(): BelongsTo
+    {
+        return $this->belongsTo(Classe::class, 'classe_id');
+    }
+
+    /**
+     * Relation: Un élève a plusieurs inscriptions
+     */
+    public function inscriptions()
+    {
+        return $this->hasMany(Inscription::class);
     }
 }

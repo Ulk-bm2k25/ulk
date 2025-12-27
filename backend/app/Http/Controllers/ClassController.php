@@ -20,18 +20,40 @@ class ClassController extends Controller
 
     public function store(Request $request)
     {
+        // LOGGING DEBUG
+        \Illuminate\Support\Facades\Log::info('Class Creation Attempt:', $request->all());
+
         $validator = Validator::make($request->all(), [
             'nom' => 'required|string',
             'niveau_id' => 'required|exists:niveaux_scolaires,id',
-            'capacity_max' => 'integer|min:1',
+            'capacity_max' => 'nullable|integer|min:1', // Changed to nullable
         ]);
 
         if ($validator->fails()) {
+            \Illuminate\Support\Facades\Log::error('Class Validation Failed:', $validator->errors()->toArray());
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $class = Classe::create($request->all());
-        return response()->json($class, 201);
+        try {
+            $data = $request->all();
+            
+            // Auto-assign School Year if missing
+            if (!isset($data['annee_scolaire'])) {
+                $year = date('Y');
+                $data['annee_scolaire'] = $year . '-' . ($year + 1);
+            }
+
+            // Default capacity if missing
+            if (!isset($data['capacity_max'])) {
+                $data['capacity_max'] = 30;
+            }
+
+            $class = Classe::create($data);
+            return response()->json($class, 201);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Class Creation Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Server Error: ' . $e->getMessage()], 500);
+        }
     }
 
     public function show($id)
