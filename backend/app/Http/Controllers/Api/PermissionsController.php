@@ -223,3 +223,4 @@ class PermissionsController extends Controller
         ];
     }
 }
+

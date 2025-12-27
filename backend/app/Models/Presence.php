@@ -9,30 +9,29 @@ class Presence extends Model
 {
     use HasFactory;
 
-    // Colonnes autorisées en mass-assignment
-    protected $fillable = ['seance_id', 'eleve_id', 'statut'];
+    protected $table = 'presence';
+    
+    protected $fillable = [
+        'classe_id',
+        'course_id', 
+        'eleve_id',
+        'date',
+        'heure',
+        'present'
+    ];
 
-    /**
-     * Relation: chaque présence appartient à une séance
-     */
-    public function seance()
-    {
-        return $this->belongsTo(Seance::class);
-    }
-
-    /**
-     * Relation: chaque présence appartient à un élève
-     */
     public function eleve()
     {
-        return $this->belongsTo(Eleve::class);
+        return $this->belongsTo(Eleve::class, 'eleve_id');
     }
 
-    /**
-     * Vérifier si l'élève est présent
-     */
-    public function isPresent(): bool
+    public function classe()
     {
-        return $this->statut === 'present';
+        return $this->belongsTo(Classe::class, 'classe_id');
+    }
+
+    public function course()
+    {
+        return $this->belongsTo(Course::class, 'course_id');
     }
 }

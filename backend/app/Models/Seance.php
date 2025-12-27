@@ -32,6 +32,14 @@ class Seance extends Model
     }
 
     /**
+     * Alias pour la relation 'course' (utilisé dans DashboardController)
+     */
+    public function cours(): BelongsTo
+    {
+        return $this->course();
+    }
+
+    /**
      * Relation: une séance peut avoir plusieurs présences
      *
      * @return HasMany

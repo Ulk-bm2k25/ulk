@@ -44,8 +44,9 @@ class EleveController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'user_id'   => 'required|exists:users,id',   // L'utilisateur lié à l'élève
-            'classe_id' => 'required|exists:classes,id', // La classe à laquelle l'élève appartient
+            'user_id'   => 'required|exists:users,id',
+            'classe_id' => 'required|exists:classes,id',
+            'serie_id'  => 'nullable|exists:series,id',
         ]);
 
         $eleve = Eleve::create($data);
@@ -67,6 +68,7 @@ class EleveController extends Controller
         $data = $request->validate([
             'user_id'   => 'sometimes|exists:users,id',
             'classe_id' => 'sometimes|exists:classes,id',
+            'serie_id'  => 'sometimes|nullable|exists:series,id',
         ]);
 
         $eleve->update($data);
@@ -87,4 +89,6 @@ class EleveController extends Controller
 
         return response()->json(['message' => 'Élève supprimé avec succès'], 200);
     }
+
+
 }

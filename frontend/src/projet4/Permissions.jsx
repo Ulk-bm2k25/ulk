@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 
 // IMPORTANT : Le nom de la fonction doit commencer par une majuscule
-function Permissions() {
+function Permissions({ initialClassId }) {
   const [permissionRequests, setPermissionRequests] = useState([]);
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentClass, setCurrentClass] = useState('Terminale A');
-  
+  const [currentClassId, setCurrentClassId] = useState(initialClassId || null);
+
   const [formData, setFormData] = useState({
     student_id: '',
     absence_date: '',
@@ -39,7 +39,7 @@ function Permissions() {
       });
 
       if (!response.ok) throw new Error('Erreur de récupération des demandes');
-      
+
       const data = await response.json();
       setPermissionRequests(data);
       setError(null);
@@ -61,7 +61,7 @@ function Permissions() {
       });
 
       if (!response.ok) throw new Error('Erreur de récupération des élèves');
-      
+
       const data = await response.json();
       setStudents(data);
     } catch (err) {
@@ -79,7 +79,7 @@ function Permissions() {
       });
 
       if (!response.ok) throw new Error('Erreur de récupération des cours');
-      
+
       const data = await response.json();
       setCourses(data);
     } catch (err) {
@@ -101,7 +101,7 @@ function Permissions() {
       if (!response.ok) throw new Error('Erreur de traitement de la demande');
 
       await fetchPermissionRequests();
-      
+
       alert(`Demande ${status === 'approved' ? 'approuvée' : 'refusée'} avec succès`);
     } catch (err) {
       alert('Erreur: ' + err.message);
@@ -120,7 +120,7 @@ function Permissions() {
       });
 
       if (!response.ok) throw new Error('Erreur d\'envoi de notification');
-      
+
       alert('Notification envoyée avec succès');
     } catch (err) {
       alert('Erreur: ' + err.message);
@@ -160,7 +160,7 @@ function Permissions() {
       });
 
       await fetchPermissionRequests();
-      
+
       alert('Demande créée avec succès');
     } catch (err) {
       alert('Erreur: ' + err.message);
@@ -170,7 +170,7 @@ function Permissions() {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked, files } = e.target;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : type === 'file' ? files[0] : value
