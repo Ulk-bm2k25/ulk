@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\TwoFactorAuthController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -203,6 +204,54 @@ Route::middleware('auth:sanctum')->group(function () {
         // Révoquer une session spécifique
         Route::delete('/{tokenId}', [ProfileController::class, 'revokeSession'])
             ->name('sessions.revoke');
+    });
+    
+    // ----------------------------------------
+    // Gestion des notifications (Admin)
+    // ----------------------------------------
+    Route::prefix('notifications')->middleware('role:admin')->group(function () {
+        
+        // Lister toutes les notifications
+        Route::get('/', [NotificationController::class, 'index'])
+            ->name('notifications.index');
+        
+        // Obtenir une notification spécifique
+        Route::get('/{id}', [NotificationController::class, 'show'])
+            ->name('notifications.show');
+        
+        // Envoyer un rappel de paiement
+        Route::post('/payment-reminder', [NotificationController::class, 'sendPaymentReminder'])
+            ->name('notifications.send-payment-reminder');
+        
+        // Envoyer une notification urgente
+        Route::post('/urgent', [NotificationController::class, 'sendUrgentNotification'])
+            ->name('notifications.send-urgent');
+        
+        // Envoyer une notification générale
+        Route::post('/general', [NotificationController::class, 'sendGeneralNotification'])
+            ->name('notifications.send-general');
+        
+        // Relancer une notification échouée
+        Route::post('/{id}/retry', [NotificationController::class, 'retry'])
+            ->name('notifications.retry');
+        
+        // Lister les templates disponibles
+        Route::get('/templates/list', [NotificationController::class, 'templates'])
+            ->name('notifications.templates');
+    });
+    
+    // ----------------------------------------
+    // Notifications des parents
+    // ----------------------------------------
+    Route::prefix('notifications')->group(function () {
+        
+        // Mes notifications (pour les parents)
+        Route::get('/me/list', [NotificationController::class, 'myNotifications'])
+            ->name('notifications.my');
+        
+        // Tracker l'ouverture d'un email (pixel tracking)
+        Route::get('/{id}/track/open', [NotificationController::class, 'trackOpen'])
+            ->name('notifications.track-open');
     });
 });
 

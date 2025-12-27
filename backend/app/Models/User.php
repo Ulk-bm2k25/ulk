@@ -8,6 +8,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Notification;
 use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
 
@@ -150,5 +152,25 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendEmailVerificationNotification()
     {
         $this->notify(new VerifyEmailNotification());
+    }
+
+    /**
+     * Relation: Un utilisateur peut recevoir plusieurs notifications
+     *
+     * @return HasMany
+     */
+    public function receivedNotifications(): HasMany
+    {
+        return $this->hasMany(Notification::class, 'recipient_id');
+    }
+
+    /**
+     * Relation: Un utilisateur peut envoyer plusieurs notifications
+     *
+     * @return HasMany
+     */
+    public function sentNotifications(): HasMany
+    {
+        return $this->hasMany(Notification::class, 'sender_id');
     }
 }
