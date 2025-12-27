@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('eleve_id')->constrained('eleves')->onDelete('cascade');
             $table->foreignId('annee_scolaire_id')->constrained('annee_scolaires_table')->cascadeOnDelete();
-            $table->date('date_inscription')->default(DB::raw('CURRENT_DATE'));
+            $table->date('date_inscription')->nullable();
             $table->string('statut')->default('inscrit');
             $table->timestamps();
             $table->unique(['eleve_id', 'annee_scolaire_id']);

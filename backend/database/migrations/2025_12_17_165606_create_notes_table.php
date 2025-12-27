@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('matiere_id')->constrained('matieres')->onDelete('cascade');
             $table->foreignId('semestre_id')->constrained('semestres')->onDelete('cascade');
             $table->decimal('valeur', 5, 2);
-            $table->date('date_note')->default(DB::raw('CURRENT_DATE'));
+            $table->date('date_note')->nullable();
             $table->timestamps();
             $table->index('eleve_id');
             $table->index('matiere_id');

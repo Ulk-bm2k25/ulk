@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, BookOpen, Hash, Search } from 'lucide-react';
-import api from '../../../../api';
+import api from '../../../api';
 
 const MatieresManager = () => {
   const [matieres, setMatieres] = useState([]);
@@ -26,29 +26,22 @@ const MatieresManager = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      // TODO: Remplacer par les vraies API calls
-      // const [matieresRes, classesRes, seriesRes] = await Promise.all([
-      //   api.get('/matieres'),
-      //   api.get('/classes'),
-      //   api.get('/series')
-      // ]);
+      const [matieresRes, classesRes] = await Promise.all([
+        api.get('/matieres'),
+        api.get('/classes')
+      ]);
       
-      // Mock data pour le moment
-      setMatieres([
-        { id: 1, nom: 'Mathématiques', code: 'MATH', coefficient: 4, classe_id: 1, serie_id: null },
-        { id: 2, nom: 'Français', code: 'FR', coefficient: 3, classe_id: 1, serie_id: null },
-        { id: 3, nom: 'Physique-Chimie', code: 'PC', coefficient: 3, classe_id: 2, serie_id: 1 },
-      ]);
-      setClasses([
-        { id: 1, name: '6ème A' },
-        { id: 2, name: 'Terminale D' },
-      ]);
-      setSeries([
-        { id: 1, nom: 'Série D' },
-        { id: 2, nom: 'Série C' },
-      ]);
+      setMatieres(matieresRes.data.data || []);
+      setClasses(classesRes.data || []);
+      
+      // TODO: Ajouter endpoint pour les séries si nécessaire
+      setSeries([]);
     } catch (error) {
       console.error('Erreur chargement données:', error);
+      // Fallback sur mock data en cas d'erreur
+      setMatieres([]);
+      setClasses([]);
+      setSeries([]);
     } finally {
       setLoading(false);
     }
@@ -58,17 +51,18 @@ const MatieresManager = () => {
     e.preventDefault();
     try {
       if (editingMatiere) {
-        // await api.put(`/matieres/${editingMatiere.id}`, formData);
-        setMatieres(prev => prev.map(m => m.id === editingMatiere.id ? { ...formData, id: editingMatiere.id } : m));
+        const response = await api.put(`/matieres/${editingMatiere.id}`, formData);
+        setMatieres(prev => prev.map(m => m.id === editingMatiere.id ? response.data.data : m));
       } else {
-        // await api.post('/matieres', formData);
-        setMatieres(prev => [...prev, { ...formData, id: Date.now() }]);
+        const response = await api.post('/matieres', formData);
+        setMatieres(prev => [...prev, response.data.data]);
       }
       setShowModal(false);
       resetForm();
+      loadData(); // Recharger les données
     } catch (error) {
       console.error('Erreur sauvegarde:', error);
-      alert('Erreur lors de la sauvegarde');
+      alert(error.response?.data?.message || 'Erreur lors de la sauvegarde');
     }
   };
 
@@ -87,11 +81,11 @@ const MatieresManager = () => {
   const handleDelete = async (id) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette matière ?')) return;
     try {
-      // await api.delete(`/matieres/${id}`);
+      await api.delete(`/matieres/${id}`);
       setMatieres(prev => prev.filter(m => m.id !== id));
     } catch (error) {
       console.error('Erreur suppression:', error);
-      alert('Erreur lors de la suppression');
+      alert(error.response?.data?.message || 'Erreur lors de la suppression');
     }
   };
 

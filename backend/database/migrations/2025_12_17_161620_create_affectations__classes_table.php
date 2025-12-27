@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('eleve_id')->constrained('eleves')->onDelete('cascade');
             $table->foreignId('classe_id')->constrained('classes')->onDelete('cascade');
-            $table->date('date_affectation')->default(DB::raw('CURRENT_DATE'));
+            $table->date('date_affectation')->nullable();
             $table->string('statut')->default('affecte');
             $table->timestamps();
             $table->unique(['eleve_id', 'classe_id']);

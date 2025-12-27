@@ -16,7 +16,7 @@ return new class extends Migration
 
             
             $table->id();
-            $table->string('nom')->unique();
+            $table->string('nom', 191)->unique();
             $table->text('description')->nullable();
             $table->timestamps();
         });

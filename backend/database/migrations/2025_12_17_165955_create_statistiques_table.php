@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('eleve_id')->constrained('eleves')->onDelete('cascade');
             $table->decimal('moyenne', 5, 2)->nullable();
             $table->integer('rang')->nullable();
-            $table->string('annee_scolaire');
+            $table->string('annee_scolaire', 191);
             $table->timestamps();
             $table->index('eleve_id');
             $table->index('annee_scolaire');

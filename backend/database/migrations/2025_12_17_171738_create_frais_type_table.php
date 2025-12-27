@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('frais_type', function (Blueprint $table) {
             $table->id();
-            $table->string('nom');
+            $table->string('nom', 191);
             $table->text('description')->nullable();
             $table->decimal('montant_defaut', 10, 2)->default(0.00);
             $table->boolean('est_obligatoire')->default(true);

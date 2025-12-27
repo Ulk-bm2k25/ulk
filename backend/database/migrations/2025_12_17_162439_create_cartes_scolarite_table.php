@@ -15,8 +15,8 @@ return new class extends Migration
         Schema::create('cartes_scolarite', function (Blueprint $table) {
             $table->id();
             $table->foreignId('eleve_id')->constrained('eleves')->onDelete('cascade');
-            $table->string('numero_carte')->unique();
-            $table->date('date_emission')->default(DB::raw('CURRENT_DATE'));
+            $table->string('numero_carte', 100)->unique();
+            $table->date('date_emission')->nullable();
             $table->date('date_expiration')->nullable();
             $table->string('statut')->default('valide');
             $table->timestamps();

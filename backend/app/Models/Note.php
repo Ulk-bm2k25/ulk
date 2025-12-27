@@ -12,14 +12,19 @@ class Note extends Model
     protected $fillable = [
         'eleve_id',
         'matiere_id',
-        'note',
+        'semestre_id',
+        'valeur',
+        'date_note',
         'type',
-        'periode',
-        'annee_scolaire',
+        'statut',
+        'validated_by',
+        'validated_at',
     ];
 
     protected $casts = [
-        'note' => 'decimal:2',
+        'valeur' => 'decimal:2',
+        'date_note' => 'date',
+        'validated_at' => 'datetime',
     ];
 
     public function eleve(): BelongsTo
@@ -30,5 +35,15 @@ class Note extends Model
     public function matiere(): BelongsTo
     {
         return $this->belongsTo(Matiere::class);
+    }
+
+    public function semestre(): BelongsTo
+    {
+        return $this->belongsTo(Semestre::class);
+    }
+
+    public function validatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'validated_by');
     }
 }

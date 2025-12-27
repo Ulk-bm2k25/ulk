@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('bulletins', function (Blueprint $table) {
             $table->id();
             $table->foreignId('eleve_id')->constrained('eleves')->onDelete('cascade');
-            $table->string('annee_scolaire');
+            $table->string('annee_scolaire', 191);
             $table->decimal('moyenne', 5, 2)->nullable();
             $table->integer('rang')->nullable();
             $table->timestamps();

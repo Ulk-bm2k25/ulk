@@ -17,8 +17,8 @@ return new class extends Migration
             $table->foreignId('paiement_id')->constrained('paiement')->onDelete('cascade');
             $table->decimal('montant_rembourse', 10, 2);
             $table->text('motif')->nullable();
-            $table->string('statut')->default('initié');
-            $table->date('date_remboursement')->default(DB::raw('CURRENT_DATE'));
+            $table->string('statut', 191)->default('initié');
+            $table->date('date_remboursement')->nullable();
             $table->timestamps();
             $table->index('paiement_id');
             $table->index('statut');

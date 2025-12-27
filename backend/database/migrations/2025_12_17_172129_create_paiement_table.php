@@ -19,8 +19,8 @@ return new class extends Migration
             $table->decimal('montant_paye', 10, 2);
             $table->string('mode_paiement')->default('cash');
             $table->string('reference_paiement')->nullable();
-            $table->string('statut')->default('en attente');
-            $table->date('date_paiement')->default(DB::raw('CURRENT_DATE'));
+            $table->string('statut', 191)->default('en attente');
+            $table->date('date_paiement')->nullable();
             $table->timestamps();
             $table->index('eleve_id');
             $table->index('tranche_id');

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('preferences_notifications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('notification_type');
+            $table->string('notification_type', 191);
             $table->boolean('via_email')->default(true);
             $table->boolean('via_WhatsApp')->default(true);
             $table->timestamps();

@@ -15,7 +15,7 @@ return new class extends Migration
         if (!Schema::hasTable('etudiants')) {
             Schema::create('etudiants', function (Blueprint $table) {
                 $table->id();
-                $table->string('matricule')->unique();
+                $table->string('matricule', 100)->unique();
                 $table->string('nom');
                 $table->string('prenom');
                 $table->string('classe')->nullable();
@@ -29,7 +29,7 @@ return new class extends Migration
         if (!Schema::hasTable('remboursements')) {
             Schema::create('remboursements', function (Blueprint $table) {
                 $table->id();
-                $table->string('numero_dossier')->unique();
+                $table->string('numero_dossier', 100)->unique();
                 $table->foreignId('etudiant_id')->constrained('etudiants')->onDelete('cascade');
                 $table->decimal('montant', 10, 2);
                 $table->string('motif');
@@ -45,7 +45,7 @@ return new class extends Migration
             Schema::create('paiements', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('etudiant_id')->constrained('etudiants')->onDelete('cascade');
-                $table->string('reference')->unique();
+                $table->string('reference', 100)->unique();
                 $table->decimal('montant', 10, 2);
                 $table->string('type')->default('scolarite');
                 $table->date('date_paiement');

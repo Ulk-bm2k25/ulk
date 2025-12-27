@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('cycles', function (Blueprint $table) {
             $table->id();
-            $table->string('nom');
+            $table->string('nom', 191);
             $table->foreignId('niveau_id')->constrained('niveaux_scolaires')->onDelete('cascade');
             $table->text('description')->nullable();
             $table->timestamps();

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('eleve_id')->constrained('eleves')->onDelete('cascade');
             $table->string('type');
             $table->string('url');
-            $table->date('upload_date')->default(DB::raw('CURRENT_DATE'));
+            $table->date('upload_date')->nullable();
             $table->timestamps();
             $table->index('eleve_id');
         });

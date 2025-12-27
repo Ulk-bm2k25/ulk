@@ -14,11 +14,11 @@ return new class extends Migration
     {
         Schema::create('statistique_financiere', function (Blueprint $table) {
             $table->id();
-            $table->string('annee_scolaire');
+            $table->string('annee_scolaire', 191);
             $table->decimal('total_recettes', 10, 2)->default(0.00);
             $table->decimal('total_remboursements', 10, 2)->default(0.00);
             $table->integer('nombre_eleves_payants')->default(0);
-            $table->date('date_generation')->default(DB::raw('CURRENT_DATE'));
+            $table->date('date_generation')->nullable();
             $table->timestamps();
             $table->index('annee_scolaire');
         });

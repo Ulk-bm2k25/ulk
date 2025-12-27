@@ -32,6 +32,23 @@ Route::prefix('stats')->group(function () {
 
 Route::get('/reports/financial/data', [App\Http\Controllers\Api\FinancialReportController::class, 'getData']);
 
+// Routes pour les classes et élèves
+Route::prefix('classes')->group(function () {
+    Route::get('/', [ClassController::class, 'index']);
+    Route::get('/{id}', [ClassController::class, 'show']);
+    Route::get('/{id}/students', [ClassController::class, 'show']); // Retourne les élèves de la classe
+});
+
+Route::prefix('eleves')->group(function () {
+    Route::get('/', function (Request $request) {
+        $query = \App\Models\Eleve::query();
+        if ($request->has('classe_id')) {
+            $query->where('classe_id', $request->classe_id);
+        }
+        return response()->json(['success' => true, 'data' => $query->with('classe')->get()]);
+    });
+});
+
 
 // Routes pour les notifications de paiement
 Route::middleware('auth:sanctum')->group(function () {

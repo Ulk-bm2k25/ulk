@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('eleve_id')->constrained('eleves')->onDelete('cascade');
             $table->foreignId('semestre_id')->constrained('semestres')->onDelete('cascade');
             $table->decimal('valeur', 5, 2);
-            $table->date('date_eval')->default(DB::raw('CURRENT_DATE'));
+            $table->date('date_eval')->nullable();
             $table->timestamps();
             $table->index('matiere_id');
             $table->index('eleve_id');
