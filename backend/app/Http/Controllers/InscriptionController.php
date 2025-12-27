@@ -75,8 +75,9 @@ class InscriptionController extends Controller
             DB::table('logs_activite')->insert([
                 'user_id' => $user->id,
                 'action' => "Mise à jour statut inscription ID $inscription->id vers $request->statut",
-                'date_action' => now(),
-                'ip_adresse' => $request->ip(),
+                'created_at' => now(), // Was date_action
+                'updated_at' => now(), // Add updated_at
+                'ip_address' => $request->ip(), // Was ip_adresse
             ]);
 
             return response()->json([

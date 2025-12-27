@@ -40,26 +40,25 @@ const ParentManager = () => {
 
     // Centralized children data
     const [children, setChildren] = useState([]);
+    const [selectedChildId, setSelectedChildId] = useState(null);
+
+    const fetchChildren = async () => {
+        if (!isAuthenticated) return;
+        try {
+            const response = await api.get('/parent/children');
+            setChildren(response.data.children || []);
+            // If no child selected and we have children, select the first one
+            if (!selectedChildId && response.data.children?.length > 0) {
+                setSelectedChildId(response.data.children[0].id);
+            }
+        } catch (error) {
+            console.error("Failed to fetch children in manager", error);
+        }
+    };
 
     React.useEffect(() => {
-        if (isAuthenticated) {
-            const fetchChildren = async () => {
-                try {
-                    const response = await api.get('/parent/children');
-                    setChildren(response.data.children || []);
-                    // If no child selected and we have children, select the first one
-                    if (!selectedChildId && response.data.children?.length > 0) {
-                        setSelectedChildId(response.data.children[0].id);
-                    }
-                } catch (error) {
-                    console.error("Failed to fetch children in manager", error);
-                }
-            };
-            fetchChildren();
-        }
+        fetchChildren();
     }, [isAuthenticated]);
-
-    const [selectedChildId, setSelectedChildId] = useState(null);
 
     const handleLogin = (token, userData) => {
         setIsAuthenticated(true);
@@ -108,7 +107,10 @@ const ParentManager = () => {
                 return <Registration
                     mode={registrationParams.mode}
                     initialData={registrationParams.childData}
-                    onComplete={() => handleNavigate('children')}
+                    onComplete={() => {
+                        fetchChildren();
+                        handleNavigate('children');
+                    }}
                 />;
             case 'settings':
                 return <SettingsPage onLogout={handleLogout} />;

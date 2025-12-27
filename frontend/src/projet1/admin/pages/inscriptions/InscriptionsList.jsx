@@ -15,6 +15,7 @@ const InscriptionsList = ({
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
   // Suppression du timer de simulation
@@ -49,9 +50,23 @@ const InscriptionsList = ({
     return matchesStatus && matchesSearch;
   });
 
+  const activeItem = filteredData.find(i => i.id === openMenuId);
+
   const toggleMenu = (id, e) => {
     e.stopPropagation();
-    setOpenMenuId(openMenuId === id ? null : id);
+    if (openMenuId === id) {
+      setOpenMenuId(null);
+    } else {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const scrollY = window.scrollY || window.pageYOffset;
+      const scrollX = window.scrollX || window.pageXOffset;
+
+      setMenuPosition({
+        top: rect.bottom + scrollY + 5,
+        left: rect.right - 192 + scrollX // 192px = w-48 (12rem)
+      });
+      setOpenMenuId(id);
+    }
   };
 
   const StatusBadge = ({ status }) => {
@@ -315,11 +330,78 @@ const InscriptionsList = ({
         </div>
       </div>
 
-      {openMenuId && (
-        <div
-          className="fixed inset-0 z-40 bg-slate-900/5 backdrop-blur-[1px]"
-          onClick={() => setOpenMenuId(null)}
-        ></div>
+      {openMenuId && activeItem && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-transparent"
+            onClick={() => setOpenMenuId(null)}
+          ></div>
+          <div
+            className="fixed z-50 w-48 bg-white rounded-lg shadow-xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            style={{
+              top: `${menuPosition.top}px`,
+              left: `${menuPosition.left}px`
+            }}
+          >
+            <div className="py-1">
+              {/* BOUTON VALIDER RAPIDEMENT */}
+              {activeItem.statut === 'en attente' && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onQuickValidate(activeItem.id);
+                    setOpenMenuId(null);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                >
+                  <CheckCircle size={16} className="text-green-600" />
+                  Valider rapidement
+                </button>
+              )}
+
+              {/* BOUTON RELANCER */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRelance(activeItem);
+                  setOpenMenuId(null);
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+              >
+                <Mail size={16} className="text-blue-600" />
+                Relancer parent
+              </button>
+
+              {/* BOUTON TÉLÉCHARGER (Simulation) */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  alert("Téléchargement du dossier PDF...");
+                  setOpenMenuId(null);
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+              >
+                <Download size={16} className="text-slate-500" />
+                Télécharger PDF
+              </button>
+            </div>
+
+            <div className="border-t border-slate-100 py-1">
+              {/* BOUTON SUPPRIMER */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(activeItem.id);
+                  setOpenMenuId(null);
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+              >
+                <Trash2 size={16} />
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
