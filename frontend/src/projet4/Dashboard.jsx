@@ -4,8 +4,8 @@ import axios from 'axios';
 // Import des composants 
 import Permissions from './Permissions.jsx';
 import Attendance from './Attendance.jsx';
-/*import Courses from './Courses.jsx';
-import Reports from './Reports.jsx';*/
+import Reports from './Reports.jsx';
+/*import Courses from './Courses.jsx';*/
 
 // Composants icônes SVG
 const DashboardIcon = () => (
@@ -201,72 +201,150 @@ function SchoolHub() {
 
   // Fonction pour charger les données du dashboard
   const fetchDashboardData = async (classId = selectedClassId) => {
-    try {
-      const headers = getHeaders();
-      if (!headers) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      const newData = { stats: null, studentsAlert: [] };
-
-      // 1. Stats du Dashboard
-      try {
-        const statsUrl = classId ? `${API_BASE_URL}/dashboard/stats?classe_id=${classId}` : `${API_BASE_URL}/dashboard/stats`;
-        const statsResponse = await fetch(statsUrl, { headers });
-        if (!statsResponse.ok) throw new Error(`HTTP ${statsResponse.status}`);
-        newData.stats = await statsResponse.json();
-      } catch (e) {
-        console.warn('Erreur Stats:', e);
-        // On ne bloque pas tout le dashboard pour les stats
-      }
-
-      // 2. Activités récentes (Notifications)
-      try {
-        const activitiesResponse = await fetch(`${API_BASE_URL}/dashboard/activities`, { headers });
-        if (!activitiesResponse.ok) throw new Error(`HTTP ${activitiesResponse.status}`);
-        const activitiesData = await activitiesResponse.json();
-        setNotifications(activitiesData);
-      } catch (e) {
-        console.warn('Erreur Activités:', e);
-      }
-
-      // 3. Élèves nécessitant attention
-      try {
-        const attentionUrl = classId ? `${API_BASE_URL}/dashboard/attention?classe_id=${classId}` : `${API_BASE_URL}/dashboard/attention`;
-        const attentionResponse = await fetch(attentionUrl, { headers });
-        if (!attentionResponse.ok) throw new Error(`HTTP ${attentionResponse.status}`);
-        newData.studentsAlert = await attentionResponse.json();
-      } catch (e) {
-        console.warn('Erreur Attention:', e);
-      }
-
-      // 4. Informations utilisateur (/auth/me)
-      try {
-        const userResponse = await fetch(`${API_BASE_URL}/auth/me`, { headers });
-        if (!userResponse.ok) throw new Error(`HTTP ${userResponse.status}`);
-        const userResult = await userResponse.json();
-        setUserInfo(userResult.data.user);
-      } catch (e) {
-        console.error('Erreur User Info (CRITIQUE):', e);
-        // Si on ne peut pas charger l'utilisateur, c'est probablement un problème de token
-        throw new Error("Session expirée ou invalide. Veuillez vous reconnecter.");
-      }
-
-      // Mettre à jour l'état avec les données collectées
-      setDashboardData(newData);
-
-    } catch (err) {
-      console.error('Erreur Globale Dashboard:', err);
-      setError(err.message);
+  try {
+    const headers = getHeaders();
+    if (!headers) {
+      console.warn('Pas de token, utilisation des données de secours');
       loadFallbackData();
-    } finally {
       setLoading(false);
+      return;
     }
-  };
+
+    setLoading(true);
+    setError(null);
+
+    const newData = { 
+      stats: null, 
+      studentsAlert: [] 
+    };
+
+    // 1. Stats du Dashboard
+    try {
+      const statsUrl = classId 
+        ? `${API_BASE_URL}/dashboard/stats?classe_id=${classId}` 
+        : `${API_BASE_URL}/dashboard/stats`;
+      
+      console.log('🔍 Requête stats:', statsUrl);
+      
+      const statsResponse = await fetch(statsUrl, { headers });
+      
+      console.log('📊 Réponse stats:', {
+        status: statsResponse.status,
+        ok: statsResponse.ok,
+        statusText: statsResponse.statusText
+      });
+      
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        console.log('✅ Stats reçues:', statsData);
+        
+        // Vérifier si les données sont dans un format attendu
+        if (statsData && typeof statsData === 'object') {
+          // Si les stats sont dans statsData.data, les extraire
+          newData.stats = statsData.data || statsData;
+        } else {
+          console.warn('⚠️ Format de stats inattendu:', statsData);
+          throw new Error('Format de données invalide');
+        }
+      } else {
+        const errorText = await statsResponse.text();
+        console.error('❌ Erreur stats:', {
+          status: statsResponse.status,
+          error: errorText
+        });
+        throw new Error(`HTTP ${statsResponse.status}: ${errorText}`);
+      }
+    } catch (e) {
+      console.error('❌ Erreur Stats complète:', e);
+      console.log('📦 Utilisation des stats de secours');
+      
+      // Utiliser des stats de secours au lieu de null
+      newData.stats = {
+        attendance_today: {
+          present: 0,
+          absent: 0,
+          total: 0,
+          rate: 0
+        },
+        consecutive_absences: {
+          count: 0,
+          threshold: 3
+        },
+        pending_permissions: 0,
+        today_courses: [],
+        today_courses_count: 0
+      };
+    }
+
+    // 2. Activités récentes (Notifications)
+    try {
+      const activitiesResponse = await fetch(`${API_BASE_URL}/dashboard/activities`, { headers });
+      if (activitiesResponse.ok) {
+        const activitiesData = await activitiesResponse.json();
+        console.log('✅ Activités reçues:', activitiesData);
+        setNotifications(activitiesData.data || activitiesData || []);
+      } else {
+        console.warn('⚠️ Erreur Activités:', activitiesResponse.status);
+      }
+    } catch (e) {
+      console.warn('⚠️ Erreur Activités:', e);
+      setNotifications([]);
+    }
+
+    // 3. Élèves nécessitant attention
+    try {
+      const attentionUrl = classId 
+        ? `${API_BASE_URL}/dashboard/attention?classe_id=${classId}` 
+        : `${API_BASE_URL}/dashboard/attention`;
+      
+      const attentionResponse = await fetch(attentionUrl, { headers });
+      if (attentionResponse.ok) {
+        const attentionData = await attentionResponse.json();
+        console.log('✅ Attention reçue:', attentionData);
+        newData.studentsAlert = attentionData.data || attentionData || [];
+      } else {
+        console.warn('⚠️ Erreur Attention:', attentionResponse.status);
+      }
+    } catch (e) {
+      console.warn('⚠️ Erreur Attention:', e);
+      newData.studentsAlert = [];
+    }
+
+    // 4. Informations utilisateur
+    try {
+      const userResponse = await fetch(`${API_BASE_URL}/auth/me`, { headers });
+      if (userResponse.ok) {
+        const userResult = await userResponse.json();
+        console.log('✅ User info reçue:', userResult);
+        setUserInfo(userResult.data?.user || userResult.user || userResult);
+      } else {
+        console.error('❌ Erreur User Info:', userResponse.status);
+        throw new Error("Session expirée ou invalide");
+      }
+    } catch (e) {
+      console.error('❌ Erreur User Info (CRITIQUE):', e);
+      // Utiliser un utilisateur par défaut
+      setUserInfo({
+        id: 1,
+        name: 'Utilisateur',
+        email: 'user@school.com',
+        role: 'Enseignant'
+      });
+    }
+
+    // Mettre à jour l'état avec les données collectées
+    console.log('📦 Données finales du dashboard:', newData);
+    setDashboardData(newData);
+
+  } catch (err) {
+    console.error('❌ Erreur Globale Dashboard:', err);
+    setError(err.message);
+    loadFallbackData();
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Données de secours pour le développement
   const loadFallbackData = () => {
@@ -487,67 +565,75 @@ function SchoolHub() {
   }, [activeTab, selectedClassId]);
 
   // Composant Dashboard
-  const Dashboard = () => {
-    if (loading) {
-      return (
-        <div className="dashboard">
-          <h2>Tableau de Bord de Présence</h2>
-          <div className="loading">
-            <p>Chargement des données...</p>
-          </div>
-        </div>
-      );
-    }
-
-    if (error) {
-      return (
-        <div className="dashboard">
-          <h2>Tableau de Bord de Présence</h2>
-          <div className="error-message">
-            <WarningIcon />
-            <p>{error}</p>
-            <button className="btn primary" onClick={fetchDashboardData}>
-              Réessayer
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    if (!dashboardData) return null;
-
-    const { stats, studentsAlert } = dashboardData;
-
-    if (!stats) {
-      return (
-        <div className="dashboard">
-          <h2>Tableau de Bord de Présence</h2>
-          <div className="loading">
-            <p>Données du tableau de bord indisponibles</p>
-          </div>
-        </div>
-      );
-    }
-
+const Dashboard = () => {
+  if (loading) {
     return (
       <div className="dashboard">
         <h2>Tableau de Bord de Présence</h2>
+        <div className="loading">
+          <p>Chargement des données...</p>
+        </div>
+      </div>
+    );
+  }
 
-        <div className="stats-container">
-          <div className="stat-card">
-            <div className="stat-icon">
-              <StudentsIcon />
+  if (error) {
+    return (
+      <div className="dashboard">
+        <h2>Tableau de Bord de Présence</h2>
+        <div className="error-message">
+          <WarningIcon />
+          <p>{error}</p>
+          <button className="btn primary" onClick={() => fetchDashboardData()}>
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ CHANGEMENT ICI : Vérifier dashboardData au lieu de stats uniquement
+  if (!dashboardData) {
+    return (
+      <div className="dashboard">
+        <h2>Tableau de Bord de Présence</h2>
+        <div className="loading">
+          <p>Initialisation du tableau de bord...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { stats, studentsAlert } = dashboardData;
+
+  // ✅ CHANGEMENT ICI : Fournir des valeurs par défaut si stats est null
+  const safeStats = stats || {
+    attendance_today: { present: 0, absent: 0, total: 0, rate: 0 },
+    consecutive_absences: { count: 0, threshold: 3 },
+    pending_permissions: 0,
+    today_courses: [],
+    today_courses_count: 0
+  };
+
+  return (
+    <div className="dashboard">
+      <h2>Tableau de Bord de Présence</h2>
+
+      <div className="stats-container">
+        <div className="stat-card">
+          <div className="stat-icon">
+            <StudentsIcon />
+          </div>
+          <div className="stat-content">
+            <h3>Présence d'aujourd'hui</h3>
+            <div className="stat-number">
+              {safeStats.attendance_today?.present || 0} / {safeStats.attendance_today?.total || 0}
             </div>
-            <div className="stat-content">
-              <h3>Présence d'aujourd'hui</h3>
-              <div className="stat-number">
-                {stats.attendance_today?.present || 0} / {stats.attendance_today?.total || 0}
-              </div>
-              <div className="stat-subtitle">
-                {stats.attendance_today?.rate || 0}% de présence
-              </div>
+            <div className="stat-subtitle">
+              {safeStats.attendance_today?.rate || 0}% de présence
             </div>
           </div>
+        </div>
 
           <div className="stat-card warning">
             <div className="stat-icon">
@@ -726,6 +812,7 @@ function SchoolHub() {
           display: flex;
           flex-direction: column;
           min-height: 100vh;
+          width: 100%;
         }
 
         /* Header */
@@ -918,12 +1005,15 @@ function SchoolHub() {
         .app-container {
           display: flex;
           flex: 1;
+          width: 100%;
           overflow: hidden;
+          min-width: 0;
         }
 
         /* Sidebar */
         .sidebar {
           width: 260px;
+          flex-shrink: 0; /* empêcher la sidebar d'écraser le contenu */
           background: var(--dark);
           display: flex;
           flex-direction: column;
@@ -1027,6 +1117,7 @@ function SchoolHub() {
         /* Contenu principal */
         .main-content {
           flex: 1;
+          min-width: 0; /* important pour éviter overflow / compression en flex */
           padding: 2rem;
           overflow-y: auto;
           background: var(--light-bg);
@@ -1721,7 +1812,7 @@ function SchoolHub() {
           {activeTab === 'attendance' && <Attendance initialClassId={selectedClassId} classesList={classes} />}
           {/*{activeTab === 'courses' && <Courses />}*/}
           {activeTab === 'permissions' && <Permissions initialClassId={selectedClassId} />}
-          {/*{activeTab === 'reports' && <Reports />}*/}
+          {activeTab === 'reports' && <Reports />}
         </main>
       </div>
     </div>

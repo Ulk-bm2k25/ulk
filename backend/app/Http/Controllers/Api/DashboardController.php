@@ -4,182 +4,231 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Presence;
-use App\Models\Eleve;
-use App\Models\Classe;
-use App\Models\Permission;
-use App\Models\Notification as AppNotification;
-use App\Models\Course;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     /**
-     * STATISTIQUES DU DASHBOARD
+     * Récupérer les statistiques du tableau de bord
      */
     public function getDashboardStats(Request $request)
     {
-        $today = Carbon::today()->format('Y-m-d');
-        $classeId = $request->query('classe_id');
+        try {
+            $classeId = $request->query('classe_id');
+            $today = Carbon::today();
 
-        // Présences du jour
-        $query = Presence::whereDate('date', $today);
-        if ($classeId) {
-            $query->where('classe_id', $classeId);
-        }
-        $todayPresences = $query->get();
+            // 1. Présence du jour
+            $attendanceQuery = DB::table('presences')
+                ->join('eleves', 'presences.eleve_id', '=', 'eleves.id')
+                ->whereDate('presences.created_at', $today);
 
-        $attendanceToday = [
-            'present' => $todayPresences->where('present', true)->count(),
-            'absent'  => $todayPresences->where('present', false)->count(),
-            'total'   => $todayPresences->count(),
-            'rate'    => $todayPresences->count() > 0
-                ? round(($todayPresences->where('present', true)->count() / $todayPresences->count()) * 100)
-                : 0
-        ];
+            if ($classeId) {
+                $attendanceQuery->where('eleves.classe_id', $classeId);
+            }
 
-        // Absences consécutives
-        $studentsWithConsecutiveAbsences = $this->getStudentsWithConsecutiveAbsences(3, $classeId);
+            $totalStudents = DB::table('eleves');
+            if ($classeId) {
+                $totalStudents->where('classe_id', $classeId);
+            }
+            $totalStudents = $totalStudents->count();
 
-        // Permissions en attente (DYNAMIQUE)
-        $pendingPermissions = Permission::where('status', 'en_attente')->count();
+            $presentCount = (clone $attendanceQuery)->where('presences.statut', 'present')->count();
+            $absentCount = (clone $attendanceQuery)->where('presences.statut', 'absent')->count();
+            $rate = $totalStudents > 0 ? round(($presentCount / $totalStudents) * 100, 2) : 0;
 
-        // Cours du jour (BASÉ SUR LE PLANNING HEBDOMADAIRE)
-        // Utiliser l'index du jour pour éviter les problèmes de locale
-        $daysSub = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-        $dayName = $daysSub[Carbon::today()->dayOfWeek];
+            // 2. Absences consécutives (3+)
+            $consecutiveAbsences = DB::table('eleves')
+                ->select('eleves.id', DB::raw('COUNT(presences.id) as absence_count'))
+                ->join('presences', 'eleves.id', '=', 'presences.eleve_id')
+                ->where('presences.statut', 'absent')
+                ->whereDate('presences.created_at', '>=', Carbon::now()->subDays(7))
+                ->when($classeId, function ($q) use ($classeId) {
+                    return $q->where('eleves.classe_id', $classeId);
+                })
+                ->groupBy('eleves.id')
+                ->having('absence_count', '>=', 3)
+                ->count();
 
-        $coursesQuery = Course::where('jour', $dayName);
-        if ($classeId) {
-            $coursesQuery->where('classe_id', $classeId);
-        }
+            // 3. Permissions en attente
+            $pendingPermissions = DB::table('permissions')
+                ->where('statut', 'en_attente')
+                ->when($classeId, function ($q) use ($classeId) {
+                    return $q->whereIn('eleve_id', function ($subQuery) use ($classeId) {
+                        $subQuery->select('id')
+                            ->from('eleves')
+                            ->where('classe_id', $classeId);
+                    });
+                })
+                ->count();
 
-        $coursesOfDay = $coursesQuery->with('matiere')
-            ->get()
-            ->map(function ($course) {
-                return [
-                    'subject' => $course->matiere?->nom ?? '—',
-                    'time' => ($course->heure_debut ? substr($course->heure_debut, 0, 5) : '??:??') . 
-                             ' - ' . 
-                             ($course->heure_fin ? substr($course->heure_fin, 0, 5) : '??:??')
-                ];
-            });
+            // 4. Cours du jour
+            $jourActuel = Carbon::now()->locale('fr')->isoFormat('dddd'); // Lundi, Mardi, etc.
+            
+            $todayCourses = DB::table('courses')
+                ->join('matieres', 'courses.matiere_id', '=', 'matieres.id')
+                ->select('matieres.nom as subject', 'courses.heure_debut', 'courses.heure_fin')
+                ->when($classeId, function ($q) use ($classeId) {
+                    return $q->where('courses.classe_id', $classeId);
+                })
+                ->where('courses.jour', $jourActuel)
+                ->orderBy('courses.heure_debut')
+                ->get()
+                ->map(function ($course) {
+                    return [
+                        'subject' => $course->subject,
+                        'time' => substr($course->heure_debut, 0, 5) . '-' . substr($course->heure_fin, 0, 5)
+                    ];
+                })
+                ->toArray();
 
-        return response()->json([
-            'attendance_today' => $attendanceToday,
-            'consecutive_absences' => [
-                'count' => $studentsWithConsecutiveAbsences->count(),
-                'threshold' => 3
-            ],
-            'pending_permissions' => $pendingPermissions,
-            'today_courses' => $coursesOfDay,
-            'today_courses_count' => $coursesOfDay->count()
-        ]);
-    }
-    
-    /**
-     * ÉLÈVES AYANT BESOIN D'ATTENTION
-     */
-    public function getStudentsNeedingAttention(Request $request)
-    {
-        $classeId = $request->query('classe_id');
-        $students = $this->getStudentsWithConsecutiveAbsences(3, $classeId);
-        
-        $studentsData = [];
-        foreach ($students as $eleve) {
-            $parent = $eleve->tuteurs->first();
-            $studentsData[] = [
-                'id' => $eleve->id,
-                'name' => $eleve->user?->name ?? 'Nom inconnu',
-                'absences' => $eleve->presences()->where('present', false)->count(),
-                'class' => $eleve->classe?->nom ?? 'Classe inconnue',
-                'parent_email' => $parent?->email ?? 'parent@example.com',
-                'parent_phone' => $parent?->telephone ?? '+229 00 00 00 00'
+            $stats = [
+                'attendance_today' => [
+                    'present' => $presentCount,
+                    'absent' => $absentCount,
+                    'total' => $totalStudents,
+                    'rate' => $rate
+                ],
+                'consecutive_absences' => [
+                    'count' => $consecutiveAbsences,
+                    'threshold' => 3
+                ],
+                'pending_permissions' => $pendingPermissions,
+                'today_courses' => $todayCourses,
+                'today_courses_count' => count($todayCourses)
             ];
+
+            return response()->json([
+                'success' => true,
+                'data' => $stats
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des statistiques',
+                'error' => $e->getMessage()
+            ], 500);
         }
-        
-        return response()->json($studentsData);
     }
-    
+
     /**
-     * ACTIVITÉS RÉCENTES
+     * Récupérer les activités récentes
      */
     public function getRecentActivities(Request $request)
     {
-        $user = $request->user();
+        try {
+            $limit = $request->query('limit', 10);
 
-        // 1. Récupérer les notifications de la table 'notifications'
-        $notifications = AppNotification::where('destinataire_id', $user->id)
-            ->latest()
-            ->take(10)
-            ->get()
-            ->map(function ($n) {
-                return [
-                    'id' => $n->id,
-                    'is_notification' => true,
-                    'type' => $n->type,
-                    'message' => $n->message,
-                    'read' => $n->lu,
-                    'created_at' => $n->created_at
-                ];
-            });
+            $activities = DB::table('presences')
+                ->join('eleves', 'presences.eleve_id', '=', 'eleves.id')
+                ->join('users', 'eleves.user_id', '=', 'users.id')
+                ->select(
+                    'presences.id',
+                    'users.name',
+                    'presences.statut',
+                    'presences.created_at'
+                )
+                ->orderBy('presences.created_at', 'desc')
+                ->limit($limit)
+                ->get()
+                ->map(function ($activity) {
+                    $type = $activity->statut === 'absent' ? 'warning' : 'success';
+                    $message = $activity->statut === 'absent'
+                        ? "{$activity->name} a été marqué absent"
+                        : "{$activity->name} a été marqué présent";
 
-        // 2. Récupérer les permissions (fallback/historique)
-        $permissions = Permission::latest()
-            ->take(5)
-            ->get()
-            ->map(function ($p) {
-                return [
-                    'id' => "perm_" . $p->id,
-                    'is_notification' => false,
-                    'type' => 'info',
-                    'message' => 'Demande de permission: ' . ($p->eleve->user->name ?? 'Élève'),
-                    'read' => false,
-                    'created_at' => $p->created_at
-                ];
-            });
+                    return [
+                        'id' => $activity->id,
+                        'message' => $message,
+                        'type' => $type,
+                        'time' => Carbon::parse($activity->created_at)->format('H:i'),
+                        'read' => false,
+                        'created_at' => $activity->created_at
+                    ];
+                });
 
-        return response()->json($notifications->merge($permissions)->sortByDesc('created_at')->values());
+            return response()->json([
+                'success' => true,
+                'data' => $activities
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des activités',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * MARQUER UNE NOTIFICATION COMME LUE
+     * Récupérer les élèves nécessitant attention
+     */
+    public function getStudentsNeedingAttention(Request $request)
+    {
+        try {
+            $classeId = $request->query('classe_id');
+            $threshold = $request->query('threshold', 3);
+
+            $students = DB::table('eleves')
+                ->join('users', 'eleves.user_id', '=', 'users.id')
+                ->join('classes', 'eleves.classe_id', '=', 'classes.id')
+                ->leftJoin('presences', function ($join) {
+                    $join->on('eleves.id', '=', 'presences.eleve_id')
+                        ->where('presences.statut', 'absent')
+                        ->whereDate('presences.created_at', '>=', Carbon::now()->subDays(7));
+                })
+                ->select(
+                    'eleves.id',
+                    'users.name',
+                    'users.email as parent_email',
+                    'classes.nom as class',
+                    DB::raw('COUNT(presences.id) as absences')
+                )
+                ->when($classeId, function ($q) use ($classeId) {
+                    return $q->where('eleves.classe_id', $classeId);
+                })
+                ->groupBy('eleves.id', 'users.name', 'users.email', 'classes.nom')
+                ->having('absences', '>=', $threshold)
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $students
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des élèves',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Marquer une notification comme lue
      */
     public function markAsRead($id)
     {
-        $notification = AppNotification::find($id);
-        if ($notification) {
-            $notification->update(['lu' => true]);
-            return response()->json(['success' => true]);
+        try {
+            // Implémentation simple - à adapter selon votre table notifications
+            DB::table('presences')
+                ->where('id', $id)
+                ->update(['read' => true]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Notification marquée comme lue'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la mise à jour',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        return response()->json(['success' => false, 'message' => 'Notification non trouvée'], 404);
     }
-    
-    /**
-     * Méthode privée : détecter les absences consécutives
-     */
-    private function getStudentsWithConsecutiveAbsences($threshold, $classeId = null)
-    {
-        $query = Eleve::whereHas('presences', function ($q) {
-                $q->where('present', false)
-                ->whereDate('date', '>=', Carbon::today()->subDays(7));
-            }, '>=', $threshold);
-            
-        if ($classeId) {
-            $query->where('classe_id', $classeId);
-        }
-
-        return $query->with([
-                'user',
-                'classe',
-                'tuteurs',
-                'presences' => function ($q) {
-                    $q->where('present', false);
-                }
-            ])
-            ->take(10)
-            ->get();
-    }
-
 }
