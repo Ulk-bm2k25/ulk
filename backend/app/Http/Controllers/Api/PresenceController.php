@@ -236,29 +236,33 @@ class PresenceController extends Controller
     }
 
     /**
-     * 6. NOTIFICATION D'ABSENCE
+     * 6. NOTIFICATION D'ABSENCE (Route API)
      */
-    public function notifyAbsence($presence)
+    public function notify(Request $request)
     {
-        $eleve = $presence->eleve;
+        $request->validate([
+            'eleve_id' => 'required|integer|exists:eleves,id',
+            'date' => 'required|date',
+            'type' => 'required|string|in:absence,permission'
+        ]);
+
+        $eleve = Eleve::findOrFail($request->eleve_id);
         $parent = $eleve->tuteurs->first() ?? null;
-        
+
         if (!$parent) {
-            return;
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucun parent trouvé pour cet élève'
+            ], 404);
         }
-        
-        $notificationData = [
-            'type' => 'absence',
-            'eleve_name' => $eleve->user->name ?? 'Élève',
-            'date' => $presence->date,
-            'heure' => $presence->heure,
-            'parent_email' => $parent->email,
-            'parent_phone' => $parent->telephone
-        ];
-        
-        \Log::info('Notification d\'absence envoyée', $notificationData);
-        
-        return true;
+
+        // Simuler l'envoi
+        \Log::info("Notification {$request->type} envoyée à {$parent->email} pour {$eleve->user->name}");
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification envoyée avec succès'
+        ]);
     }
 
     /**

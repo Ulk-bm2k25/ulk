@@ -152,7 +152,7 @@ function SchoolHub() {
 
   // Configuration de l'API
   const API_BASE_URL = 'http://localhost:8000/api';
-  
+
   // Fonction pour récupérer le token d'authentification
   const getAuthToken = () => {
     return localStorage.getItem('token');
@@ -166,7 +166,7 @@ function SchoolHub() {
       window.location.href = '/login';
       return {};
     }
-    
+
     return {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -179,43 +179,43 @@ function SchoolHub() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Utiliser fetch 
       const statsResponse = await fetch(`${API_BASE_URL}/dashboard/stats`, {
         headers: getHeaders()
       });
-      
+
       if (!statsResponse.ok) throw new Error('Erreur API dashboard stats');
-      
+
       const statsData = await statsResponse.json();
-      
+
       // Récupérer les notifications
       const notificationsResponse = await fetch(`${API_BASE_URL}/notifications`, {
         headers: getHeaders()
       });
-      
+
       if (!notificationsResponse.ok) throw new Error('Erreur API notifications');
-      
+
       const notificationsData = await notificationsResponse.json();
-      
+
       // Récupérer les élèves nécessitant attention
-      const studentsAlertResponse = await fetch(`${API_BASE_URL}/dashboard/students-needing-attention`, {
+      const studentsAlertResponse = await fetch(`${API_BASE_URL}/dashboard/attention`, {
         headers: getHeaders()
       });
-      
+
       if (!studentsAlertResponse.ok) throw new Error('Erreur API students alert');
-      
+
       const studentsAlertData = await studentsAlertResponse.json();
-      
+
       // Récupérer les informations utilisateur
-      const userResponse = await fetch(`${API_BASE_URL}/user`, {
+      const userResponse = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: getHeaders()
       });
-      
+
       if (!userResponse.ok) throw new Error('Erreur API user');
-      
+
       const userData = await userResponse.json();
-      
+
       // Mettre à jour l'état avec les données de l'API
       setDashboardData({
         stats: statsData,
@@ -223,7 +223,7 @@ function SchoolHub() {
       });
       setNotifications(notificationsData);
       setUserInfo(userData);
-      
+
     } catch (err) {
       console.error('Erreur API:', err);
       setError('Impossible de charger les données. Vérifiez votre connexion.');
@@ -236,24 +236,24 @@ function SchoolHub() {
   // Fonction pour marquer tous les présents via l'API
   const markAllPresent = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/attendance/mark-all`, {
+      const response = await fetch(`${API_BASE_URL}/presence/mark-all`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({
           status: 'present',
-          class_id: 1,
+          classe_id: 1,
           date: new Date().toISOString().split('T')[0]
         })
       });
-      
+
       if (!response.ok) throw new Error('Erreur marquage présence');
-      
+
       // Recharger les données
       await fetchDashboardData();
-      
+
       // Ajouter une notification locale
       addLocalNotification('Tous les élèves marqués présents', 'success');
-      
+
     } catch (err) {
       console.error('Erreur:', err);
       addLocalNotification('Erreur lors du marquage des présences', 'warning');
@@ -263,24 +263,24 @@ function SchoolHub() {
   // Fonction pour marquer tous les absents via l'API
   const markAllAbsent = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/attendance/mark-all`, {
+      const response = await fetch(`${API_BASE_URL}/presence/mark-all`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({
           status: 'absent',
-          class_id: 1,
+          classe_id: 1,
           date: new Date().toISOString().split('T')[0]
         })
       });
-      
+
       if (!response.ok) throw new Error('Erreur marquage absence');
-      
+
       // Recharger les données
       await fetchDashboardData();
-      
+
       // Ajouter une notification locale
       addLocalNotification('Tous les élèves marqués absents', 'warning');
-      
+
     } catch (err) {
       console.error('Erreur:', err);
       addLocalNotification('Erreur lors du marquage des absences', 'warning');
@@ -290,21 +290,20 @@ function SchoolHub() {
   // Fonction pour générer un rapport PDF via l'API
   const generateReport = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/reports/generate`, {
+      const response = await fetch(`${API_BASE_URL}/presence/report`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({
-          class_id: 1,
-          date: new Date().toISOString().split('T')[0],
-          report_type: 'daily_attendance',
-          include_details: true
+          classe_id: 1,
+          date_debut: new Date().toISOString().split('T')[0],
+          format: 'pdf'
         })
       });
-      
+
       if (!response.ok) throw new Error('Erreur génération rapport');
-      
+
       const data = await response.json();
-      
+
       if (data.report_url) {
         // Ouvrir le PDF dans un nouvel onglet
         window.open(data.report_url, '_blank');
@@ -323,12 +322,12 @@ function SchoolHub() {
         method: 'PUT',
         headers: getHeaders()
       });
-      
+
       if (!response.ok) throw new Error('Erreur marquage notification lue');
-      
+
       // Mettre à jour localement
-      setNotifications(prev => 
-        prev.map(notification => 
+      setNotifications(prev =>
+        prev.map(notification =>
           notification.id === id ? { ...notification, read: true } : notification
         )
       );
@@ -365,7 +364,7 @@ function SchoolHub() {
     } else {
       window.location.href = '/login';
     }
-    
+
     // Polling toutes les 30 secondes pour les mises à jour
     const interval = setInterval(() => {
       const token = getAuthToken();
@@ -373,7 +372,7 @@ function SchoolHub() {
         fetchDashboardData();
       }
     }, 30000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -412,7 +411,7 @@ function SchoolHub() {
     return (
       <div className="dashboard">
         <h2>Tableau de Bord de Présence</h2>
-        
+
         <div className="stats-container">
           <div className="stat-card">
             <div className="stat-icon">
@@ -428,7 +427,7 @@ function SchoolHub() {
               </div>
             </div>
           </div>
-          
+
           <div className="stat-card warning">
             <div className="stat-icon">
               <WarningIcon />
@@ -441,7 +440,7 @@ function SchoolHub() {
               <div className="stat-subtitle">Élèves avec 3+ absences</div>
             </div>
           </div>
-          
+
           <div className="stat-card info">
             <div className="stat-icon">
               <ClockIcon />
@@ -454,7 +453,7 @@ function SchoolHub() {
               <div className="stat-subtitle">À traiter</div>
             </div>
           </div>
-          
+
           <div className="stat-card success">
             <div className="stat-icon">
               <CalendarIcon />
@@ -507,15 +506,15 @@ function SchoolHub() {
                 <div className="activity-content">
                   <div className="activity-message">{notification.message}</div>
                   <div className="activity-time">
-                    {new Date(notification.created_at).toLocaleTimeString('fr-BJ', { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
+                    {new Date(notification.created_at).toLocaleTimeString('fr-BJ', {
+                      hour: '2-digit',
+                      minute: '2-digit'
                     })}
                   </div>
                 </div>
                 {!notification.read && (
-                  <button 
-                    className="btn small" 
+                  <button
+                    className="btn small"
                     onClick={() => markNotificationAsRead(notification.id)}
                     title="Marquer comme lu"
                   >
@@ -1502,12 +1501,12 @@ function SchoolHub() {
             </div>
           </div>
         </div>
-        
+
         <div className="header-center">
           <div className="platform-title">Plateforme de Gestion de Présence</div>
           <div className="platform-subtitle">Système Éducatif SchoolHub</div>
         </div>
-        
+
         <div className="header-right">
           <div className="notification-bell" title="Notifications">
             <BellIcon />
@@ -1515,7 +1514,7 @@ function SchoolHub() {
               <span className="notification-count">{unreadNotifications}</span>
             )}
           </div>
-          
+
           <div className="user-info">
             <div className="user-avatar">
               <UserIcon />
@@ -1525,7 +1524,7 @@ function SchoolHub() {
               <div className="user-role">{userInfo?.role || 'Chargement...'}</div>
             </div>
           </div>
-          
+
           <button className="btn logout" onClick={handleLogout}>
             <LogoutIcon /> Déconnexion
           </button>
@@ -1535,35 +1534,35 @@ function SchoolHub() {
       <div className="app-container">
         <nav className="sidebar">
           <ul className="nav-menu">
-            <li 
+            <li
               className={activeTab === 'dashboard' ? 'active' : ''}
               onClick={() => setActiveTab('dashboard')}
             >
               <span className="nav-icon"><DashboardIcon /></span>
               Tableau de bord
             </li>
-            <li 
+            <li
               className={activeTab === 'attendance' ? 'active' : ''}
               onClick={() => setActiveTab('attendance')}
             >
               <span className="nav-icon"><AttendanceIcon /></span>
               Marquage présence
             </li>
-            <li 
+            <li
               className={activeTab === 'courses' ? 'active' : ''}
               onClick={() => setActiveTab('courses')}
             >
               <span className="nav-icon"><CoursesIcon /></span>
               Gestion des cours
             </li>
-            <li 
+            <li
               className={activeTab === 'permissions' ? 'active' : ''}
               onClick={() => setActiveTab('permissions')}
             >
               <span className="nav-icon"><PermissionsIcon /></span>
               Demandes permission
             </li>
-            <li 
+            <li
               className={activeTab === 'reports' ? 'active' : ''}
               onClick={() => setActiveTab('reports')}
             >
@@ -1571,16 +1570,16 @@ function SchoolHub() {
               Rapports
             </li>
           </ul>
-          
+
           <div className="sidebar-footer">
             <div className="current-class-widget">
               <div className="widget-title">Classe actuelle</div>
               <div className="class-display">
                 <div className="class-name">{userInfo?.class_assigned || currentClass}</div>
                 <div className="class-change" onClick={() => setCurrentClass(
-                  currentClass === 'Terminale A' ? 'Terminale B' : 
-                  currentClass === 'Terminale B' ? 'Première A' :
-                  currentClass === 'Première A' ? 'Seconde A' : 'Terminale A'
+                  currentClass === 'Terminale A' ? 'Terminale B' :
+                    currentClass === 'Terminale B' ? 'Première A' :
+                      currentClass === 'Première A' ? 'Seconde A' : 'Terminale A'
                 )}>
                   Changer
                 </div>

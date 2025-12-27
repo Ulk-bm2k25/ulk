@@ -8,115 +8,192 @@ function Attendance() {
   const [courses, setCourses] = useState([]);
   const [permissionRequests, setPermissionRequests] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Voici votre code de base amélioré
+  // Configuration de l'API
+  const API_BASE_URL = 'http://localhost:8000/api';
 
-  // Données simulées pour les étudiants
-  const initialStudents = [
-    { id: 1, name: 'Jean Dupont', present: false, absences: 2, parentEmail: 'parent1@email.com', parentPhone: '+1234567890' },
-    { id: 2, name: 'Marie Martin', present: true, absences: 0, parentEmail: 'parent2@email.com', parentPhone: '+1234567891' },
-    { id: 3, name: 'Pierre Bernard', present: false, absences: 3, parentEmail: 'parent3@email.com', parentPhone: '+1234567892' },
-    { id: 4, name: 'Sophie Petit', present: true, absences: 1, parentEmail: 'parent4@email.com', parentPhone: '+1234567893' },
-    { id: 5, name: 'Luc Dubois', present: true, absences: 0, parentEmail: 'parent5@email.com', parentPhone: '+1234567894' },
-    { id: 6, name: 'Emma Laurent', present: false, absences: 5, parentEmail: 'parent6@email.com', parentPhone: '+1234567895' },
-  ];
+  const getAuthToken = () => localStorage.getItem('token');
 
-  // Données simulées pour les cours 
-  const initialCourses = [
-    { id: 1, subject: 'Mathématiques', class: 'Terminale A', day: 'Lundi', time: '08:00-10:00', teacher: 'M. Diallo' },
-    { id: 2, subject: 'Physique-Chimie', class: 'Terminale A', day: 'Lundi', time: '10:15-12:15', teacher: 'Mme. Koné' },
-    { id: 3, subject: 'Français', class: 'Terminale A', day: 'Mardi', time: '08:00-10:00', teacher: 'M. Traoré' },
-    { id: 4, subject: 'Histoire-Géographie', class: 'Terminale A', day: 'Mardi', time: '10:15-12:15', teacher: 'Mme. Diop' },
-    { id: 5, subject: 'Anglais', class: 'Terminale A', day: 'Mercredi', time: '08:00-10:00', teacher: 'M. Smith' },
-  ];
-
-  // Données simulées pour les demandes de permission
-  const initialRequests = [
-    { id: 1, student: 'Pierre Bernard', studentId: 3, date: '2025-03-15', reason: 'Rendez-vous médical', status: 'En attente' },
-    { id: 2, student: 'Emma Laurent', studentId: 6, date: '2025-03-14', reason: 'Problème familial', status: 'Approuvé' },
-    { id: 3, student: 'Sophie Petit', studentId: 4, date: '2025-03-13', reason: 'Compétition sportive', status: 'Refusé' },
-  ];
-
-  // Notifications simulées
-  const initialNotifications = [
-    { id: 1, message: 'Pierre Bernard a 3 absences consécutives', type: 'warning', time: '10:30', read: false },
-    { id: 2, message: 'Nouvelle demande de permission de Jean Dupont', type: 'info', time: '09:15', read: false },
-    { id: 3, message: 'Rapport de présence généré avec succès', type: 'success', time: 'Hier', read: true },
-  ];
-
-  useEffect(() => {
-    setAttendanceData(initialStudents);
-    setCourses(initialCourses);
-    setPermissionRequests(initialRequests);
-    setNotifications(initialNotifications);
-  }, []);
-
-  const toggleAttendance = (studentId) => {
-    setAttendanceData(prevData => 
-      prevData.map(student => {
-        if (student.id === studentId) {
-          const newPresentState = !student.present;
-          if (!newPresentState) {
-            addNotification(`Absence enregistrée pour ${student.name}`, 'warning');
-            sendParentNotification(student, 'absence');
-          }
-          return { ...student, present: newPresentState };
-        }
-        return student;
-      })
-    );
-  };
-
-  const markAllPresent = () => {
-    setAttendanceData(prevData => 
-      prevData.map(student => ({ ...student, present: true }))
-    );
-    addNotification('Tous les élèves marqués présents', 'success');
-  };
-
-  const markAllAbsent = () => {
-    setAttendanceData(prevData => 
-      prevData.map(student => {
-        if (!student.present) {
-          sendParentNotification(student, 'absence');
-        }
-        return { ...student, present: false };
-      })
-    );
-    addNotification('Tous les élèves marqués absents', 'warning');
-  };
-
-  const generateReport = () => {
-    addNotification('Rapport de présence généré au format PDF', 'success');
-    const reportData = {
-      date: new Date().toLocaleDateString(),
-      class: currentClass,
-      course: currentCourse,
-      totalStudents: attendanceData.length,
-      present: attendanceData.filter(s => s.present).length,
-      absent: attendanceData.filter(s => !s.present).length,
-      attendanceRate: Math.round((attendanceData.filter(s => s.present).length / attendanceData.length) * 100)
+  const getHeaders = () => {
+    const token = getAuthToken();
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
     };
-    
-    alert(`Rapport généré avec succès!\n\nClasse: ${reportData.class}\nCours: ${reportData.course}\nTaux de présence: ${reportData.attendanceRate}%\nPrésents: ${reportData.present}/${reportData.totalStudents}\n\nLe rapport PDF est prêt au téléchargement.`);
   };
 
-  const sendParentNotification = (student, type) => {
-    let message = '';
-    if (type === 'absence') {
-      message = `Votre enfant ${student.name} est absent en cours de ${currentCourse} aujourd'hui.`;
-    } else if (type === 'permission') {
-      message = `Demande de permission pour ${student.name} a été traitée.`;
+  // Charger les données au montage ou quand la classe/date change
+  useEffect(() => {
+    fetchAttendanceData();
+    fetchCoursesOfDay();
+    // On garde les permissions simulées pour l'instant si pas de route dédiée stable
+    setPermissionRequests([
+      { id: 1, student: 'Pierre Bernard', studentId: 3, date: '2025-03-15', reason: 'Rendez-vous médical', status: 'En attente' },
+      { id: 2, student: 'Emma Laurent', studentId: 6, date: '2025-03-14', reason: 'Problème familial', status: 'Approuvé' },
+      { id: 3, student: 'Sophie Petit', studentId: 4, date: '2025-03-13', reason: 'Compétition sportive', status: 'Refusé' },
+    ]);
+  }, [currentClass]);
+
+  const fetchAttendanceData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/presence/list?classe_id=1&date=${new Date().toISOString().split('T')[0]}`, {
+        headers: getHeaders()
+      });
+      if (!response.ok) throw new Error('Erreur chargement présences');
+      const data = await response.json();
+      setAttendanceData(data.eleves.map(e => ({
+        id: e.eleve_id,
+        name: e.nom,
+        present: e.present === true,
+        absences: e.absences_count || 0,
+        parentEmail: e.parent_email,
+        parentPhone: e.parent_phone
+      })));
+    } catch (err) {
+      console.error(err);
+      addNotification('Erreur lors du chargement des élèves', 'warning');
+    } finally {
+      setLoading(false);
     }
-    
-    console.log(`Email envoyé à: ${student.parentEmail}`);
-    console.log(`Message WhatsApp envoyé à: ${student.parentPhone}`);
-    
-    addNotification(`Notification envoyée aux parents de ${student.name}`, 'info');
+  };
+
+  const fetchCoursesOfDay = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/presence/courses-of-day?classe_id=1&date=${new Date().toISOString().split('T')[0]}`, {
+        headers: getHeaders()
+      });
+      if (!response.ok) throw new Error('Erreur chargement cours');
+      const data = await response.json();
+      setCourses(data.courses);
+      if (data.courses.length > 0) {
+        setCurrentCourse(data.courses[0].subject);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const toggleAttendance = async (studentId) => {
+    const student = attendanceData.find(s => s.id === studentId);
+    const newPresentState = !student.present;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/presence/mark`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          eleve_id: studentId,
+          classe_id: 1,
+          present: newPresentState,
+          date: new Date().toISOString().split('T')[0]
+        })
+      });
+
+      if (!response.ok) throw new Error('Erreur enregistrement');
+
+      setAttendanceData(prev =>
+        prev.map(s => s.id === studentId ? { ...s, present: newPresentState } : s)
+      );
+
+      if (!newPresentState) {
+        addNotification(`Absence enregistrée pour ${student.name}`, 'warning');
+      }
+    } catch (err) {
+      console.error(err);
+      addNotification('Erreur lors de l\'enregistrement', 'warning');
+    }
+  };
+
+  const markAllPresent = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/presence/mark-all`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          classe_id: 1,
+          date: new Date().toISOString().split('T')[0],
+          status: 'present'
+        })
+      });
+
+      if (!response.ok) throw new Error('Erreur');
+
+      setAttendanceData(prev => prev.map(s => ({ ...s, present: true })));
+      addNotification('Tous les élèves marqués présents', 'success');
+    } catch (err) {
+      addNotification('Erreur', 'warning');
+    }
+  };
+
+  const markAllAbsent = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/presence/mark-all`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          classe_id: 1,
+          date: new Date().toISOString().split('T')[0],
+          status: 'absent'
+        })
+      });
+
+      if (!response.ok) throw new Error('Erreur');
+
+      setAttendanceData(prev => prev.map(s => ({ ...s, present: false })));
+      addNotification('Tous les élèves marqués absents', 'warning');
+    } catch (err) {
+      addNotification('Erreur', 'warning');
+    }
+  };
+
+  const generateReport = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/presence/report`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          classe_id: 1,
+          date_debut: new Date().toISOString().split('T')[0],
+          format: 'pdf'
+        })
+      });
+
+      if (!response.ok) throw new Error('Erreur rapport');
+      const data = await response.json();
+      if (data.report_url) {
+        window.open(data.report_url, '_blank');
+        addNotification('Rapport généré avec succès', 'success');
+      }
+    } catch (err) {
+      addNotification('Erreur génération rapport', 'warning');
+    }
+  };
+
+  const sendParentNotification = async (student, type) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/presence/notify`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          eleve_id: student.id,
+          date: new Date().toISOString().split('T')[0],
+          type: type
+        })
+      });
+
+      if (!response.ok) throw new Error('Erreur notification');
+      addNotification(`Notification envoyée aux parents de ${student.name}`, 'info');
+    } catch (err) {
+      console.error(err);
+      addNotification('Erreur lors de l\'envoi de la notification', 'warning');
+    }
   };
 
   const handlePermissionAction = (requestId, action) => {
-    setPermissionRequests(prev => 
+    setPermissionRequests(prev =>
       prev.map(request => {
         if (request.id === requestId) {
           const student = attendanceData.find(s => s.id === request.studentId);
@@ -227,8 +304,8 @@ function Attendance() {
                   </td>
                   <td>
                     <label className="checkbox-container">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={student.present}
                         onChange={() => toggleAttendance(student.id)}
                       />
@@ -246,15 +323,15 @@ function Attendance() {
                   </td>
                   <td>
                     <div className="action-buttons">
-                      <button 
-                        className="btn small accent" 
+                      <button
+                        className="btn small accent"
                         onClick={() => sendParentNotification(student, 'absence')}
                         disabled={student.present}
                         title="Notifier les parents"
                       >
                         Notifier
                       </button>
-                      <button 
+                      <button
                         className="btn small secondary"
                         onClick={() => {
                           alert(`SMS envoyé à ${student.parentPhone}\nMessage: Urgent: ${student.name} absent en cours.`);
@@ -308,7 +385,7 @@ function Attendance() {
   const Reports = () => (
     <div className="reports">
       <h2>Rapports de Présence</h2>
-      
+
       <div className="report-controls">
         <div className="report-filters">
           <div className="filter-group">
@@ -346,7 +423,7 @@ function Attendance() {
             </select>
           </div>
         </div>
-        
+
         <div className="report-actions">
           <button className="btn primary" onClick={generateReport}>
             Générer rapport
@@ -361,7 +438,7 @@ function Attendance() {
             <button className="btn small secondary">Exporter</button>
           </div>
         </div>
-        
+
         <div className="report-stats">
           <div className="report-stat">
             <div className="stat-label">Taux de présence global</div>
@@ -384,7 +461,7 @@ function Attendance() {
             <div className="stat-trend">(3+ absences)</div>
           </div>
         </div>
-        
+
         <div className="report-table">
           <h4>Détail par élève</h4>
           <table>
@@ -408,9 +485,9 @@ function Attendance() {
                   <td>
                     <div className="attendance-rate">
                       <div className="rate-bar">
-                        <div 
-                          className="rate-fill" 
-                          style={{width: `${Math.max(70, 100 - student.absences * 5)}%`}}
+                        <div
+                          className="rate-fill"
+                          style={{ width: `${Math.max(70, 100 - student.absences * 5)}%` }}
                         ></div>
                       </div>
                       <span className="rate-value">{Math.max(70, 100 - student.absences * 5)}%</span>
@@ -1476,12 +1553,12 @@ function Attendance() {
             </div>
           </div>
         </div>
-        
+
         <div className="header-center">
           <div className="platform-title">Plateforme de Gestion de Présence</div>
           <div className="platform-subtitle">Enseignement Général et Technique - 2025</div>
         </div>
-        
+
         <div className="header-right">
           <div className="notification-bell" title="Notifications">
             <span>🔔</span>
@@ -1489,7 +1566,7 @@ function Attendance() {
               <span className="notification-count">{unreadNotifications}</span>
             )}
           </div>
-          
+
           <div className="user-info">
             <div className="user-avatar">MD</div>
             <div className="user-details">
@@ -1497,7 +1574,7 @@ function Attendance() {
               <div className="user-role">Professeur Principal</div>
             </div>
           </div>
-          
+
           <button className="btn logout">Déconnexion</button>
         </div>
       </header>
@@ -1505,15 +1582,15 @@ function Attendance() {
       <div className="app-container">
         <nav className="sidebar">
           <ul className="nav-menu">
-            <li 
+            <li
               className={activeTab === 'attendance' ? 'active' : ''}
               onClick={() => setActiveTab('attendance')}
             >
               <span className="nav-icon"></span>
               Marquage présence
             </li>
-            
-            <li 
+
+            <li
               className={activeTab === 'reports' ? 'active' : ''}
               onClick={() => setActiveTab('reports')}
             >
@@ -1521,16 +1598,16 @@ function Attendance() {
               Rapports
             </li>
           </ul>
-          
+
           <div className="sidebar-footer">
             <div className="current-class-widget">
               <div className="widget-title">Classe actuelle</div>
               <div className="class-display">
                 <div className="class-name">{currentClass}</div>
                 <div className="class-change" onClick={() => setCurrentClass(
-                  currentClass === 'Terminale A' ? 'Terminale B' : 
-                  currentClass === 'Terminale B' ? 'Première A' :
-                  currentClass === 'Première A' ? 'Seconde A' : 'Terminale A'
+                  currentClass === 'Terminale A' ? 'Terminale B' :
+                    currentClass === 'Terminale B' ? 'Première A' :
+                      currentClass === 'Première A' ? 'Seconde A' : 'Terminale A'
                 )}>
                   Changer
                 </div>

@@ -266,20 +266,12 @@ Route::post('permissions/{id}/notify', [PermissionsController::class, 'notify'])
 // ----------------------------------------
 // Dashboard
 // ----------------------------------------
-Route::middleware('auth:sanctum')->get(
-    '/dashboard/stats',
-    [DashboardController::class, 'getDashboardStats']
-);
-
-Route::middleware('auth:sanctum')->get(
-    '/dashboard/activities',
-    [DashboardController::class, 'getRecentActivities']
-);
-
-Route::middleware('auth:sanctum')->get(
-    '/dashboard/attention',
-    [DashboardController::class, 'getStudentsNeedingAttention']
-);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/dashboard/stats', [DashboardController::class, 'getDashboardStats']);
+    Route::get('/dashboard/activities', [DashboardController::class, 'getRecentActivities']);
+    Route::get('/dashboard/attention', [DashboardController::class, 'getStudentsNeedingAttention']);
+    Route::get('/notifications', [DashboardController::class, 'getRecentActivities']);
+});
 
 // ----------------------------------------
 // Gestion des présences
@@ -300,4 +292,6 @@ Route::prefix('presence')->group(function () {
     // Ajout de la route manquante pour les cours du jour
     Route::get('/courses-of-day', [App\Http\Controllers\Api\PresenceController::class, 'getCoursesOfDay'])
         ->name('presence.courses-of-day');
+    Route::post('/notify', [App\Http\Controllers\Api\PresenceController::class, 'notify'])
+        ->name('presence.notify');
 });

@@ -39,11 +39,11 @@ class DashboardController extends Controller
 
     // Cours du jour (DYNAMIQUE)
     $todayCourses = \App\Models\Seance::whereDate('date', $today)
-        ->with('cours')
+        ->with('cours.matiere')
         ->get()
         ->map(function ($seance) {
             return [
-                'subject' => $seance->cours->subject ?? '—',
+                'subject' => $seance->cours->matiere->nom ?? '—',
                 'time' => $seance->heure_debut . ' - ' . $seance->heure_fin
             ];
         });
@@ -114,7 +114,7 @@ class DashboardController extends Controller
             ->with([
                 'user',
                 'classe',
-                'parentTuteur',
+                'tuteurs',
                 'presences' => function ($q) {
                     $q->where('present', false);
                 }
