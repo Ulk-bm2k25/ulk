@@ -44,7 +44,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/attendance/class/{classId}', [AttendanceController::class, 'getClassAttendance']);
         Route::post('/attendance/bulk', [AttendanceController::class, 'storeBulk']);
 
-        // Finance Routes (Removed)
+        // Finance Routes
+        Route::get('/finance/stats', [PaiementController::class, 'getAdminFinanceStats']);
+        Route::get('/finance/payments', [PaiementController::class, 'getAdminPayments']);
 
         // Admin specific
         Route::get('/dashboard/stats', [AdminController::class, 'getDashboardStats']);
@@ -86,6 +88,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/profile', [ParentPortalController::class, 'getProfile']);
         Route::post('/profile/update', [ParentPortalController::class, 'updateProfile']);
         Route::post('/profile/password', [ParentPortalController::class, 'updatePassword']);
+        
+        // Payments
+        Route::get('/children/{id}/payments', [PaiementController::class, 'getStudentPayments']);
+        Route::post('/payments/process', [PaiementController::class, 'processPayment']);
     });
 });
 

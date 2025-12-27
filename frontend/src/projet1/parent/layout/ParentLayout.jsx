@@ -43,14 +43,14 @@ const ParentLayout = ({ children, currentPage, onNavigate, onLogout, user }) => 
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className={`w - full flex items - center justify - between px - 4 py - 3.5 rounded - xl transition - all group ${currentPage === item.id
-                  ? 'bg-[#eb8e3a] text-white shadow-lg shadow-orange-950/20'
-                  : 'text-white/50 hover:bg-white/5 hover:text-white'
+              className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all group ${currentPage === item.id
+                ? 'bg-[#eb8e3a] text-white shadow-lg shadow-orange-950/20'
+                : 'text-white/50 hover:bg-white/5 hover:text-white'
                 } `}
             >
               <div className="flex items-center gap-4">
                 <item.icon size={22} strokeWidth={currentPage === item.id ? 2.5 : 2} />
-                <span className={`text - [15px] ${currentPage === item.id ? 'font-black' : 'font-bold'} `}>
+                <span className={`text-[15px] ${currentPage === item.id ? 'font-black' : 'font-bold'} `}>
                   {item.label}
                 </span>
               </div>
@@ -68,20 +68,19 @@ const ParentLayout = ({ children, currentPage, onNavigate, onLogout, user }) => 
           <div className="space-y-1">
             <button
               onClick={() => setSettingsOpen(!settingsOpen)}
-              className={`w - full flex items - center justify - between px - 4 py - 3 rounded - xl transition - all ${currentPage === 'settings'
-                  ? 'bg-[#eb8e3a] text-white shadow-lg shadow-orange-950/20'
-                  : 'text-white/50 hover:bg-white/5 hover:text-white'
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${currentPage === 'settings'
+                ? 'bg-[#eb8e3a] text-white shadow-lg shadow-orange-950/20'
+                : 'text-white/50 hover:bg-white/5 hover:text-white'
                 } `}
             >
               <div className="flex items-center gap-4">
                 <Settings size={22} strokeWidth={currentPage === 'settings' ? 2.5 : 2} />
                 <span className="text-[15px] font-bold">Paramètres</span>
               </div>
-              <ChevronDown size={16} className={`transition - transform duration - 300 ${settingsOpen ? 'rotate-180' : ''} `} />
+              <ChevronDown size={16} className={`transition-transform duration-300 ${settingsOpen ? 'rotate-180' : ''} `} />
             </button>
 
-            {/* Settings Sub-menus */}
-            <div className={`overflow - hidden transition - all duration - 300 ${settingsOpen ? 'max-h-32 opacity-100 mt-1' : 'max-h-0 opacity-0'} `}>
+            <div className={`overflow-hidden transition-all duration-300 ${settingsOpen ? 'max-h-32 opacity-100 mt-1' : 'max-h-0 opacity-0'} `}>
               <div className="pl-12 space-y-1">
                 <button
                   onClick={() => onNavigate('settings')}

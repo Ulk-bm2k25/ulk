@@ -202,9 +202,9 @@ const Registration = ({ mode = 'new', initialData = null, onComplete }) => {
                         <div className="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
                             <CheckCircle size={48} />
                         </div>
-                        <h3 className="text-2xl font-bold">Inscription validée !</h3>
+                        <h3 className="text-2xl font-bold">Demande reçue !</h3>
                         <p className="text-white/60 max-w-md mx-auto">
-                            Merci. Votre enfant est désormais inscrit. Vous recevrez une notification de confirmation par email.
+                            Votre demande d'inscription a été soumise avec succès. Elle est actuellement en attente de validation par l'administration. Vous recevrez une notification dès qu'elle sera traitée.
                         </p>
                         <button onClick={onComplete} className="parent-btn-primary mt-6">
                             Retour à la liste des enfants

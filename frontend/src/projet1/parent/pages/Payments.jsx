@@ -22,8 +22,15 @@ const Payments = ({ children, selectedChildId, setSelectedChildId }) => {
             const fetchPayments = async () => {
                 setIsLoading(true);
                 try {
-                    const response = await api.get(`/parent/children/${selectedChildId}/payments`);
-                    setPaymentData(response.data);
+                    // API endpoint not implemented yet
+                    // const response = await api.get(`/parent/children/${selectedChildId}/payments`);
+                    // setPaymentData(response.data);
+
+                    // Mock data
+                    setPaymentData({
+                        summary: { totalPaid: 0, totalOwed: 0, balance: 0, status: 'en attente', currency: 'FCFA' },
+                        transactions: []
+                    });
                 } catch (err) {
                     console.error("Failed to fetch payments", err);
                 } finally {
@@ -44,24 +51,24 @@ const Payments = ({ children, selectedChildId, setSelectedChildId }) => {
         }
         setIsProcessing(true);
         try {
-            await api.post('/parent/payments/process', {
-                eleve_id: selectedChildId,
-                amount: amount,
-                provider: paymentProvider,
-                phone: phoneNumber
-            });
-            setPaymentSuccess(true);
+            // API endpoint not implemented yet
+            // await api.post('/parent/payments/process', {
+            //     eleve_id: selectedChildId,
+            //     amount: amount,
+            //     provider: paymentProvider,
+            //     phone: phoneNumber
+            // });
 
-            // Refresh data
-            const response = await api.get(`/parent/children/${selectedChildId}/payments`);
-            setPaymentData(response.data);
+            // Mock success
+            alert(`Fonctionnalité en développement.\nMontant: ${Number(amount).toLocaleString()} FCFA\nProvider: ${paymentProvider}\nTél: ${phoneNumber}`);
+            setPaymentSuccess(true);
 
             setTimeout(() => {
                 setShowPaymentModal(false);
                 setPaymentSuccess(false);
                 setPaymentProvider('');
                 setPhoneNumber('');
-            }, 3000);
+            }, 2000);
         } catch (error) {
             console.error("Payment failed", error);
             alert("Erreur lors du traitement du paiement.");

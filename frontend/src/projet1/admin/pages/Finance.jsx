@@ -18,12 +18,17 @@ const Finance = () => {
         const fetchFinanceData = async () => {
             try {
                 setIsLoading(true);
-                const [statsRes, transRes] = await Promise.all([
-                    api.get('/admin/finance/stats'),
-                    api.get('/admin/finance/payments')
-                ]);
-                setStats(statsRes.data.stats);
-                setTransactions(transRes.data);
+                // API endpoints not implemented yet
+                // const [statsRes, transRes] = await Promise.all([
+                //     api.get('/admin/finance/stats'),
+                //     api.get('/admin/finance/payments')
+                // ]);
+                // setStats(statsRes.data.stats);
+                // setTransactions(transRes.data);
+
+                // Mock empty data
+                setStats({ total_revenue: 0, recovery_rate: 0, balance_to_collect: 0 });
+                setTransactions([]);
                 setIsLoading(false);
             } catch (error) {
                 console.error("Failed to fetch finance data", error);

@@ -48,6 +48,12 @@ class InscriptionController extends Controller
         return DB::transaction(function () use ($request, $inscription, $user) {
             $inscription->update(['statut' => $request->statut]);
 
+            // If approved and a class is provided, update the student's class
+            if ($request->statut === 'inscrit' && $request->has('classe_id')) {
+                $eleve = $inscription->eleve;
+                $eleve->update(['classe_id' => $request->classe_id]);
+            }
+
             // Create notification for the parent(s)
             $eleve = $inscription->eleve;
             $tuteurs = $eleve->tuteurs;
