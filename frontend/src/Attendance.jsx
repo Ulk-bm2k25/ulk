@@ -1466,7 +1466,41 @@ function Attendance() {
         }
       `}</style>
 
-
+      <header className="app-header">
+        <div className="header-left">
+          <div className="logo">
+            <div className="logo-icon">IFRI</div>
+            <div>
+              <div className="logo-text">Institut de Formation</div>
+              <div className="logo-subtext">Projet 4 - Gestion de Présence</div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="header-center">
+          <div className="platform-title">Plateforme de Gestion de Présence</div>
+          <div className="platform-subtitle">Enseignement Général et Technique - 2025</div>
+        </div>
+        
+        <div className="header-right">
+          <div className="notification-bell" title="Notifications">
+            <span>🔔</span>
+            {unreadNotifications > 0 && (
+              <span className="notification-count">{unreadNotifications}</span>
+            )}
+          </div>
+          
+          <div className="user-info">
+            <div className="user-avatar">MD</div>
+            <div className="user-details">
+              <div className="user-name">M. Diallo</div>
+              <div className="user-role">Professeur Principal</div>
+            </div>
+          </div>
+          
+          <button className="btn logout">Déconnexion</button>
+        </div>
+      </header>
 
       <div className="app-container">
         <nav className="sidebar">
