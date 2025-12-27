@@ -127,5 +127,10 @@ class DatabaseSeeder extends Seeder
             ['user_id' => $adminId, 'action' => 'login', 'details' => 'Admin connecté avec succès'],
             ['user_id' => $parentId, 'action' => 'view_inscription', 'details' => 'Parent a vu l\'inscription de l\'élève'],
         ]);
+
+        // Seeders pour les notifications
+        $this->call([
+            NotificationTemplateSeeder::class,
+        ]);
     }
 }

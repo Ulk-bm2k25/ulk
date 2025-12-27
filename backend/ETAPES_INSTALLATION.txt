@@ -1,0 +1,61 @@
+═══════════════════════════════════════════════════════════════
+    INSTALLATION DU MODULE DE NOTIFICATIONS
+═══════════════════════════════════════════════════════════════
+
+ÉTAPE 1: Installation des dépendances
+───────────────────────────────────────
+cd backend
+composer install
+
+ÉTAPE 2: Configuration de l'environnement
+───────────────────────────────────────────
+Si .env n'existe pas:
+  copy .env.example .env  (Windows)
+  cp .env.example .env    (Linux/Mac)
+
+Générer la clé:
+  php artisan key:generate
+
+ÉTAPE 3: Configuration Email (dans .env)
+───────────────────────────────────────────
+MAIL_MAILER=smtp
+MAIL_HOST=sandbox.smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=votre_username_mailtrap
+MAIL_PASSWORD=votre_password_mailtrap
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=noreply@ecole-example.com
+MAIL_FROM_NAME="${APP_NAME}"
+
+ÉTAPE 4: Configuration Redis (dans .env)
+───────────────────────────────────────────
+QUEUE_CONNECTION=redis
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_PASSWORD=null
+REDIS_DB=0
+
+ÉTAPE 5: Installation de Redis
+────────────────────────────────
+Windows: Installer Memurai ou utiliser WSL/Docker
+Linux: sudo apt-get install redis-server
+Mac: brew install redis
+
+Vérifier: redis-cli ping (doit retourner PONG)
+
+ÉTAPE 6: Exécuter les migrations
+──────────────────────────────────
+php artisan migrate
+
+ÉTAPE 7: Seed les templates
+─────────────────────────────
+php artisan db:seed --class=NotificationTemplateSeeder
+
+ÉTAPE 8: Lancer le worker de queue
+────────────────────────────────────
+php artisan queue:work redis --queue=emails
+
+═══════════════════════════════════════════════════════════════
+CONSULTEZ CONFIGURATION_NOTIFICATIONS.md POUR PLUS DE DÉTAILS
+═══════════════════════════════════════════════════════════════
+
