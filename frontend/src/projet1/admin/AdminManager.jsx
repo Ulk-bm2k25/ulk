@@ -146,15 +146,40 @@ const AdminManager = () => {
   };
 
   // --- NOUVEAU : Logique de validation réelle ---
+  /* --- NOUVEAU : Logique de validation réelle --- */
   const handleValidateInscription = async (id) => {
     try {
       const response = await api.patch(`/admin/inscriptions/${id}/status`, { statut: 'inscrit' });
       setInscriptions(prev => prev.map(item =>
         item.id === id ? response.data.inscription : item
       ));
-      alert("Inscription validée avec succès !");
-      setSelectedInscription(null);
+
+      // Post-validation: Prompt for Class Assignment
+      if (window.confirm("Inscription validée avec succès ! Voulez-vous affecter l'élève à une classe définitive maintenant ?")) {
+        const inscription = inscriptions.find(i => i.id === id);
+        if (inscription && inscription.eleve) {
+          // Open the Student Modal in Edit Mode (which allows class change)
+          // We need to fetch the student first or construct a partial object
+          const student = {
+            ...inscription.eleve,
+            lastName: inscription.eleve.user?.nom,
+            firstName: inscription.eleve.user?.prenom,
+            class: inscription.eleve.classe?.nom,
+            classe_id: inscription.eleve.classe_id, // Ensure this exists
+            gender: inscription.eleve.sexe,
+            birthDate: inscription.eleve.date_naissance, // Check exact field name
+            pob: inscription.eleve.lieu_naissance,
+            address: inscription.eleve.adresse
+          };
+          setEditingStudent(student);
+          setIsStudentModalOpen(true);
+        }
+      } else {
+        setSelectedInscription(null);
+      }
+
     } catch (error) {
+      console.error(error);
       alert("Erreur lors de la validation");
     }
   };
@@ -221,6 +246,9 @@ const AdminManager = () => {
   const handleSaveStudent = async (studentForm) => {
     try {
       if (editingStudent) {
+        // Find the classe_id from the selected class name
+        const selectedClass = classesData.find(c => c.nom === studentForm.class);
+
         // Map frontend fields to backend fields
         const payload = {
           nom: studentForm.lastName,
@@ -228,7 +256,8 @@ const AdminManager = () => {
           sexe: studentForm.gender,
           date_naissance: studentForm.birthDate,
           lieu_naissance: studentForm.pob,
-          adresse: studentForm.address
+          adresse: studentForm.address,
+          classe_id: selectedClass ? selectedClass.id : null
         };
 
         const response = await api.put(`/admin/students/${editingStudent.id}`, payload);
@@ -240,7 +269,8 @@ const AdminManager = () => {
           lastName: studentForm.lastName,
           firstName: studentForm.firstName,
           class: studentForm.class,
-          gender: studentForm.gender
+          gender: studentForm.gender,
+          classe_id: selectedClass ? selectedClass.id : null
         } : s));
 
         alert(`Dossier de ${studentForm.firstName} mis à jour avec succès !`);

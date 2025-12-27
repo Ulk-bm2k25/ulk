@@ -208,7 +208,7 @@ class AdminController extends Controller
         }
 
         // Update student
-        $student->update($request->only(['date_naissance', 'lieu_naissance', 'adresse', 'sexe']));
+        $student->update($request->only(['date_naissance', 'lieu_naissance', 'adresse', 'sexe', 'classe_id']));
 
         // Update user info if provided
         if ($request->has('nom') || $request->has('prenom')) {
@@ -217,7 +217,7 @@ class AdminController extends Controller
 
         return response()->json([
             'message' => 'Student updated successfully',
-            'student' => $student->load('user')
+            'student' => $student->load('user', 'classe')
         ]);
     }
 

@@ -224,7 +224,7 @@ class ParentPortalController extends Controller
                 'eleve_id' => $eleve->id,
                 'annee_scolaire_id' => $anneeScolaire->id,
                 'date_inscription' => now(),
-                'statut' => 'inscrit',
+                'statut' => 'en attente',
             ]);
 
             // 8. Payment Block Removed

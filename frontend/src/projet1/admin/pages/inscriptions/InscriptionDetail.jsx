@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, Calendar, MapPin, User, Phone, Mail, FileText,
-  CheckCircle, XCircle, AlertTriangle, Download, Printer, Loader2, IdCard
+  CheckCircle, XCircle, AlertTriangle, Download, Printer, Loader2, IdCard, School
 } from 'lucide-react';
+import api from '@/api'; // Assuming global api instance
 
 const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) => {
   const [isLoading, setIsLoading] = useState(true);
+  const [classes, setClasses] = useState([]);
+  const [selectedClass, setSelectedClass] = useState('');
+  const [showValidateModal, setShowValidateModal] = useState(false);
 
-  // Suppression du chargement simulé
   useEffect(() => {
     if (data) {
       setIsLoading(false);
+      // setSelectedClass(data.eleve?.classe_id || ''); // Not used
     }
   }, [data]);
 
@@ -27,7 +31,6 @@ const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) =
 
   const currentTuteur = data.eleve?.tuteurs?.[0] || {};
 
-  // 2. Utilisation des données réelles
   const fullData = {
     id: data.id,
     firstName: data.eleve?.user?.prenom || '--',
@@ -38,6 +41,7 @@ const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) =
     previousSchool: '--',
     status: mapStatus(data.statut),
     class: data.eleve?.classe?.nom || '--',
+    classId: data.eleve?.classe_id,
     parent: {
       name: `${currentTuteur.prenom || ''} ${currentTuteur.nom || '--'}`.trim(),
       job: currentTuteur.profession || '--',
@@ -63,6 +67,16 @@ const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) =
     }
   };
 
+  const handleValidateClick = () => {
+    setShowValidateModal(true);
+  };
+
+  const confirmValidation = () => {
+    // Pass the ID back to validate
+    onValidate(fullData.id);
+    setShowValidateModal(false);
+  };
+
   if (isLoading) {
     return (
       <div className="h-[calc(100vh-150px)] flex items-center justify-center">
@@ -75,7 +89,40 @@ const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) =
   }
 
   return (
-    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300 relative">
+      {/* Validation Modal */}
+      {showValidateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md m-4 animate-in zoom-in-95 duration-200">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <CheckCircle className="text-green-600" />
+              Valider l'inscription
+            </h2>
+            <p className="text-slate-600 mb-6">
+              Voulez-vous valider l'inscription de <strong>{fullData.firstName} {fullData.lastName}</strong> ?
+            </p>
+            <p className="text-sm text-slate-500 mb-6">
+              L'élève passera au statut <strong>Inscrit</strong>. Vous pourrez ensuite lui affecter une classe définitive.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowValidateModal(false)}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={confirmValidation}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-600/20"
+              >
+                Confirmer Validation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 1. Header & Navigation */}
       <div className="flex items-center justify-between">
         <button
@@ -219,7 +266,7 @@ const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) =
             <div className="space-y-3">
               {(fullData.status === 'pending' || fullData.status === 'rejected') && (
                 <button
-                  onClick={() => onValidate(fullData.id)}
+                  onClick={handleValidateClick}
                   className="w-full flex items-center justify-center gap-2 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold shadow-sm shadow-green-500/20 transition-all"
                 >
                   <CheckCircle size={18} />
