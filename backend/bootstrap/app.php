@@ -11,9 +11,19 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-        //
+    ->withMiddleware(function (Middleware $middleware) {
+        // Ajout du middleware Sanctum pour l'API
+        $middleware->api(prepend: [
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        ]);
+
+        // Alias des middlewares personnalisés
+        $middleware->alias([
+            'role' => \App\Http\Middleware\CheckRole::class,
+            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
+            '2fa' => \App\Http\Middleware\CheckTwoFactorAuth::class,
+        ]);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
+    ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();

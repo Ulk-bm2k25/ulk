@@ -1,20 +1,35 @@
 <?php
+
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Enseignant extends Model
 {
+    use HasFactory;
+
+    /**
+     * Le nom de la table dans la base de données
+     */
     protected $table = 'enseignants';
-    protected $fillable = ['user_id', 'matiere'];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'user_id',
+        'matiere',
+    ];
 
-    public function classes()
+    /**
+     * Relation: Un enseignant appartient à un utilisateur
+     */
+    public function user(): BelongsTo
     {
-        return $this->hasMany(Classe::class, 'enseignant_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
