@@ -1,161 +1,19 @@
 <!doctype html>
 <html lang="fr">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>School HUB - Parent Portal</title>
+    <title>School HUB - Gestion Scolaire</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;600&display=swap" rel="stylesheet">
-  </head>
-  <body>
+</head>
+
+<body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; }
-        #root { padding: 20px; }
-        .card { background: white; border-radius: 8px; padding: 20px; margin: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .button { background: #1976d2; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
-        .button:hover { background: #1565c0; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f5f5f5; }
-    </style>
-    <div id="root">Chargement...</div>
-
-    <!-- React seul, sans dépendances complexes -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
-    <script>
-        // ============================================
-        // APPLICATION SIMPLE SANS BOUCLE INFINIE
-        // ============================================
-        
-        const { useState, useEffect } = React;
-        
-        function App() {
-            console.log('App rendu');
-            
-            var [remboursements, setRemboursements] = useState([
-                { id: 1, etudiant: 'Martin Dubois', montant: 75000, statut: 'En attente' },
-                { id: 2, etudiant: 'Sophie Moreau', montant: 50000, statut: 'Approuvé' },
-                { id: 3, etudiant: 'Lucas Bernard', montant: 120000, statut: 'Refusé' }
-            ]);
-            
-            // useEffect avec tableau de dépendances vide = exécuté une seule fois
-            useEffect(() => {
-                console.log('useEffect exécuté');
-                // Simulation de chargement
-                setTimeout(() => {
-                    console.log('Données chargées');
-                }, 1000);
-                
-                // Nettoyage (optionnel)
-                return () => {
-                    console.log('useEffect nettoyé');
-                };
-            }, []); // ← Tableau vide = exécuté une seule fois
-            
-            const formatMontant = (montant) => {
-                return new Intl.NumberFormat('fr-FR', {
-                    style: 'currency',
-                    currency: 'XAF'
-                }).format(montant);
-            };
-            
-            return React.createElement('div', null,
-                React.createElement('h1', null, 'Gestion des Remboursements'),
-                
-                React.createElement('div', { className: 'card' },
-                    React.createElement('h2', null, 'Liste des remboursements'),
-                    
-                    React.createElement('table', null,
-                        React.createElement('thead', null,
-                            React.createElement('tr', null,
-                                React.createElement('th', null, 'Étudiant'),
-                                React.createElement('th', null, 'Montant'),
-                                React.createElement('th', null, 'Statut'),
-                                React.createElement('th', null, 'Actions')
-                            )
-                        ),
-                        React.createElement('tbody', null,
-                            remboursements.map(remboursement =>
-                                React.createElement('tr', { key: remboursement.id },
-                                    React.createElement('td', null, remboursement.etudiant),
-                                    React.createElement('td', null, formatMontant(remboursement.montant)),
-                                    React.createElement('td', null, 
-                                        React.createElement('span', { 
-                                            style: { 
-                                                padding: '4px 8px',
-                                                borderRadius: '4px',
-                                                background: remboursement.statut === 'En attente' ? '#fff3cd' :
-                                                           remboursement.statut === 'Approuvé' ? '#d4edda' : '#f8d7da',
-                                                color: remboursement.statut === 'En attente' ? '#856404' :
-                                                       remboursement.statut === 'Approuvé' ? '#155724' : '#721c24'
-                                            }
-                                        }, remboursement.statut)
-                                    ),
-                                    React.createElement('td', null,
-                                        React.createElement('button', { 
-                                            className: 'button',
-                                            onClick: () => alert(`Détails: ${remboursement.etudiant}`)
-                                        }, 'Voir')
-                                    )
-                                )
-                            )
-                        )
-                    )
-                ),
-                
-                React.createElement('div', { className: 'card' },
-                    React.createElement('h3', null, 'Statistiques'),
-                    React.createElement('p', null, `Total: ${remboursements.length} remboursements`),
-                    React.createElement('p', null, 
-                        `Montant total: ${formatMontant(remboursements.reduce((sum, r) => sum + r.montant, 0))}`
-                    )
-                )
-            );
-        }
-        
-        // ============================================
-        // INITIALISATION
-        // ============================================
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM chargé');
-            
-            const rootElement = document.getElementById('root');
-            if (rootElement) {
-                try {
-                    // Vérifier React
-                    if (!window.React || !window.ReactDOM) {
-                        throw new Error('React non chargé');
-                    }
-                    
-                    // Créer racine
-                    const root = ReactDOM.createRoot(rootElement);
-                    
-                    // Rendre l'app
-                    root.render(React.createElement(App));
-                    
-                    console.log('Application démarrée');
-                    
-                } catch (error) {
-                    console.error('Erreur:', error);
-                    rootElement.innerHTML = `
-                        <div style="color: red; padding: 20px;">
-                            <h2>Erreur: ${error.message}</h2>
-                            <p>Vérifiez la console (F12) pour plus de détails</p>
-                            <button onclick="location.reload()">Recharger</button>
-                        </div>
-                    `;
-                }
-            }
-        });
-    </script>
 </body>
-</html>
-  </body>
+
 </html>

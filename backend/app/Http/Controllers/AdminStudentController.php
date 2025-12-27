@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class AdminController extends Controller
+class AdminStudentController extends Controller
 {
     /**
      * Get all students with pagination, search, and filters

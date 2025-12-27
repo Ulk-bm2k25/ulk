@@ -12,6 +12,7 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\PaiementController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminStudentController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ScolariteController;
 
@@ -50,10 +51,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Admin specific
         Route::get('/dashboard/stats', [AdminController::class, 'getDashboardStats']);
-        Route::get('/students', [AdminController::class, 'getStudents']);
-        Route::get('/students/{id}', [AdminController::class, 'getStudentDetails']);
-        Route::put('/students/{id}', [AdminController::class, 'updateStudent']);
-        Route::post('/students/{id}/transfer', [AdminController::class, 'transferStudent']);
+        Route::get('/students', [AdminStudentController::class, 'getStudents']);
+        Route::get('/students/{id}', [AdminStudentController::class, 'getStudentDetails']);
+        Route::put('/students/{id}', [AdminStudentController::class, 'updateStudent']);
+        Route::post('/students/{id}/transfer', [AdminStudentController::class, 'transferStudent']);
         Route::get('/teachers', [AdminController::class, 'getTeachers']);
         Route::get('/notifications/history', [AdminController::class, 'getNotificationsHistory']);
         Route::post('/notifications/send', [AdminController::class, 'sendNotification']);
