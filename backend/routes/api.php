@@ -51,3 +51,51 @@ Route::delete('/notifications_payment',
 Route::delete('/notifications_payment/read', 
     [NotificationPaymentController::class, 'destroyRead']
 )->middleware('auth:sanctum');
+
+// Routes pour le Projet 3 - Gestion des notes
+Route::prefix('matieres')->group(function () {
+    Route::get('/', [App\Http\Controllers\Api\MatiereController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\Api\MatiereController::class, 'store'])->middleware('auth:sanctum');
+    Route::get('/{id}', [App\Http\Controllers\Api\MatiereController::class, 'show']);
+    Route::put('/{id}', [App\Http\Controllers\Api\MatiereController::class, 'update'])->middleware('auth:sanctum');
+    Route::delete('/{id}', [App\Http\Controllers\Api\MatiereController::class, 'destroy'])->middleware('auth:sanctum');
+});
+
+Route::prefix('semestres')->group(function () {
+    Route::get('/', [App\Http\Controllers\Api\SemestreController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\Api\SemestreController::class, 'store'])->middleware('auth:sanctum');
+    Route::put('/{id}', [App\Http\Controllers\Api\SemestreController::class, 'update'])->middleware('auth:sanctum');
+    Route::delete('/{id}', [App\Http\Controllers\Api\SemestreController::class, 'destroy'])->middleware('auth:sanctum');
+});
+
+Route::prefix('notes')->group(function () {
+    Route::get('/', [App\Http\Controllers\Api\NoteController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\Api\NoteController::class, 'store'])->middleware('auth:sanctum');
+    Route::post('/bulk', [App\Http\Controllers\Api\NoteController::class, 'bulkStore'])->middleware('auth:sanctum');
+    Route::get('/average', [App\Http\Controllers\Api\NoteController::class, 'calculateAverage']);
+    Route::put('/{id}', [App\Http\Controllers\Api\NoteController::class, 'update'])->middleware('auth:sanctum');
+    Route::delete('/{id}', [App\Http\Controllers\Api\NoteController::class, 'destroy'])->middleware('auth:sanctum');
+});
+
+// Routes pour le Projet 4 - Gestion de présence
+Route::prefix('presence')->group(function () {
+    Route::get('/', [App\Http\Controllers\Api\PresenceController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\Api\PresenceController::class, 'store'])->middleware('auth:sanctum');
+    Route::post('/bulk', [App\Http\Controllers\Api\PresenceController::class, 'bulkStore'])->middleware('auth:sanctum');
+    Route::post('/qr-scan', [App\Http\Controllers\Api\PresenceController::class, 'qrScan'])->middleware('auth:sanctum');
+    Route::get('/alerts', [App\Http\Controllers\Api\PresenceController::class, 'getAlerts']);
+    Route::put('/{id}', [App\Http\Controllers\Api\PresenceController::class, 'update'])->middleware('auth:sanctum');
+    Route::delete('/{id}', [App\Http\Controllers\Api\PresenceController::class, 'destroy'])->middleware('auth:sanctum');
+});
+
+Route::prefix('cours')->group(function () {
+    Route::get('/schedule/{classeId}', [App\Http\Controllers\Api\CoursController::class, 'getSchedule']);
+    Route::post('/schedule', [App\Http\Controllers\Api\CoursController::class, 'storeSchedule'])->middleware('auth:sanctum');
+    Route::put('/schedule/{id}', [App\Http\Controllers\Api\CoursController::class, 'updateSchedule'])->middleware('auth:sanctum');
+    Route::delete('/schedule/{id}', [App\Http\Controllers\Api\CoursController::class, 'destroySchedule'])->middleware('auth:sanctum');
+});
+
+Route::prefix('presence/reports')->group(function () {
+    Route::get('/', [App\Http\Controllers\Api\AttendanceReportController::class, 'index']);
+    Route::post('/generate', [App\Http\Controllers\Api\AttendanceReportController::class, 'generate'])->middleware('auth:sanctum');
+});
