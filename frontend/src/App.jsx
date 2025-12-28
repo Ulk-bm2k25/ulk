@@ -20,7 +20,7 @@ const App = () => {
       title: "Gestion de la Scolarité",
       description: "Administration de la scolarité et des programmes",
       icon: GraduationCap,
-      path: "/finance",
+      path: "/gestion-scolarite",
       features: ["Classes", "Emplois du temps", "Paiements"]
     },
     {

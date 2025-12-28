@@ -88,7 +88,7 @@ const ProtectedRoute = ({ isAuthenticated, children }) => {
 function App() {
   // --- ÉTAT GLOBAL (AUTH) ---
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('token') !== null || sessionStorage.getItem('token') !== null;
+    return localStorage.getItem('APP_CONFIG.STORAGE_KEYS.TOKEN') !== null ;
   });
 
   const handleLogin = (token, rememberMe) => {
