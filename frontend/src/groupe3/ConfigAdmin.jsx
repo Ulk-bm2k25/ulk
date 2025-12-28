@@ -148,7 +148,7 @@ const ConfigAdmin = () => {
 
             <div style={styles.container}>
                 <div style={styles.sidebar}>
-                    {/* Gestion des Classes */}
+                    {}
                     <div className="glass-card" style={{ marginBottom: '24px' }}>
                         <h2 style={styles.sectionTitle}>🏫 Gestion des Classes</h2>
                         <form onSubmit={handleSaveClasse} style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
@@ -178,7 +178,7 @@ const ConfigAdmin = () => {
                         </div>
                     </div>
 
-                    {/* Gestion des Matières */}
+                    {}
                     <div className="glass-card">
                         <h2 style={styles.sectionTitle}>📋 Gestion des Matières</h2>
                         <form onSubmit={handleSaveMatiere} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -216,7 +216,7 @@ const ConfigAdmin = () => {
                     </div>
                 </div>
 
-                {/* Section Coefficients */}
+                {}
                 <div className="glass-card" style={styles.mainSection}>
                     <div style={styles.headerRow}>
                         <h2 style={styles.sectionTitle}>
@@ -320,7 +320,7 @@ const styles = {
     placeholder: { padding: '100px 40px', textAlign: 'center', opacity: 0.4, color: 'var(--secondary)' },
     miniBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '4px' },
     deleteBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', padding: '4px', transition: 'transform 0.2s', opacity: 0.6 },
-    // Hover is handled via inline logic if needed or just kept simple
+
     checkbox: { width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' },
     actionBtn: { border: 'none', padding: '6px 14px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }
 };

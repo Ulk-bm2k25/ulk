@@ -276,12 +276,12 @@ const ConsulterBulletin = () => {
                         borderRadius: 0 !important;
                     }
                     @media print {
-                        /* Cacher la barre latérale, le header global et les filtres */
+                        
                         aside, .sidebar, header, .no-print, .glass-card:not(.bulletin-print-zone) {
                             display: none !important;
                         }
                         
-                        /* Forcer l'affichage du bulletin en plein écran sans ombre */
+                        
                         .bulletin-print-zone {
                             position: absolute !important;
                             top: 0 !important;
@@ -294,7 +294,7 @@ const ConsulterBulletin = () => {
                             background: white !important;
                         }
                         
-                        /* Ajuster le texte pour l'impression */
+                        
                         body { background: white !important; }
                         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                     }
@@ -403,7 +403,7 @@ const ConsulterBulletin = () => {
     );
 };
 
-// Composant Helper pour l'affichage d'un bulletin unique
+
 const BulletinView = ({ bulletin, eleve, classe, semestre, type, onPrint, onDownload, elevesCount }) => {
     return (
         <div>

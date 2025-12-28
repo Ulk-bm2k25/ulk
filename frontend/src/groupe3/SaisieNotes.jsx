@@ -23,7 +23,7 @@ const SaisieNotes = () => {
             const userData = JSON.parse(storedUser);
             setUser(userData);
 
-            // Si c'est un enseignant, récupérer ses classes et matière
+
             if (userData.role === 'ENSEIGNANT') {
                 fetch(`${API_BASE_URL}/get_enseignant_info.php?user_id=${userData.id}`)
                     .then(res => res.json())
@@ -31,7 +31,7 @@ const SaisieNotes = () => {
                         if (!data.error) {
                             setTeacherInfo(data);
                             setClasses(data.classes);
-                            // Récupérer l'ID de la matière (ou des matières si groupées)
+
                             fetch(`${API_BASE_URL}/get_matieres.php`)
                                 .then(res => res.json())
                                 .then(allMatieres => {
@@ -53,7 +53,7 @@ const SaisieNotes = () => {
                         }
                     });
             } else {
-                // Si c'est un admin, charger toutes les classes
+
                 fetch(`${API_BASE_URL}/get_classes.php`).then(res => res.json()).then(setClasses);
             }
         }
@@ -71,23 +71,23 @@ const SaisieNotes = () => {
         }
     }, [selectedClasse, user]);
 
-    // Charger les élèves et leurs notes existantes
+
     useEffect(() => {
         if (selectedClasse && selectedMatiere && selectedSemestre) {
             setLoading(true);
 
-            // Charger les élèves
+
             fetch(`${API_BASE_URL}/get_eleves.php?classe_id=${selectedClasse}`)
                 .then(res => res.json())
                 .then(elevesData => {
                     setEleves(elevesData);
 
-                    // Charger les notes existantes
+
                     return fetch(`${API_BASE_URL}/get_notes_saisie.php?classe_id=${selectedClasse}&matiere_id=${selectedMatiere}&semestre_id=${selectedSemestre}`);
                 })
                 .then(res => res.json())
                 .then(notesData => {
-                    // Organiser les notes par élève
+
                     const notesParEleve = {};
                     notesData.forEach(note => {
                         if (!notesParEleve[note.eleve_id]) {
@@ -108,7 +108,7 @@ const SaisieNotes = () => {
     }, [selectedClasse, selectedMatiere, selectedSemestre]);
 
     const handleNoteChange = (eleveId, type, numero, value) => {
-        // Validation: la note doit être entre 0 et 20
+
         if (value !== '' && (parseFloat(value) < 0 || parseFloat(value) > 20)) {
             alert("La note doit être comprise entre 0 et 20");
             return;
@@ -131,18 +131,18 @@ const SaisieNotes = () => {
     const calculateMoyenne = (eleveId) => {
         const eleveNotes = notes[eleveId] || {};
 
-        // Calculer la moyenne des interrogations
+
         const moyInterro = calculateMoyenneInterro(eleveId);
         if (moyInterro === '-') return '-';
 
-        // Récupérer D1 et D2
+
         const d1 = eleveNotes['DEVOIR_1']?.valeur;
         const d2 = eleveNotes['DEVOIR_2']?.valeur;
 
-        // Si au moins un devoir est manquant, on ne peut pas calculer
+
         if (!d1 || d1 === '' || !d2 || d2 === '') return '-';
 
-        // Moyenne = (MoyInterro + D1 + D2) / 3
+
         const moyenne = (parseFloat(moyInterro) + parseFloat(d1) + parseFloat(d2)) / 3;
         return moyenne.toFixed(2);
     };
@@ -152,7 +152,7 @@ const SaisieNotes = () => {
         let total = 0;
         let count = 0;
 
-        // Interrogations (3)
+
         for (let i = 1; i <= 3; i++) {
             const note = eleveNotes[`INTERROGATION_${i}`];
             if (note?.valeur && note.valeur !== '') {
@@ -168,7 +168,7 @@ const SaisieNotes = () => {
         const moyenne = calculateMoyenne(eleveId);
         if (moyenne === '-') return '-';
 
-        // Récupérer le coefficient de la matière sélectionnée
+
         const matiere = matieres.find(m => m.id === parseInt(selectedMatiere));
         const coef = matiere?.coefficient || 1;
 
@@ -187,11 +187,11 @@ const SaisieNotes = () => {
         try {
             const notesToSave = [];
 
-            // On parcourt tous les élèves pour être sûr de ne rien oublier
+
             eleves.forEach(eleve => {
                 const eleveNotes = notes[eleve.id] || {};
 
-                // Interrogations
+
                 for (let i = 1; i <= 3; i++) {
                     const note = eleveNotes[`INTERROGATION_${i}`];
                     const val = note?.valeur;
@@ -207,7 +207,7 @@ const SaisieNotes = () => {
                     }
                 }
 
-                // Devoirs
+
                 for (let i = 1; i <= 2; i++) {
                     const note = eleveNotes[`DEVOIR_${i}`];
                     const val = note?.valeur;
@@ -242,7 +242,7 @@ const SaisieNotes = () => {
                 setSaveStatus(`✅ ${data.message || (data.saved + " note(s) enregistrée(s)")}`);
                 setTimeout(() => setSaveStatus(""), 5000);
 
-                // Recharger pour synchroniser
+
                 const refreshRes = await fetch(`${API_BASE_URL}/get_notes_saisie.php?classe_id=${selectedClasse}&matiere_id=${selectedMatiere}&semestre_id=${selectedSemestre}`);
                 const notesData = await refreshRes.json();
                 const notesParEleve = {};
@@ -280,7 +280,7 @@ const SaisieNotes = () => {
                 <p style={{ color: 'var(--text-dim)', fontSize: '1.1rem' }}>Interface de saisie rapide pour toute la classe</p>
             </header>
 
-            {/* Filtres */}
+            {}
             <div className="glass-card" style={{ marginBottom: '24px', padding: '24px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
                     <div style={styles.field}>
@@ -312,7 +312,7 @@ const SaisieNotes = () => {
                 </div>
             </div>
 
-            {/* Tableau de saisie */}
+            {}
             {selectedClasse && selectedMatiere && selectedSemestre && (
                 <div className="glass-card" style={{ padding: '0', overflow: 'auto' }}>
                     {loading ? (
@@ -325,7 +325,7 @@ const SaisieNotes = () => {
                         </div>
                     ) : (
                         <>
-                            {/* Titre du tableau */}
+                            {}
                             <div style={{
                                 padding: '20px 24px',
                                 borderBottom: '2px solid #e2e8f0',
@@ -382,7 +382,7 @@ const SaisieNotes = () => {
                                                     <td style={{ ...styles.td, position: 'sticky', left: 0, backgroundColor: '#fff', fontWeight: '600', zIndex: 1 }}>
                                                         {eleve.prenom} {eleve.nom}
                                                     </td>
-                                                    {/* Interrogations */}
+                                                    {}
                                                     {[1, 2, 3].map(num => (
                                                         <td key={`I${num}`} style={styles.td}>
                                                             <input
@@ -400,11 +400,11 @@ const SaisieNotes = () => {
                                                             />
                                                         </td>
                                                     ))}
-                                                    {/* Moyenne Interrogations */}
+                                                    {}
                                                     <td style={{ ...styles.td, backgroundColor: '#fef3c7', fontWeight: '700', color: '#92400e' }}>
                                                         {calculateMoyenneInterro(eleve.id)}
                                                     </td>
-                                                    {/* Devoirs */}
+                                                    {}
                                                     {[1, 2].map(num => (
                                                         <td key={`D${num}`} style={styles.td}>
                                                             <input
@@ -422,15 +422,15 @@ const SaisieNotes = () => {
                                                             />
                                                         </td>
                                                     ))}
-                                                    {/* Moyenne */}
+                                                    {}
                                                     <td style={{ ...styles.td, backgroundColor: 'rgba(99, 102, 241, 0.1)', fontWeight: '700', color: '#6366f1' }}>
                                                         {calculateMoyenne(eleve.id)}
                                                     </td>
-                                                    {/* Moyenne Coefficientée */}
+                                                    {}
                                                     <td style={{ ...styles.td, backgroundColor: 'rgba(139, 92, 246, 0.1)', fontWeight: '700', color: '#8b5cf6' }}>
                                                         {calculateMoyenneCoef(eleve.id)}
                                                     </td>
-                                                    {/* Statut */}
+                                                    {}
                                                     <td style={styles.td}>
                                                         {validated ? (
                                                             <span style={styles.badgeValidated}>✓ Validé</span>
@@ -445,7 +445,7 @@ const SaisieNotes = () => {
                                 </table>
                             </div>
 
-                            {/* Bouton de sauvegarde */}
+                            {}
                             <div style={{ padding: '24px', borderTop: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>

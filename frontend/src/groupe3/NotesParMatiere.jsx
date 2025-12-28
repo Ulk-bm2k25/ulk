@@ -37,7 +37,7 @@ const NotesParMatiere = () => {
         }
     }, []);
 
-    // Pour l'admin/responsable : charger les notes par matière
+
     useEffect(() => {
         if (user?.role !== 'ENSEIGNANT' && selectedMatiere) {
             fetch(`${API_BASE_URL}/get_notes_matiere.php?matiere_id=${selectedMatiere}`)

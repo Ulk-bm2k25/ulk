@@ -24,10 +24,10 @@ const Login = () => {
             const data = await response.json();
 
             if (data.success) {
-                // Sauvegarder l'utilisateur dans le localStorage
+
                 localStorage.setItem('user', JSON.stringify(data.user));
 
-                // Redirection selon le rôle (facultatif, ici on va au Dashboard)
+
                 navigate('/notes');
                 window.location.reload(); // Pour mettre à jour la Sidebar immédiatement
             } else {

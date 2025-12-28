@@ -241,7 +241,7 @@ const DashboardNotes = () => {
                 <p style={styles.subtitle}>{isAdmin ? "Pilotez votre établissement avec précision et élégance." : "Gérez vos classes et vos notes simplement."}</p>
             </header>
 
-            {/* Widgets Section */}
+            {}
             <div style={styles.widgetRow}>
                 <div className="glass-card" style={{ ...styles.widget, borderLeft: '4px solid var(--primary)' }}>
                     <span style={styles.widgetValue}>{stats.taux_reussite}%</span>
@@ -268,7 +268,7 @@ const DashboardNotes = () => {
                     </div>
                     <span style={styles.widgetLabel}>Podium Excellence (Top 3)</span>
 
-                    {/* Custom Hover Card */}
+                    {}
                     {showPodium && stats.top_eleves.length > 0 && (
                         <div className="glass-card slide-up" style={{
                             position: 'absolute',

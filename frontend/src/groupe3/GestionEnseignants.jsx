@@ -78,7 +78,7 @@ const GestionEnseignants = () => {
             </header>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '40px' }}>
-                {/* Formulaire de création */}
+                {}
                 <div className="glass-card" style={{ padding: '30px' }}>
                     <h2 style={styles.cardTitle}>Nouveau Compte Enseignant</h2>
                     <form onSubmit={handleSubmit} style={styles.form}>
@@ -149,7 +149,7 @@ const GestionEnseignants = () => {
                     </form>
                 </div>
 
-                {/* Liste des enseignants */}
+                {}
                 <div className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
                     <table style={styles.table}>
                         <thead>

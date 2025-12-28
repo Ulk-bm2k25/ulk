@@ -6,7 +6,7 @@ const ChangePassword = () => {
     const [message, setMessage] = useState({ type: '', text: '' });
     const [loading, setLoading] = useState(false);
 
-    // Get real userId from localStorage
+
     const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
     const userId = storedUser.id;
 
@@ -41,11 +41,11 @@ const ChangePassword = () => {
                 setMessage({ type: 'success', text: 'Mot de passe mis à jour avec succès !' });
                 setPasswords({ old: '', new: '', confirm: '' });
 
-                // Update localStorage flag
+
                 const updatedUser = { ...storedUser, doit_changer_mdp: 0 };
                 localStorage.setItem('user', JSON.stringify(updatedUser));
 
-                // Force a check/redirect update
+
                 setTimeout(() => {
                     window.location.href = '/notes'; // Go to dashboard
                 }, 1500);
