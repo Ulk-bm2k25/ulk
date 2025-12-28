@@ -12,7 +12,9 @@ import {
   LogOut, 
   Menu, 
   X, 
-  Bell 
+  Bell,
+  Home,
+  ArrowLeft
 } from 'lucide-react';
 
 const MainLayout = ({ children, onLogout }) => {
@@ -23,29 +25,29 @@ const MainLayout = ({ children, onLogout }) => {
 
   // Définition du menu
   const menuItems = [
-    { path: '/admin', label: 'Tableau de bord', icon: LayoutDashboard },
+    { path: '/admin/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
     
     // Projet 1 : Scolarité
     { section: 'Scolarité' },
-    { path: '/admin/inscriptions', label: 'Inscriptions', icon: FileText },
-    { path: '/admin/eleves', label: 'Élèves', icon: Users },
-    { path: '/admin/classes', label: 'Classes', icon: School },
+    { path: '/admin/dashboard/inscriptions', label: 'Inscriptions', icon: FileText },
+    { path: '/admin/dashboard/eleves', label: 'Élèves', icon: Users },
+    { path: '/admin/dashboard/classes', label: 'Classes', icon: School },
 
     // Projet 2 : Finance
     { section: 'Gestion' },
-    { path: '/admin/finance', label: 'Finance & Compta.', icon: DollarSign },
+    { path: '/admin/dashboard/finance', label: 'Finance & Compta.', icon: DollarSign },
 
     // Projet 3 : Pédagogie
     { section: 'Pédagogie' },
-    { path: '/admin/notes', label: 'Notes & Bulletins', icon: GraduationCap },
+    { path: '/admin/dashboard/notes', label: 'Notes & Bulletins', icon: GraduationCap },
 
     // Projet 4 : Vie Scolaire
     { section: 'Vie Scolaire' },
-    { path: '/admin/vie-scolaire', label: 'Présence & Perm.', icon: CalendarCheck },
+    { path: '/admin/dashboard/vie-scolaire', label: 'Présence & Perm.', icon: CalendarCheck },
 
     // Système
     { section: 'Système' },
-    { path: '/admin/parametres', label: 'Paramètres', icon: Settings },
+    { path: '/admin/dashboard/parametres', label: 'Paramètres', icon: Settings },
   ];
 
   // COULEURS DE LA MARQUE
@@ -72,6 +74,29 @@ const MainLayout = ({ children, onLogout }) => {
           </div>
         </div>
 
+        {/* Boutons de navigation rapide */}
+        {isSidebarOpen && (
+          <div className="px-3 py-3 border-b border-white/10 space-y-2">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition-colors"
+              title="Retour aux portails"
+            >
+              <Home size={18} />
+              <span className="text-sm font-medium">Tous les portails</span>
+            </button>
+            
+            <button
+              onClick={() => navigate('/admin')}
+              className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition-colors"
+              title="Accueil du module"
+            >
+              <ArrowLeft size={18} />
+              <span className="text-sm font-medium">Accueil module</span>
+            </button>
+          </div>
+        )}
+        
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           {menuItems.map((item, index) => {
@@ -140,14 +165,14 @@ const MainLayout = ({ children, onLogout }) => {
           <div className="flex items-center gap-6">
             {/* Cloche de Notification (Cliquable) */}
             <button 
-                onClick={() => navigate('/admin/notifications')}
+                onClick={() => navigate('/admin/dashboard/notifications')}
                 className={`p-2 rounded-full relative transition-all ${
-                    location.pathname === '/admin/notifications'
+                    location.pathname === '/admin/dashboard/notifications'
                     ? 'bg-orange-50 text-[#eb8e3a] ring-2 ring-orange-100'
                     : 'text-slate-500 hover:bg-slate-100'
                 }`}
             >
-              <Bell size={20} fill={location.pathname === '/admin/notifications' ? "currentColor" : "none"} />
+              <Bell size={20} fill={location.pathname === '/admin/dashboard/notifications' ? "currentColor" : "none"} />
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
             </button>
             

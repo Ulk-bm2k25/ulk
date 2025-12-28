@@ -11,7 +11,7 @@ import PortalSelector from './App';
 import Projet1App from './projet1/App';
 import Projet2App from './projet2/App';
 // import Projet3App from './projet3/App';
-// import Projet4App from './projet4/App';
+import Projet4App from './projet4/App';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -24,7 +24,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/admin/*" element={<Projet1App />} />
         <Route path="/finance/*" element={<Projet2App />} />
         {/* <Route path="/notes/*" element={<Projet3App />} /> */}
-        {/* <Route path="/vie-scolaire/*" element={<Projet4App />} /> */}
+        <Route path="/vie-scolaire/*" element={<Projet4App />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
 
 // --- LAYOUTS & GLOBAL ---
-// Note : Je garde vos chemins d'imports "shared/admin" tels que vous les avez définis
 import MainLayout from '../shared/admin/layouts/MainLayout';
 import GlobalDashboard from '../shared/admin/pages/GlobalDashboard';
 import ForgotPassword from '../shared/admin/pages/auth/ForgotPassword';
@@ -42,13 +41,21 @@ const Home = () => (
       
       <div>
         <h1 className="text-4xl font-black tracking-tight mb-2">School<span className="text-[#eb8e3a]">Hub</span></h1>
-        <p className="text-white/40 font-medium">Plateforme de gestion scolaire unifiée.</p>
+        <p className="text-white/40 font-medium">Module Inscription & Réinscription</p>
       </div>
 
       <div className="space-y-4 pt-4">
+        {/* Bouton retour vers sélecteur de portails */}
+        <Link
+          to="/" 
+          className="block w-full py-4 px-6 bg-white/5 text-white font-bold rounded-2xl hover:bg-white/10 hover:scale-[1.02] transition-all border border-white/10"
+        >
+          ← Retour aux Portails
+        </Link>
+        
         {/* Lien vers l'espace Parent (Futur) */}
         <Link
-          to="/parent" 
+          to="/admin/parent" 
           className="block w-full py-4 px-6 bg-[#eb8e3a] text-[#1a2035] font-bold rounded-2xl hover:bg-[#d67e2a] hover:scale-[1.02] transition-all shadow-lg shadow-orange-950/20"
         >
           Accéder à l'Espace Parent
@@ -56,8 +63,8 @@ const Home = () => (
         
         {/* Lien vers l'espace Admin */}
         <Link
-          to="/admin"
-          className="block w-full py-4 px-6 bg-white/5 text-white font-bold rounded-2xl hover:bg-white/10 hover:scale-[1.02] transition-all border border-white/10"
+          to="/admin/dashboard"
+          className="block w-full py-4 px-6 bg-[#eb8e3a] text-[#1a2035] font-bold rounded-2xl hover:bg-[#d67e2a] hover:scale-[1.02] transition-all shadow-lg shadow-orange-950/20"
         >
           Portail Administration
         </Link>
@@ -76,7 +83,7 @@ const ProtectedRoute = ({ isAuthenticated, children }) => {
     return <Navigate to="/admin/login" replace />;
   }
   return children;
-}
+};
 
 function App() {
   // --- ÉTAT GLOBAL (AUTH) ---
@@ -95,7 +102,6 @@ function App() {
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');
   };
-
 
   // --- ÉTAT GLOBAL (DONNÉES MÉTIER) ---
   const [inscriptions, setInscriptions] = useState([
@@ -174,38 +180,46 @@ function App() {
     }]);
   };
 
-  return (
-    <>
-      <Routes>
-        {/* REDIRECTION DE LA RACINE VERS LOGIN SI NON AUTHENTIFIÉ */}
-        <Route path="/" element={
-          isAuthenticated ? <Navigate to="/admin" replace /> : <Navigate to="/admin/login" replace />
-        } />
+return (
+  <>
+    <Routes>
+      {/* === PAGE D'ACCUEIL DU MODULE === */}
+      <Route path="/" element={<Home />} />
 
-        {/* AUTHENTIFICATION */}
-        <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+      {/* AUTHENTIFICATION */}
+      <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* === ESPACE ADMIN (PROTÉGÉ) === */}
-        <Route path="/" element={
+      {/* === ESPACE ADMIN (PROTÉGÉ) === */}
+      <Route 
+        path="/dashboard/*" 
+        element={
           <ProtectedRoute isAuthenticated={isAuthenticated}>
             <MainLayout onLogout={handleLogout}>
               <Outlet />
             </MainLayout>
           </ProtectedRoute>
-        }>
-          
-          <Route index element={<GlobalDashboard />} />
+        }
+      >
+        {/* Dashboard principal */}
+        <Route index element={<GlobalDashboard />} />
 
-          <Route path="inscriptions" element={
+        {/* Inscriptions */}
+        <Route 
+          path="inscriptions" 
+          element={
             <InscriptionsList 
               inscriptions={inscriptions} 
               onQuickValidate={handleValidateInscription}
               onViewDetails={(item) => console.log("Voir détail", item)}
             />
-          } />
+          } 
+        />
 
-          <Route path="eleves" element={
+        {/* Élèves */}
+        <Route 
+          path="eleves" 
+          element={
             <StudentsList 
               students={studentsData} 
               classes={classesData}
@@ -213,54 +227,61 @@ function App() {
               onEditStudent={(s) => openStudentModal(s)}
               onViewProfile={(s) => console.log("Profil", s)}
             />
-          } />
-          <Route path="cartes" element={<StudentCardsPage students={studentsData} />} />
+          } 
+        />
+        <Route path="cartes" element={<StudentCardsPage students={studentsData} />} />
 
-          <Route path="classes" element={
+        {/* Classes */}
+        <Route 
+          path="classes" 
+          element={
             <ClassesList 
               classes={classesData}
               onAddClass={() => openClassModal(null)}
               onViewDetails={(cls) => console.log("Voir classe", cls.id)}
             />
-          } />
-          <Route path="affectations" element={<AffectationsManager onBack={() => window.history.back()} />} />
+          } 
+        />
+        <Route path="affectations" element={<AffectationsManager onBack={() => window.history.back()} />} />
 
-          <Route path="documents" element={<DocumentsHistory />} />
-          <Route path="parametres" element={<SystemSettings />} />
+        {/* Autres */}
+        <Route path="documents" element={<DocumentsHistory />} />
+        <Route path="parametres" element={<SystemSettings />} />
 
-          {/* Placeholders pour les modules futurs */}
-          <Route path="finance" element={<FinancialDashboard />} />
-          <Route path="notes/*" element={<NotesManager />} />
-          <Route path="vie-scolaire/*" element={<PresenceManager />} />
+        {/* Modules futurs */}
+        <Route path="finance" element={<FinancialDashboard />} />
+        <Route path="notes/*" element={<NotesManager />} />
+        <Route path="vie-scolaire/*" element={<PresenceManager />} />
+      </Route>
 
-        </Route>
-
-        {/* === ESPACE PARENT (FUTUR) === */}
-        <Route path="/parent/*" element={
+      {/* === ESPACE PARENT (FUTUR) === */}
+      <Route 
+        path="/parent/*" 
+        element={
           <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-600">
             Interface Parent en construction...
           </div>
-        } />
-
-      </Routes>
-
-      {/* MODALS GLOBAUX (ADMIN) */}
-      <ClassFormModal 
-        isOpen={modalState.type === 'class'} 
-        onClose={closeModal} 
-        initialData={modalState.data} 
-        onSubmit={handleSaveClass} 
+        } 
       />
-      
-      <StudentFormModal 
-        isOpen={modalState.type === 'student'} 
-        onClose={closeModal} 
-        initialData={modalState.data} 
-        availableClasses={classesData} 
-        onSubmit={handleSaveStudent} 
-      />
-    </>
-  );
+    </Routes>
+
+    {/* MODALS GLOBAUX (ADMIN) */}
+    <ClassFormModal 
+      isOpen={modalState.type === 'class'} 
+      onClose={closeModal} 
+      initialData={modalState.data} 
+      onSubmit={handleSaveClass} 
+    />
+    
+    <StudentFormModal 
+      isOpen={modalState.type === 'student'} 
+      onClose={closeModal} 
+      initialData={modalState.data} 
+      availableClasses={classesData} 
+      onSubmit={handleSaveStudent} 
+    />
+  </>
+);
 }
 
 export default App;
