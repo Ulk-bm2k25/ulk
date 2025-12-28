@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @import "tailwindcss";
 
 
@@ -28,3 +29,222 @@
     background-color: #f9f9f9;
   }
 }
+=======
+:root {
+  /* Elegant Corporate Palette (Inspired by Screenshot) */
+  --primary: #f9b17a;
+  /* Orange Active */
+  --primary-dark: #e89a61;
+  --secondary: #2d3250;
+  /* Sidebar Dark Blue */
+  --accent: #424769;
+
+  --bg-main: #f8f9fa;
+  --bg-white: #ffffff;
+  --sidebar-bg: #2d3250;
+  --sidebar-hover: rgba(255, 255, 255, 0.05);
+
+  --text-main: #2d3250;
+  --text-dim: #707589;
+  --text-white: #ffffff;
+
+  --success: #4ade80;
+  --success-bg: #f0fdf4;
+  --danger: #f87171;
+  --danger-bg: #fef2f2;
+  --warning: #fbbf24;
+  --warning-bg: #fffbeb;
+
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --border-radius: 12px;
+  --transition-smooth: all 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg-main);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  color: var(--secondary);
+}
+
+button,
+a {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Layout */
+.app-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding: 40px;
+  background: var(--bg-main);
+}
+
+/* Standard Cards (Replacement for Glass) */
+.glass-card {
+  background: var(--bg-white);
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-smooth);
+}
+
+.glass-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* Typography Gradient */
+.text-gradient {
+  color: var(--secondary);
+  font-weight: 800;
+}
+
+/* Buttons */
+.btn-premium {
+  background: var(--primary);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  color: var(--secondary);
+  font-weight: 700;
+  text-transform: none;
+  transition: var(--transition-smooth);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-premium:hover {
+  background: var(--primary-dark);
+  transform: scale(1.02);
+}
+
+/* Common Table Styles */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th {
+  background: #fdfdfd;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 16px;
+  border-bottom: 2px solid #eee;
+}
+
+td {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Badges */
+.badge-success {
+  background: var(--success-bg);
+  color: #166534;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge-danger {
+  background: var(--danger-bg);
+  color: #991b1b;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app-wrapper {
+    flex-direction: column;
+  }
+
+  .main-content {
+    padding: 20px !important;
+  }
+
+  .glass-card {
+    padding: 16px;
+  }
+
+  h1 {
+    font-size: 1.8rem !important;
+  }
+
+  /* Table responsiveness */
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+  }
+
+  table {
+    min-width: 600px;
+  }
+}
+
+/* Utilities */
+.slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 5px;
+}
+>>>>>>> groupe3
