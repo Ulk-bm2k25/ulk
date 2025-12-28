@@ -28,6 +28,7 @@ class Notification extends Model
      * L'expéditeur de la notification
      */
     public function expediteur(): BelongsTo
+
     {
         return $this->belongsTo(User::class, 'user_id');
     }
@@ -36,6 +37,7 @@ class Notification extends Model
      * Le destinataire de la notification
      */
     public function destinataire(): BelongsTo
+
     {
         return $this->belongsTo(User::class, 'destinataire_id');
     }

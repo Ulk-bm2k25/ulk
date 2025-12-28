@@ -26,6 +26,10 @@ class Eleve extends Model
         'user_id',
         'classe_id',
         'serie_id',
+        'sexe',
+        'age',
+        'photo', // Added photo as well just in case for future
+        'matricule' // Added matricule
     ];
 
     /**
@@ -56,6 +60,7 @@ class Eleve extends Model
     public function classe(): BelongsTo
     {
         return $this->belongsTo(Classe::class, 'classe_id');
+<<<<<<< HEAD
     }
 
     /**
@@ -88,5 +93,6 @@ class Eleve extends Model
     public function getParentTuteurAttribute()
     {
         return $this->tuteurs->first();
+
     }
 }

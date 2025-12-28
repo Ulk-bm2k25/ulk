@@ -9,7 +9,15 @@ class Classe extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nom', 'niveau_id', 'description', 'annee_scolaire'];
+    // Fusion des champs des deux versions
+    protected $fillable = [
+        'nom',
+        'niveau_id',
+        'description',
+        'annee_scolaire',
+        'capacity_max',
+        'current_students',
+    ];
 
     public function eleves()
     {
@@ -20,19 +28,22 @@ class Classe extends Model
     {
         return $this->hasMany(Course::class);
     }
+
     public function programmes()
     {
         return $this->hasMany(Programme::class);
     }
-    public function niveau() 
+
+    // Relation standard vers NiveauScolaire (nommage unique conservé)
+    public function niveau()
     {
-    return $this->belongsTo(NiveauScolaire::class, 'niveau_id');
-    }
-    public function getLibelleAttribute(): string
-    {
-        $niveauNom = isset($this->niveau->nom) ? $this->niveau->nom : 'N/A';
-        return "{$this->nom} ({$niveauNom}) - {$this->annee_scolaire}";
-// ...existing code...
+        return $this->belongsTo(NiveauScolaire::class, 'niveau_id');
     }
 
+    // Libellé sûr : évite les erreurs quand niveau est null
+    public function getLibelleAttribute(): string
+    {
+        $niveauNom = $this->niveau && isset($this->niveau->nom) ? $this->niveau->nom : 'N/A';
+        return "{$this->nom} ({$niveauNom}) - {$this->annee_scolaire}";
+    }
 }

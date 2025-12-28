@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 
 const api = axios.create({
   baseURL: "http://127.0.0.1:8000/api/",
+
   headers: {
     "Content-Type": "application/json",
     "Accept": "application/json",
@@ -144,7 +145,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Optionnel : Rediriger vers le login ou nettoyer le stockage
       localStorage.removeItem('token');
       sessionStorage.removeItem('token');
     }

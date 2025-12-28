@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+
 class Matiere extends Model
 {
     use HasFactory;
@@ -28,7 +29,7 @@ class Matiere extends Model
      *
      * @return HasMany
      */
-    public function cours(): HasMany
+    public function cours(): HasMany    
     {
         return $this->hasMany(Course::class, 'matiere_id');
     }

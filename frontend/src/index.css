@@ -1,13 +1,12 @@
 @import "tailwindcss";
 
+
 @theme {
-  /* Vos variables de thème existantes */
-  --color-brand-dark: #2A2D3E;
-  --color-brand-primary: #F59E0B;
-  --color-brand-bg: #F3F4F6;
+/* Vos variables de thème existantes */
+--color-brand-dark: #2A2D3E;
+--color-brand-primary: #F59E0B;
+--color-brand-bg: #F3F4F6;
 }
-
-
 @layer base {
 
   input,
@@ -23,7 +22,7 @@
   textarea::placeholder {
     color: #9ca3af;
     /* gray-400 */
-  }
+
 
   button {
     background-color: #f9f9f9;

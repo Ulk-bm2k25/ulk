@@ -1,21 +1,18 @@
 <?php
 
-use App\Http\Controllers\StatsController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\TwoFactorAuthController;
 use App\Http\Controllers\Api\ProfileController;
-use App\Http\Controllers\Api\ClasseController;
-use App\Http\Controllers\Api\CourseController;
-use App\Http\Controllers\Api\EleveController;
-use App\Http\Controllers\Api\PermissionsController;
-use App\Http\Controllers\Api\PresenceController;
-use App\Http\Controllers\Api\SeanceController;
-use App\Http\Controllers\Api\ProgrammeController;
-use App\Http\Controllers\Api\AnneeScolaireController;
-use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\PdfController;
+use App\Http\Controllers\ClassController;
+use App\Http\Controllers\app\RegisterController;
+use App\Http\Controllers\app\Http\LoginController;
+use App\Http\Controllers\app\ParentController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -59,343 +56,151 @@ Route::prefix('auth')->group(function () {
 // ============================================
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [LoginController::class, 'logout']);
+    Route::get('/user', [LoginController::class, 'user']);
     
-    // ----------------------------------------
-    // Authentification & Session
-    // ----------------------------------------
-    Route::prefix('auth')->group(function () {
+    Route::prefix('admin')->group(function () {
+        // ========== INSCRIPTIONS ==========
+        Route::get('/inscriptions', [InscriptionController::class, 'index']);
+        Route::get('/inscriptions/{id}', [InscriptionController::class, 'show']);
+        Route::patch('/inscriptions/{id}/status', [InscriptionController::class, 'updateStatus']);
         
-        // Déconnexion
-        Route::post('/logout', [AuthController::class, 'logout'])
-            ->name('auth.logout');
+        // Documents élèves
+        Route::get('/eleves/{eleveId}/documents', [InscriptionController::class, 'getEleveDocuments']);
+        Route::post('/eleves/{eleveId}/documents', [InscriptionController::class, 'addDocument']);
         
-        // Déconnexion de tous les appareils
-        Route::post('/logout-all', [AuthController::class, 'logoutAll'])
-            ->name('auth.logout-all');
+        // ========== STRUCTURE ACADÉMIQUE ==========
+        // Niveaux scolaires
+        Route::get('/academic/niveaux', [AcademicStructureController::class, 'indexNiveaux']);
+        Route::post('/academic/niveaux', [AcademicStructureController::class, 'storeNiveau']);
+        Route::put('/academic/niveaux/{id}', [AcademicStructureController::class, 'updateNiveau']);
+        Route::delete('/academic/niveaux/{id}', [AcademicStructureController::class, 'destroyNiveau']);
         
-        // Informations utilisateur connecté
-        Route::get('/me', [AuthController::class, 'me'])
-            ->name('auth.me');
+        // Cycles
+        Route::get('/academic/cycles', [AcademicStructureController::class, 'indexCycles']);
+        Route::post('/academic/cycles', [AcademicStructureController::class, 'storeCycle']);
+        Route::put('/academic/cycles/{id}', [AcademicStructureController::class, 'updateCycle']);
+        Route::delete('/academic/cycles/{id}', [AcademicStructureController::class, 'destroyCycle']);
         
-        // Rafraîchir le token
-        Route::post('/refresh-token', [AuthController::class, 'refreshToken'])
-            ->name('auth.refresh-token');
+        // Séries
+        Route::get('/academic/series', [AcademicStructureController::class, 'indexSeries']);
+        Route::post('/academic/series', [AcademicStructureController::class, 'storeSerie']);
+        Route::put('/academic/series/{id}', [AcademicStructureController::class, 'updateSerie']);
+        Route::delete('/academic/series/{id}', [AcademicStructureController::class, 'destroySerie']);
+        
+        // Années scolaires
+        Route::get('/academic/annees-scolaires', [AcademicStructureController::class, 'indexAnneeScolaires']);
+        Route::get('/academic/annee-scolaire/active', [AcademicStructureController::class, 'getActiveAnneeScolaire']);
+        Route::post('/academic/annees-scolaires', [AcademicStructureController::class, 'storeAnneeScolaire']);
+        Route::put('/academic/annees-scolaires/{id}', [AcademicStructureController::class, 'updateAnneeScolaire']);
+        Route::delete('/academic/annees-scolaires/{id}', [AcademicStructureController::class, 'destroyAnneeScolaire']);
+        
+        // ========== AFFECTATIONS ==========
+        Route::get('/affectations', [AffectationController::class, 'index']);
+        Route::post('/affectations', [AffectationController::class, 'store']);
+        Route::post('/affectations/{id}/transfer', [AffectationController::class, 'transfer']);
+        Route::delete('/affectations/{id}/unassign', [AffectationController::class, 'unassign']);
+        Route::get('/affectations/eleve/{eleveId}', [AffectationController::class, 'getByEleve']);
+        Route::get('/affectations/classe/{classeId}', [AffectationController::class, 'getByClasse']);
+        
+        // Grades & Bulletins
+        Route::get('/grades/class/{classId}', [NoteController::class, 'getGradesByClass']);
+        Route::post('/grades/bulk', [NoteController::class, 'storeBulk']);
+        Route::post('/bulletins/generate/{classId}', [NoteController::class, 'generateBulletins']);
+        Route::get('/bulletins/download/{eleveId}', [NoteController::class, 'downloadBulletin']);
+        Route::get('/matieres', [NoteController::class, 'getMatieres']);
+        Route::get('/semestres', [NoteController::class, 'getSemestres']);
+
+        // Attendance
+        Route::get('/attendance/class/{classId}', [AttendanceController::class, 'getClassAttendance']);
+        Route::post('/attendance/bulk', [AttendanceController::class, 'storeBulk']);
+
+        // Finance Routes
+        Route::get('/finance/stats', [PaiementController::class, 'getAdminFinanceStats']);
+        Route::get('/finance/payments', [PaiementController::class, 'getAdminPayments']);
+
+        // Admin specific
+        Route::get('/dashboard/stats', [AdminController::class, 'getDashboardStats']);
+        Route::get('/students', [AdminStudentController::class, 'getStudents']);
+        Route::get('/students/{id}', [AdminStudentController::class, 'getStudentDetails']);
+        Route::put('/students/{id}', [AdminStudentController::class, 'updateStudent']);
+        Route::post('/students/{id}/transfer', [AdminStudentController::class, 'transferStudent']);
+        Route::post('/students/{id}/exclude', [AdminStudentController::class, 'excludeStudent']);
+        Route::post('/students/{id}/reactivate', [AdminStudentController::class, 'reactivateStudent']);
+        Route::delete('/students/{id}', [AdminStudentController::class, 'deleteStudent']);
+        Route::get('/teachers', [AdminController::class, 'getTeachers']);
+        Route::get('/notifications/history', [AdminController::class, 'getNotificationsHistory']);
+        Route::post('/notifications/send', [AdminController::class, 'sendNotification']);
+
+        // Settings
+        Route::get('/settings', [SettingController::class, 'index']);
+        Route::post('/settings', [SettingController::class, 'store']);
+        
+        // Admin Settings (Profil, Mot de passe, Créer Admin)
+        Route::get('/settings/profile', [\App\Http\Controllers\AdminSettingsController::class, 'getProfile']);
+        Route::put('/settings/profile', [\App\Http\Controllers\AdminSettingsController::class, 'updateProfile']);
+        Route::post('/settings/password', [\App\Http\Controllers\AdminSettingsController::class, 'changePassword']);
+        Route::post('/settings/create-admin', [\App\Http\Controllers\AdminSettingsController::class, 'createAdmin']);
+        Route::get('/settings/admins', [\App\Http\Controllers\AdminSettingsController::class, 'listAdmins']);
+
+        // Scolarité
+        Route::get('/scolarite/documents', [ScolariteController::class, 'getDocumentsHistory']);
+        Route::get('/eleves/{id}/carte', [ScolariteController::class, 'generateIDCard']);
+        
+        // ========== PDFs ==========
+        Route::get('/pdf/fiche-inscription/{inscriptionId}', [PdfController::class, 'ficheInscription']);
+        Route::get('/pdf/carte-scolarite/{eleveId}', [PdfController::class, 'carteScolarite']);
+        Route::get('/pdf/fiche-inscription/{inscriptionId}/preview', [PdfController::class, 'previewFicheInscription']);
+        Route::get('/pdf/carte-scolarite/{eleveId}/preview', [PdfController::class, 'previewCarteScolarite']);
+        
+        // ========== NOTIFICATIONS ==========
+        Route::prefix('notifications')->group(function () {
+            Route::get('/', [NotificationController::class, 'index']);
+            Route::get('/templates', [NotificationController::class, 'templates']);
+            Route::post('/payment-reminder', [NotificationController::class, 'sendPaymentReminder']);
+            Route::post('/urgent', [NotificationController::class, 'sendUrgentNotification']);
+            Route::post('/general', [NotificationController::class, 'sendGeneralNotification']);
+            Route::post('/class', [NotificationController::class, 'sendToClass']);
+            Route::get('/{id}', [NotificationController::class, 'show']);
+            Route::post('/{id}/retry', [NotificationController::class, 'retry']);
+        });
     });
-    
-    // ----------------------------------------
-    // Vérification d'email
-    // ----------------------------------------
-    Route::prefix('email')->group(function () {
+
+
+
+    // Parent Routes
+    Route::prefix('parent')->group(function () {
+        Route::get('/dashboard', [ParentPortalController::class, 'getDashboardSummary']);
+        Route::get('/children', [ParentPortalController::class, 'getChildren']);
+        Route::get('/children/{id}', [ParentPortalController::class, 'getChildDetails']);
+        Route::get('/children/{id}/grades', [NoteController::class, 'getStudentGrades']);
+        Route::get('/children/{id}/bulletin', [NoteController::class, 'downloadBulletin']);
+        Route::get('/children/{id}/carte', [ScolariteController::class, 'generateIDCard']);
+        Route::get('/children/{id}/documents', [InscriptionController::class, 'getEleveDocuments']);
+        Route::post('/children/{id}/documents', [InscriptionController::class, 'addDocument']);
+        Route::get('/notifications', [NotificationController::class, 'myNotifications']);
+        Route::patch('/notifications/{id}/read', [ParentPortalController::class, 'markNotificationAsRead']);
+        Route::post('/notifications/read-all', [ParentPortalController::class, 'markAllAsRead']);
+        Route::post('/enroll-child', [ParentPortalController::class, 'enrollChild']);
+
+        Route::get('/semestres', [NoteController::class, 'getSemestres']);
+        Route::get('/children/{id}/attendance', [AttendanceController::class, 'getStudentAttendance']);
+        Route::post('/children/{id}/update-photo', [ParentPortalController::class, 'updateChildPhoto']);
+        Route::get('/profile', [ParentPortalController::class, 'getProfile']);
+        Route::post('/profile/update', [ParentPortalController::class, 'updateProfile']);
+        Route::post('/profile/password', [ParentPortalController::class, 'updatePassword']);
         
-        // Renvoyer l'email de vérification
-        Route::post('/verification-notification', [EmailVerificationController::class, 'resend'])
-            ->name('verification.send');
-        
-        // Vérifier l'email
-        Route::get('/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
-            ->name('verification.verify');
-        
-        // Statut de vérification
-        Route::get('/verification-status', [EmailVerificationController::class, 'status'])
-            ->name('verification.status');
-    });
-    
-    // ----------------------------------------
-    // Authentification à deux facteurs (2FA)
-    // ----------------------------------------
-    Route::prefix('2fa')->group(function () {
-        
-        // Activer 2FA
-        Route::post('/enable', [TwoFactorAuthController::class, 'enable'])
-            ->name('2fa.enable');
-        
-        // Confirmer l'activation 2FA
-        Route::post('/confirm', [TwoFactorAuthController::class, 'confirm'])
-            ->name('2fa.confirm');
-        
-        // Désactiver 2FA
-        Route::post('/disable', [TwoFactorAuthController::class, 'disable'])
-            ->name('2fa.disable');
-        
-        // Vérifier le code 2FA (avec token temporaire)
-        Route::post('/verify', [TwoFactorAuthController::class, 'verify'])
-            ->name('2fa.verify');
-        
-        // Compléter le login après 2FA
-        Route::post('/complete-login', [AuthController::class, 'completeTwoFactorLogin'])
-            ->name('2fa.complete-login');
-        
-        // Obtenir les codes de récupération
-        Route::get('/recovery-codes', [TwoFactorAuthController::class, 'recoveryCodes'])
-            ->name('2fa.recovery-codes');
-        
-        // Régénérer les codes de récupération
-        Route::post('/recovery-codes/regenerate', [TwoFactorAuthController::class, 'regenerateRecoveryCodes'])
-            ->name('2fa.recovery-codes.regenerate');
-    });
-    
-    // ----------------------------------------
-    // Gestion du profil utilisateur
-    // ----------------------------------------
-    Route::prefix('profile')->group(function () {
-        
-        // Obtenir le profil
-        Route::get('/', [ProfileController::class, 'show'])
-            ->name('profile.show');
-        
-        // Mettre à jour le profil
-        Route::put('/', [ProfileController::class, 'update'])
-            ->name('profile.update');
-        
-        // Changer le mot de passe
-        Route::post('/change-password', [ProfileController::class, 'changePassword'])
-            ->name('profile.change-password');
-        
-        // Supprimer le compte
-        Route::delete('/', [ProfileController::class, 'destroy'])
-            ->name('profile.destroy');
-    });
-    
-    // ----------------------------------------
-    // Gestion des administrateurs (Admin only)
-    // ----------------------------------------
-    Route::prefix('admin')->middleware('role:admin')->group(function () {
-        
-        // Créer un administrateur
-        Route::post('/register', [AuthController::class, 'registerAdmin'])
-            ->name('admin.register');
-        
-        // Liste des administrateurs
-        Route::get('/list', [ProfileController::class, 'listAdmins'])
-            ->name('admin.list');
-        
-        // Détails d'un administrateur
-        Route::get('/{id}', [ProfileController::class, 'showAdmin'])
-            ->name('admin.show');
-        
-        // Mettre à jour un administrateur
-        Route::put('/{id}', [ProfileController::class, 'updateAdmin'])
-            ->name('admin.update');
-        
-        // Supprimer un administrateur
-        Route::delete('/{id}', [ProfileController::class, 'destroyAdmin'])
-            ->name('admin.destroy');
-    });
-    
-    // ----------------------------------------
-    // Logs d'activité (Admin only)
-    // ----------------------------------------
-    Route::prefix('logs')->middleware('role:admin')->group(function () {
-        
-        // Liste des logs
-        Route::get('/', [\App\Http\Controllers\Api\LogController::class, 'index'])
-            ->name('logs.index');
-        
-        // Logs d'un utilisateur spécifique
-        Route::get('/user/{userId}', [\App\Http\Controllers\Api\LogController::class, 'userLogs'])
-            ->name('logs.user');
-        
-        // Recherche dans les logs
-        Route::post('/search', [\App\Http\Controllers\Api\LogController::class, 'search'])
-            ->name('logs.search');
-    });
-    
-    // ----------------------------------------
-    // Gestion des sessions actives
-    // ----------------------------------------
-    Route::prefix('sessions')->group(function () {
-        
-        // Liste des sessions actives
-        Route::get('/', [ProfileController::class, 'activeSessions'])
-            ->name('sessions.active');
-        
-        // Révoquer une session spécifique
-        Route::delete('/{tokenId}', [ProfileController::class, 'revokeSession'])
-            ->name('sessions.revoke');
+        // Payments
+        Route::get('/children/{id}/payments', [PaiementController::class, 'getStudentPayments']);
+        Route::post('/payments/process', [PaiementController::class, 'processPayment']);
     });
 });
 
-// ============================================
-// ROUTE DE TEST (À supprimer en production)
-// ============================================
-
-Route::get('/test', function () {
-    return response()->json([
-        'success' => true,
-        'message' => 'API de Gestion Scolaire - Module Authentification',
-        'version' => '1.0.0',
-        'timestamp' => now(),
-    ]);
-})->name('api.test');
-
-// ============================================
-// ROUTE 404 POUR LES ROUTES API NON TROUVÉES
-// ============================================
-
-Route::fallback(function () {
-    return response()->json([
-        'success' => false,
-        'message' => 'Route API non trouvée',
-    ], 404);
-});
-
-
-// Routes protégées par auth:sanctum
-Route::middleware('auth:sanctum')->group(function() {
-
-    Route::apiResource('classes', ClasseController::class);
-    Route::apiResource('courses', CourseController::class);
-    Route::apiResource('eleves', EleveController::class);
-    Route::apiResource('seances', SeanceController::class)->only(['index','store','show']);
-    Route::apiResource('programmes', ProgrammeController::class)->only(['index','store']);
-    Route::apiResource('annee-scolaires', AnneeScolaireController::class);
-
-});
-
-// ============================================
-// ROUTES PERMISSIONS
-// ============================================
-Route::get('permissions', [PermissionsController::class, 'index']);
-Route::post('permissions', [PermissionsController::class, 'store']);
-Route::get('permissions/{id}', [PermissionsController::class, 'show']);
-Route::put('permissions/{id}', [PermissionsController::class, 'update']);
-Route::get('students', [PermissionsController::class, 'students']);
-Route::get('courses', [PermissionsController::class, 'courses']);
-Route::post('permissions/{id}/notify', [PermissionsController::class, 'notify']);
-
-// ----------------------------------------
-// Dashboard
-// ----------------------------------------
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/dashboard/stats', [DashboardController::class, 'getDashboardStats']);
-    Route::get('/dashboard/activities', [DashboardController::class, 'getRecentActivities']);
-    Route::get('/dashboard/attention', [DashboardController::class, 'getStudentsNeedingAttention']);
-    Route::get('/notifications', [DashboardController::class, 'getRecentActivities']);
-    Route::put('/notifications/{id}/read', [DashboardController::class, 'markAsRead']);
-});
-
-// ----------------------------------------
-// Gestion des présences
-// ----------------------------------------
-Route::prefix('presence')->group(function () {
-    Route::get('/list', [App\Http\Controllers\Api\PresenceController::class, 'getAttendanceList'])
-        ->name('presence.list');
-    Route::post('/mark', [App\Http\Controllers\Api\PresenceController::class, 'markAttendance'])
-        ->name('presence.mark');
-    Route::post('/mark-all', [App\Http\Controllers\Api\PresenceController::class, 'markAllAttendance'])
-        ->name('presence.mark-all');
-    Route::post('/report', [App\Http\Controllers\Api\PresenceController::class, 'generateAttendanceReport'])
-        ->name('presence.report');
-    Route::get('/download/{filename}', [App\Http\Controllers\Api\PresenceController::class, 'downloadReport'])
-        ->name('presence.download');
-    Route::get('/stats', [App\Http\Controllers\Api\PresenceController::class, 'getAttendanceStats'])
-        ->name('presence.stats');
-    // Ajout de la route manquante pour les cours du jour
-    Route::get('/courses-of-day', [App\Http\Controllers\Api\PresenceController::class, 'getCoursesOfDay'])
-        ->name('presence.courses-of-day');
-    Route::post('/notify', [App\Http\Controllers\Api\PresenceController::class, 'notify'])
-        ->name('presence.notify');
-});
-
-// Route de test
-Route::get('/test', function () {
-    return response()->json([
-        'status' => 'success',
-        'message' => 'API Laravel fonctionne correctement !',
-        'timestamp' => now()->toDateTimeString()
-    ]);
-});
-
-// Routes pour les statistiques
-Route::prefix('stats')->group(function () {
-    Route::get('/{classeId}', [StatsController::class, 'index']);
-    Route::get('/{classeId}/generales', [StatsController::class, 'generales']);
-    Route::get('/{classeId}/academiques', [StatsController::class, 'academiques']);
-});
-
-Route::get('/reports/financial/data', [App\Http\Controllers\Api\FinancialReportController::class, 'getData']);
-
-// Routes pour les classes et élèves
-Route::prefix('classes')->group(function () {
-    Route::get('/', [ClassController::class, 'index']);
-    Route::get('/{id}', [ClassController::class, 'show']);
-    Route::get('/{id}/students', [ClassController::class, 'show']); // Retourne les élèves de la classe
-});
-
-Route::prefix('eleves')->group(function () {
-    Route::get('/', function (Request $request) {
-        $query = \App\Models\Eleve::query();
-        if ($request->has('classe_id')) {
-            $query->where('classe_id', $request->classe_id);
-        }
-        return response()->json(['success' => true, 'data' => $query->with('classe')->get()]);
-    });
-});
-
-
-// Routes pour les notifications de paiement
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/notifications_payment', [NotificationPaymentController::class, 'index']);
-    Route::post('/notifications_payment/{id}/read', [NotificationPaymentController::class, 'markAsRead']);
-});
-
-
-Route::delete('/notifications_payment/{id}', 
-    [NotificationPaymentController::class, 'destroy']
-)->middleware('auth:sanctum');
-
-Route::delete('/notifications_payment', 
-    [NotificationPaymentController::class, 'destroyAll']
-)->middleware('auth:sanctum');
-
-Route::delete('/notifications_payment/read', 
-    [NotificationPaymentController::class, 'destroyRead']
-)->middleware('auth:sanctum');
-
-// Routes pour le Projet 3 - Gestion des notes
-Route::prefix('matieres')->group(function () {
-    Route::get('/', [App\Http\Controllers\Api\MatiereController::class, 'index']);
-    Route::post('/', [App\Http\Controllers\Api\MatiereController::class, 'store'])->middleware('auth:sanctum');
-    Route::get('/{id}', [App\Http\Controllers\Api\MatiereController::class, 'show']);
-    Route::put('/{id}', [App\Http\Controllers\Api\MatiereController::class, 'update'])->middleware('auth:sanctum');
-    Route::delete('/{id}', [App\Http\Controllers\Api\MatiereController::class, 'destroy'])->middleware('auth:sanctum');
-});
-
-Route::prefix('semestres')->group(function () {
-    Route::get('/', [App\Http\Controllers\Api\SemestreController::class, 'index']);
-    Route::post('/', [App\Http\Controllers\Api\SemestreController::class, 'store'])->middleware('auth:sanctum');
-    Route::put('/{id}', [App\Http\Controllers\Api\SemestreController::class, 'update'])->middleware('auth:sanctum');
-    Route::delete('/{id}', [App\Http\Controllers\Api\SemestreController::class, 'destroy'])->middleware('auth:sanctum');
-});
-
-Route::prefix('notes')->group(function () {
-    Route::get('/', [App\Http\Controllers\Api\NoteController::class, 'index']);
-    Route::post('/', [App\Http\Controllers\Api\NoteController::class, 'store'])->middleware('auth:sanctum');
-    Route::post('/bulk', [App\Http\Controllers\Api\NoteController::class, 'bulkStore'])->middleware('auth:sanctum');
-    Route::get('/average', [App\Http\Controllers\Api\NoteController::class, 'calculateAverage']);
-    Route::put('/{id}', [App\Http\Controllers\Api\NoteController::class, 'update'])->middleware('auth:sanctum');
-    Route::delete('/{id}', [App\Http\Controllers\Api\NoteController::class, 'destroy'])->middleware('auth:sanctum');
-});
-
-// Routes pour le Projet 4 - Gestion de présence
-Route::prefix('presence')->group(function () {
-    Route::get('/', [App\Http\Controllers\Api\PresenceController::class, 'index']);
-    Route::post('/', [App\Http\Controllers\Api\PresenceController::class, 'store'])->middleware('auth:sanctum');
-    Route::post('/bulk', [App\Http\Controllers\Api\PresenceController::class, 'bulkStore'])->middleware('auth:sanctum');
-    Route::post('/qr-scan', [App\Http\Controllers\Api\PresenceController::class, 'qrScan'])->middleware('auth:sanctum');
-    Route::get('/alerts', [App\Http\Controllers\Api\PresenceController::class, 'getAlerts']);
-    Route::put('/{id}', [App\Http\Controllers\Api\PresenceController::class, 'update'])->middleware('auth:sanctum');
-    Route::delete('/{id}', [App\Http\Controllers\Api\PresenceController::class, 'destroy'])->middleware('auth:sanctum');
-});
-
-Route::prefix('cours')->group(function () {
-    Route::get('/schedule/{classeId}', [App\Http\Controllers\Api\CoursController::class, 'getSchedule']);
-    Route::post('/schedule', [App\Http\Controllers\Api\CoursController::class, 'storeSchedule'])->middleware('auth:sanctum');
-    Route::put('/schedule/{id}', [App\Http\Controllers\Api\CoursController::class, 'updateSchedule'])->middleware('auth:sanctum');
-    Route::delete('/schedule/{id}', [App\Http\Controllers\Api\CoursController::class, 'destroySchedule'])->middleware('auth:sanctum');
-});
-
-Route::prefix('presence/reports')->group(function () {
-    Route::get('/', [App\Http\Controllers\Api\AttendanceReportController::class, 'index']);
-    Route::post('/generate', [App\Http\Controllers\Api\AttendanceReportController::class, 'generate'])->middleware('auth:sanctum');
+    Route::apiResource('classes', ClassController::class);
+    Route::post('classes/{classId}/assign-eleve', [ClassController::class, 'assignEleve']);
+    Route::delete('classes/{classId}/unassign-eleve/{eleveId}', [ClassController::class, 'unassignEleve']);
+    Route::post('classes/{classId}/assign-enseignant', [ClassController::class, 'assignEnseignant']);
+    Route::get('niveaux', [ClassController::class, 'niveaux']);
+    Route::get('matieres', [ClassController::class, 'matieres']);
 });
