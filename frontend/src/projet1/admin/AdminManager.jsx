@@ -309,6 +309,42 @@ const AdminManager = () => {
     }
   };
 
+  const handleExcludeStudent = async (studentId) => {
+    if (!window.confirm("Êtes-vous sûr de vouloir exclure cet élève ?")) return;
+    try {
+      await api.post(`/admin/students/${studentId}/exclude`);
+      setStudentsData(prev => prev.map(s => 
+        s.id === studentId ? { ...s, status: 'excluded', est_actif: false } : s
+      ));
+      alert("Élève exclu avec succès.");
+    } catch (error) {
+      alert(error.response?.data?.message || "Erreur lors de l'exclusion.");
+    }
+  };
+
+  const handleReactivateStudent = async (studentId) => {
+    try {
+      await api.post(`/admin/students/${studentId}/reactivate`);
+      setStudentsData(prev => prev.map(s => 
+        s.id === studentId ? { ...s, status: 'active', est_actif: true } : s
+      ));
+      alert("Élève réactivé avec succès.");
+    } catch (error) {
+      alert(error.response?.data?.message || "Erreur lors de la réactivation.");
+    }
+  };
+
+  const handleDeleteStudent = async (studentId) => {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer définitivement cet élève ? Cette action est irréversible.")) return;
+    try {
+      await api.delete(`/admin/students/${studentId}`);
+      setStudentsData(prev => prev.filter(s => s.id !== studentId));
+      alert("Élève supprimé avec succès.");
+    } catch (error) {
+      alert(error.response?.data?.error || error.response?.data?.message || "Erreur lors de la suppression.");
+    }
+  };
+
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard':
@@ -349,6 +385,9 @@ const AdminManager = () => {
             onViewProfile={(student) => setSelectedStudent(student)}
             onNavigate={handleNavigate}
             onTransfer={handleTransferStudent}
+            onExclude={handleExcludeStudent}
+            onReactivate={handleReactivateStudent}
+            onDelete={handleDeleteStudent}
             onAddStudent={() => {
               setEditingStudent(null);
               setIsStudentModalOpen(true);

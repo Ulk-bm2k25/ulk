@@ -151,7 +151,7 @@ class PasswordResetController extends Controller
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, $password) {
                 $user->forceFill([
-                    'password' => Hash::make($password)
+                    'password_hash' => Hash::make($password)
                 ])->setRememberToken(Str::random(60));
 
                 $user->save();
@@ -188,7 +188,8 @@ class PasswordResetController extends Controller
             'user_id' => $user->id,
             'action' => $action,
             'details' => $details,
-            'timestamp' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
 }

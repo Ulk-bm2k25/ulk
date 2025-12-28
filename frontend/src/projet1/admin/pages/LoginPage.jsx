@@ -153,6 +153,18 @@ const LoginPage = ({ onLogin }) => {
                 />
                 <span className="text-sm text-slate-600 font-medium">Se souvenir de moi</span>
               </label>
+              <button
+                type="button"
+                onClick={() => {
+                  // Navigate to forgot password
+                  if (window.location.pathname.includes('/admin')) {
+                    window.location.href = '/admin/forgot-password';
+                  }
+                }}
+                className="text-sm text-brand-primary font-medium hover:underline"
+              >
+                Mot de passe oublié ?
+              </button>
             </div>
 
             <button

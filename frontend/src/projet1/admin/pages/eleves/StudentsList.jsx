@@ -14,7 +14,10 @@ const StudentsList = ({
   onNavigate,
   onAddStudent,
   onEditStudent,
-  onTransfer
+  onTransfer,
+  onExclude,
+  onReactivate,
+  onDelete
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('all');
@@ -324,10 +327,43 @@ const StudentsList = ({
                                 </button>
                               </div>
                               <div className="border-t border-slate-100 py-1">
-                                <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                  <Trash2 size={16} />
-                                  Exclure / Supprimer
-                                </button>
+                                {student.status === 'active' ? (
+                                  <button 
+                                    onClick={() => {
+                                      setOpenMenuId(null);
+                                      if (onExclude) onExclude(student.id);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 flex items-center gap-2"
+                                  >
+                                    <Trash2 size={16} />
+                                    Exclure temporairement
+                                  </button>
+                                ) : (
+                                  <>
+                                    <button 
+                                      onClick={() => {
+                                        setOpenMenuId(null);
+                                        if (onReactivate) onReactivate(student.id);
+                                      }}
+                                      className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 flex items-center gap-2"
+                                    >
+                                      <CheckSquare size={16} />
+                                      Réactiver
+                                    </button>
+                                    <button 
+                                      onClick={() => {
+                                        setOpenMenuId(null);
+                                        if (window.confirm("Êtes-vous sûr de vouloir supprimer définitivement cet élève ?")) {
+                                          if (onDelete) onDelete(student.id);
+                                        }
+                                      }}
+                                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                    >
+                                      <Trash2 size={16} />
+                                      Supprimer définitivement
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             </div>
                           )}

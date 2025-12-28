@@ -26,6 +26,11 @@ Route::get('/user', function (Request $request) {
 Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/login', [LoginController::class, 'login']);
 
+// Mot de passe oublié (public)
+Route::post('/password/forgot', [\App\Http\Controllers\Api\PasswordResetController::class, 'sendResetLink']);
+Route::post('/password/verify-token', [\App\Http\Controllers\Api\PasswordResetController::class, 'verifyToken']);
+Route::post('/password/reset', [\App\Http\Controllers\Api\PasswordResetController::class, 'resetPassword']);
+
 // Inscription complète (publique)
 Route::post('/inscription/complete', [InscriptionController::class, 'completeInscription']);
 
@@ -101,6 +106,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/students/{id}', [AdminStudentController::class, 'getStudentDetails']);
         Route::put('/students/{id}', [AdminStudentController::class, 'updateStudent']);
         Route::post('/students/{id}/transfer', [AdminStudentController::class, 'transferStudent']);
+        Route::post('/students/{id}/exclude', [AdminStudentController::class, 'excludeStudent']);
+        Route::post('/students/{id}/reactivate', [AdminStudentController::class, 'reactivateStudent']);
+        Route::delete('/students/{id}', [AdminStudentController::class, 'deleteStudent']);
         Route::get('/teachers', [AdminController::class, 'getTeachers']);
         Route::get('/notifications/history', [AdminController::class, 'getNotificationsHistory']);
         Route::post('/notifications/send', [AdminController::class, 'sendNotification']);
@@ -108,6 +116,13 @@ Route::middleware('auth:sanctum')->group(function () {
         // Settings
         Route::get('/settings', [SettingController::class, 'index']);
         Route::post('/settings', [SettingController::class, 'store']);
+        
+        // Admin Settings (Profil, Mot de passe, Créer Admin)
+        Route::get('/settings/profile', [\App\Http\Controllers\AdminSettingsController::class, 'getProfile']);
+        Route::put('/settings/profile', [\App\Http\Controllers\AdminSettingsController::class, 'updateProfile']);
+        Route::post('/settings/password', [\App\Http\Controllers\AdminSettingsController::class, 'changePassword']);
+        Route::post('/settings/create-admin', [\App\Http\Controllers\AdminSettingsController::class, 'createAdmin']);
+        Route::get('/settings/admins', [\App\Http\Controllers\AdminSettingsController::class, 'listAdmins']);
 
         // Scolarité
         Route::get('/scolarite/documents', [ScolariteController::class, 'getDocumentsHistory']);

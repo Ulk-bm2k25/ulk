@@ -63,10 +63,12 @@ class AdminStudentController extends Controller
 
         $student = Eleve::with([
             'user',
-            'classe.niveau_scolaire',
+            'classe.niveauScolaire',
             'serie',
             'inscriptions.anneeScolaire',
-            'tuteurs.user'
+            'inscriptions.eleve.classe',
+            'tuteurs.user',
+            'documents'
         ])->find($id);
 
         if (!$student) {
@@ -81,12 +83,40 @@ class AdminStudentController extends Controller
             ->get();
 
         // Calculate average
-        $averageNote = Note::where('eleve_id', $id)->avg('note');
+        $averageNote = Note::where('eleve_id', $id)->avg('valeur');
+
+        // Get attendance rate
+        $totalPresence = \App\Models\Attendance::where('eleve_id', $id)->count();
+        $presentCount = \App\Models\Attendance::where('eleve_id', $id)->where('statut', 'present')->count();
+        $attendanceRate = $totalPresence > 0 ? round(($presentCount / $totalPresence) * 100, 1) : 0;
+
+        // Get payment info
+        $totalFrais = \App\Models\Paiement::where('eleve_id', $id)->sum('montant_paye');
+        $reste = 0; // TODO: Calculate from frais_types
+
+        // Format inscriptions history
+        $inscriptionsHistory = $student->inscriptions->map(function($inscription) {
+            return [
+                'year' => $inscription->anneeScolaire->annee ?? 'N/A',
+                'class' => $inscription->eleve->classe->nom ?? 'N/A',
+                'statut' => $inscription->statut
+            ];
+        });
 
         return response()->json([
             'student' => $student,
             'recent_notes' => $recentNotes,
-            'average' => $averageNote ? round($averageNote, 2) : null
+            'average' => $averageNote ? round($averageNote, 2) : null,
+            'attendance' => [
+                'rate' => $attendanceRate,
+                'justified' => '0h',
+                'absent' => ($totalPresence - $presentCount) . 'h'
+            ],
+            'finance' => [
+                'reste' => number_format($reste, 0, ',', ' ') . ' FCFA',
+                'statut' => $reste > 0 ? 'En attente' : 'Payé'
+            ],
+            'inscriptions_history' => $inscriptionsHistory
         ]);
     }
 
@@ -175,5 +205,82 @@ class AdminStudentController extends Controller
         ]);
     }
 
-    // ... existing methods (getDashboardStats, getTeachers, sendNotification, etc.)
+    /**
+     * Exclure un élève (désactiver)
+     */
+    public function excludeStudent(Request $request, $id)
+    {
+        $user = auth()->user();
+        if (!in_array($user->role, ['ADMIN', 'RESPONSABLE'])) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $student = Eleve::find($id);
+        if (!$student) {
+            return response()->json(['error' => 'Student not found'], 404);
+        }
+
+        $student->update(['est_actif' => false]);
+
+        return response()->json([
+            'message' => 'Élève exclu avec succès',
+            'student' => $student->load('user')
+        ]);
+    }
+
+    /**
+     * Réactiver un élève
+     */
+    public function reactivateStudent($id)
+    {
+        $user = auth()->user();
+        if (!in_array($user->role, ['ADMIN', 'RESPONSABLE'])) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $student = Eleve::find($id);
+        if (!$student) {
+            return response()->json(['error' => 'Student not found'], 404);
+        }
+
+        $student->update(['est_actif' => true]);
+
+        return response()->json([
+            'message' => 'Élève réactivé avec succès',
+            'student' => $student->load('user')
+        ]);
+    }
+
+    /**
+     * Supprimer définitivement un élève
+     */
+    public function deleteStudent($id)
+    {
+        $user = auth()->user();
+        if (!in_array($user->role, ['ADMIN', 'RESPONSABLE'])) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $student = Eleve::find($id);
+        if (!$student) {
+            return response()->json(['error' => 'Student not found'], 404);
+        }
+
+        // Vérifier s'il y a des inscriptions actives
+        $activeInscriptions = Inscription::where('eleve_id', $id)
+            ->where('statut', 'inscrit')
+            ->count();
+
+        if ($activeInscriptions > 0) {
+            return response()->json([
+                'error' => 'Impossible de supprimer un élève avec des inscriptions actives'
+            ], 400);
+        }
+
+        $student->delete();
+
+        return response()->json([
+            'message' => 'Élève supprimé avec succès'
+        ]);
+    }
 }

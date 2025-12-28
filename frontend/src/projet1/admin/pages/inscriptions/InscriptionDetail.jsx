@@ -3,19 +3,47 @@ import {
   ArrowLeft, Calendar, MapPin, User, Phone, Mail, FileText,
   CheckCircle, XCircle, AlertTriangle, Download, Printer, Loader2, IdCard, School
 } from 'lucide-react';
-import api from '@/api'; // Assuming global api instance
+import api from '@/api';
 
 const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [classes, setClasses] = useState([]);
+  const [niveaux, setNiveaux] = useState([]);
   const [selectedClass, setSelectedClass] = useState('');
+  const [selectedNiveau, setSelectedNiveau] = useState('');
+  const [newClassName, setNewClassName] = useState('');
   const [showValidateModal, setShowValidateModal] = useState(false);
+  const [showCreateClass, setShowCreateClass] = useState(false);
+  const [classeSouhaitee, setClasseSouhaitee] = useState('');
 
   useEffect(() => {
-    if (data) {
-      setIsLoading(false);
-      // setSelectedClass(data.eleve?.classe_id || ''); // Not used
-    }
+    const fetchData = async () => {
+      if (data) {
+        setIsLoading(false);
+        
+        // Extraire la classe souhaitée du commentaire
+        if (data.commentaire && data.commentaire.includes('Classe souhaitée:')) {
+          const match = data.commentaire.match(/Classe souhaitée: (.+?)(?: -|$)/);
+          if (match) {
+            setClasseSouhaitee(match[1].trim());
+            setNewClassName(match[1].trim());
+          }
+        }
+        
+        // Charger les classes et niveaux
+        try {
+          const [classesRes, niveauxRes] = await Promise.all([
+            api.get('/classes'),
+            api.get('/niveaux')
+          ]);
+          setClasses(classesRes.data || []);
+          setNiveaux(niveauxRes.data || []);
+        } catch (error) {
+          console.error('Error fetching classes/niveaux', error);
+        }
+      }
+    };
+    fetchData();
   }, [data]);
 
   if (!data) return null;
@@ -71,10 +99,64 @@ const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) =
     setShowValidateModal(true);
   };
 
-  const confirmValidation = () => {
-    // Pass the ID back to validate
-    onValidate(fullData.id);
-    setShowValidateModal(false);
+  const confirmValidation = async () => {
+    try {
+      let classeId = selectedClass;
+      let classeSouhaiteeValue = null;
+      let niveauId = null;
+
+      // Si une classe est sélectionnée, l'utiliser
+      if (selectedClass) {
+        classeId = selectedClass;
+      } 
+      // Sinon, si on doit créer une nouvelle classe
+      else if (showCreateClass && newClassName && selectedNiveau) {
+        // Créer la classe d'abord
+        try {
+          const newClassRes = await api.post('/classes', {
+            nom: newClassName,
+            niveau_id: selectedNiveau,
+            annee_scolaire: data.annee_scolaire || new Date().getFullYear() + '-' + (new Date().getFullYear() + 1),
+            capacity_max: 30
+          });
+          classeId = newClassRes.data.id;
+        } catch (error) {
+          alert('Erreur lors de la création de la classe: ' + (error.response?.data?.message || error.message));
+          return;
+        }
+      }
+      // Sinon, utiliser la classe souhaitée du commentaire
+      else if (classeSouhaitee) {
+        classeSouhaiteeValue = classeSouhaitee;
+        // Essayer de trouver une classe correspondante
+        const matchingClass = classes.find(c => c.nom.includes(classeSouhaitee));
+        if (matchingClass) {
+          classeId = matchingClass.id;
+        } else {
+          // Demander à créer la classe
+          setShowCreateClass(true);
+          return;
+        }
+      }
+
+      // Valider l'inscription avec la classe
+      await api.patch(`/admin/inscriptions/${fullData.id}/status`, {
+        statut: 'inscrit',
+        classe_id: classeId,
+        classe_souhaitee: classeSouhaiteeValue,
+        niveau_id: selectedNiveau
+      });
+
+      onValidate(fullData.id);
+      setShowValidateModal(false);
+      alert('Inscription validée avec succès !');
+    } catch (error) {
+      if (error.response?.data?.requires_class_creation) {
+        setShowCreateClass(true);
+      } else {
+        alert('Erreur lors de la validation: ' + (error.response?.data?.message || error.message));
+      }
+    }
   };
 
   if (isLoading) {
@@ -93,7 +175,7 @@ const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) =
       {/* Validation Modal */}
       {showValidateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md m-4 animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg m-4 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
               <CheckCircle className="text-green-600" />
               Valider l'inscription
@@ -101,20 +183,97 @@ const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) =
             <p className="text-slate-600 mb-6">
               Voulez-vous valider l'inscription de <strong>{fullData.firstName} {fullData.lastName}</strong> ?
             </p>
-            <p className="text-sm text-slate-500 mb-6">
-              L'élève passera au statut <strong>Inscrit</strong>. Vous pourrez ensuite lui affecter une classe définitive.
-            </p>
 
-            <div className="flex justify-end gap-3">
+            {/* Classe souhaitée affichée */}
+            {classeSouhaitee && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Classe souhaitée par le parent:</strong> {classeSouhaitee}
+                </p>
+              </div>
+            )}
+
+            {/* Sélection de classe */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Sélectionner une classe existante
+              </label>
+              <select
+                value={selectedClass}
+                onChange={(e) => {
+                  setSelectedClass(e.target.value);
+                  setShowCreateClass(false);
+                }}
+                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              >
+                <option value="">-- Choisir une classe --</option>
+                {classes.map(classe => (
+                  <option key={classe.id} value={classe.id}>
+                    {classe.nom} ({classe.niveau_scolaire?.nom || 'N/A'})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Option: Créer une nouvelle classe */}
+            <div className="mb-4">
+              <label className="flex items-center gap-2 mb-2">
+                <input
+                  type="checkbox"
+                  checked={showCreateClass}
+                  onChange={(e) => {
+                    setShowCreateClass(e.target.checked);
+                    if (e.target.checked) setSelectedClass('');
+                  }}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm font-medium text-slate-700">Créer une nouvelle classe</span>
+              </label>
+              
+              {showCreateClass && (
+                <div className="mt-3 space-y-3 p-3 bg-slate-50 rounded-lg">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Nom de la classe</label>
+                    <input
+                      type="text"
+                      value={newClassName}
+                      onChange={(e) => setNewClassName(e.target.value)}
+                      placeholder="Ex: 6ème A"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Niveau scolaire</label>
+                    <select
+                      value={selectedNiveau}
+                      onChange={(e) => setSelectedNiveau(e.target.value)}
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                    >
+                      <option value="">-- Choisir un niveau --</option>
+                      {niveaux.map(niveau => (
+                        <option key={niveau.id} value={niveau.id}>{niveau.nom}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => setShowValidateModal(false)}
+                onClick={() => {
+                  setShowValidateModal(false);
+                  setShowCreateClass(false);
+                  setSelectedClass('');
+                }}
                 className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors"
               >
                 Annuler
               </button>
               <button
                 onClick={confirmValidation}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-600/20"
+                disabled={!selectedClass && (!showCreateClass || !newClassName || !selectedNiveau)}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Confirmer Validation
               </button>
@@ -160,8 +319,12 @@ const InscriptionDetail = ({ data, onBack, onValidate, onReject, onNavigate }) =
                   <h1 className="text-2xl font-bold text-slate-800">{fullData.firstName} {fullData.lastName}</h1>
                   <div className="text-slate-500 mt-1 flex items-center gap-2">
                     <span className="font-mono bg-slate-100 px-2 py-0.5 rounded text-xs">INS-{fullData.id}</span>
-                    <span>•</span>
-                    <span>Classe demandée : <strong className="text-slate-800">{fullData.class}</strong></span>
+                    {classeSouhaitee && (
+                      <>
+                        <span>•</span>
+                        <span>Classe souhaitée : <strong className="text-slate-800">{classeSouhaitee}</strong></span>
+                      </>
+                    )}
                   </div>
                   <div className={`mt-3 inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(fullData.status)}`}>
                     {getStatusLabel(fullData.status)}

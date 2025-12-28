@@ -304,6 +304,9 @@ class InscriptionController extends Controller
     {
         $request->validate([
             'statut' => 'required|string|in:inscrit,rejete,en attente',
+            'classe_id' => 'nullable|exists:classes,id',
+            'classe_souhaitee' => 'nullable|string', // Pour créer une nouvelle classe
+            'niveau_id' => 'nullable|exists:niveaux_scolaires,id', // Pour créer une nouvelle classe
         ]);
 
         $user = Auth::user();
@@ -314,13 +317,81 @@ class InscriptionController extends Controller
         $inscription = Inscription::findOrFail($id);
         
         return DB::transaction(function () use ($request, $inscription, $user) {
-            $inscription->update(['statut' => $request->statut]);
+            $eleve = $inscription->eleve;
+            $anneeScolaire = $inscription->anneeScolaire;
+            $anneeScolaireStr = $anneeScolaire ? $anneeScolaire->annee : date('Y') . '-' . (date('Y') + 1);
 
-            // If approved and a class is provided, update the student's class
-            if ($request->statut === 'inscrit' && $request->has('classe_id')) {
-                $eleve = $inscription->eleve;
-                $eleve->update(['classe_id' => $request->classe_id]);
+            // Si l'inscription est validée
+            if ($request->statut === 'inscrit') {
+                $classe = null;
+
+                // Si une classe_id est fournie, l'utiliser
+                if ($request->has('classe_id') && $request->classe_id) {
+                    $classe = Classe::find($request->classe_id);
+                }
+                // Sinon, chercher une classe correspondant à la classe souhaitée
+                elseif ($request->has('classe_souhaitee') && $request->classe_souhaitee) {
+                    $classe = Classe::where('nom', 'LIKE', '%' . $request->classe_souhaitee . '%')
+                        ->where('annee_scolaire', $anneeScolaireStr)
+                        ->first();
+
+                    // Si aucune classe trouvée, créer une nouvelle classe
+                    if (!$classe && $request->has('niveau_id')) {
+                        $niveau = \App\Models\NiveauScolaire::find($request->niveau_id);
+                        if ($niveau) {
+                            $classe = Classe::create([
+                                'nom' => $request->classe_souhaitee,
+                                'niveau_id' => $niveau->id,
+                                'annee_scolaire' => $anneeScolaireStr,
+                                'capacity_max' => 30,
+                                'current_students' => 0,
+                            ]);
+                        }
+                    }
+                }
+
+                // Si toujours pas de classe, chercher dans le commentaire de l'inscription
+                if (!$classe && $inscription->commentaire) {
+                    // Extraire la classe souhaitée du commentaire
+                    if (preg_match('/Classe souhaitée: (.+?)(?: -|$)/', $inscription->commentaire, $matches)) {
+                        $classeSouhaitee = trim($matches[1]);
+                        $classe = Classe::where('nom', 'LIKE', '%' . $classeSouhaitee . '%')
+                            ->where('annee_scolaire', $anneeScolaireStr)
+                            ->first();
+                    }
+                }
+
+                // Si une classe est trouvée/créée, affecter l'élève
+                if ($classe) {
+                    // Vérifier la capacité
+                    if ($classe->isFull()) {
+                        return response()->json([
+                            'message' => 'La classe est pleine. Capacité maximale: ' . $classe->capacity_max
+                        ], 400);
+                    }
+
+                    // Affecter l'élève à la classe
+                    $eleve->update(['classe_id' => $classe->id]);
+                    $classe->incrementStudents();
+
+                    // Créer l'affectation
+                    \App\Models\AffectationClasse::create([
+                        'eleve_id' => $eleve->id,
+                        'classe_id' => $classe->id,
+                        'date_affectation' => now(),
+                        'statut' => 'affecte',
+                    ]);
+                } else {
+                    // Si aucune classe n'est trouvée, retourner une erreur
+                    return response()->json([
+                        'message' => 'Aucune classe correspondante trouvée. Veuillez créer une classe ou en sélectionner une.',
+                        'requires_class_creation' => true,
+                        'classe_souhaitee' => $request->classe_souhaitee ?? 'N/A',
+                    ], 400);
+                }
             }
+
+            $inscription->update(['statut' => $request->statut]);
 
             // Create notification for the parent(s)
             $eleve = $inscription->eleve;
