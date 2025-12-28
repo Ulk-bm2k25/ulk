@@ -11,20 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('presence', function (Blueprint $table) {
+        Schema::create('presences', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('classe_id')->nullable()->constrained('classes')->onDelete('set null');
-            $table->foreignId('cours_id')->nullable()->constrained('cours')->onDelete('set null');
-            $table->foreignId('eleve_id')->nullable()->constrained('eleves')->onDelete('set null');
-            $table->date('date');
-            $table->string('heure');
-            $table->boolean('present')->default(false);
+            $table->foreignId('seance_id')->constrained('seances')->onDelete('cascade');
+            $table->foreignId('eleve_id')->constrained('eleves')->onDelete('cascade');
+            $table->enum('statut', ['present', 'absent', 'retard'])->default('absent');
             $table->timestamps();
-            $table->index('classe_id');
-            $table->index('cours_id');
+            $table->index('seance_id');
             $table->index('eleve_id');
-            $table->index('date');
         });
+
     }
 
     /**

@@ -1,51 +1,38 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
 
 class Classe extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nom', 'niveau_id', 'description', 'serie', 'annee_scolaire', 'effectif_max', 'current_students'];
-
-    public function niveauScolaire()
-    {
-        return $this->belongsTo(NiveauScolaire::class, 'niveau_id');
-    }
+    protected $fillable = ['nom', 'niveau_id', 'description', 'annee_scolaire'];
 
     public function eleves()
     {
-        return $this->belongsToMany(Eleve::class, 'affectations');
+        return $this->hasMany(Eleve::class);
     }
 
-    public function matieres()
+    public function courses()
     {
-        return $this->belongsToMany(Matiere::class, 'affectations');
+        return $this->hasMany(Course::class);
     }
-
-    public function enseignants()
+    public function programmes()
     {
-        return $this->belongsToMany(User::class, 'affectations', 'class_id', 'user_id')->where('role', 'ENSEIGNANT');
+        return $this->hasMany(Programme::class);
     }
-
-    public function isFull()
+    public function niveau() 
     {
-        return $this->current_students >= $this->capacity_max;
+    return $this->belongsTo(NiveauScolaire::class, 'niveau_id');
     }
-
-    public function incrementStudents()
+    public function getLibelleAttribute(): string
     {
-        $this->increment('current_students');
+        $niveauNom = isset($this->niveau->nom) ? $this->niveau->nom : 'N/A';
+        return "{$this->nom} ({$niveauNom}) - {$this->annee_scolaire}";
+// ...existing code...
     }
 
-    public function decrementStudents()
-    {
-        $this->decrement('current_students');
-    }
-
-    
 }

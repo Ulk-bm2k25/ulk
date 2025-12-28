@@ -4,224 +4,382 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Presence;
+use App\Models\Classe;
+use App\Models\Eleve;
+use App\Models\Course;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Notifications\AbsenceNotification;
+use App\Notifications\AbsenceAlertNotification;
+use Illuminate\Support\Facades\Notification;
 
 class PresenceController extends Controller
 {
     /**
-     * Liste des présences
+     * 1. OUVERTURE D'UNE LISTE DE PRÉSENCE
      */
-    public function index(Request $request): JsonResponse
+    public function getAttendanceList(Request $request)
     {
-        $query = Presence::with(['eleve']);
-
-        if ($request->has('classe_id')) {
-            $query->whereHas('eleve', function($q) use ($request) {
-                $q->where('classe_id', $request->classe_id);
-            });
-        }
-
-        if ($request->has('date')) {
-            $query->whereDate('date', $request->date);
-        }
-
-        if ($request->has('date_debut') && $request->has('date_fin')) {
-            $query->whereBetween('date', [$request->date_debut, $request->date_fin]);
-        }
-
-        if ($request->has('eleve_id')) {
-            $query->where('eleve_id', $request->eleve_id);
-        }
-
-        if ($request->has('statut')) {
-            $query->where('statut', $request->statut);
-        }
-
-        $presences = $query->orderBy('date', 'desc')->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $presences
-        ]);
-    }
-
-    /**
-     * Créer une présence
-     */
-    public function store(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'eleve_id' => 'required|exists:eleves,id',
-            'date' => 'required|date',
-            'statut' => 'required|in:present,absent,late',
-            'justifie' => 'boolean',
-            'motif' => 'nullable|string|max:500',
+        $request->validate([
+            'classe_id' => 'required|integer|exists:classes,id',
+            'date' => 'required|date'
         ]);
 
-        $presence = Presence::create($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Présence enregistrée avec succès',
-            'data' => $presence->load('eleve')
-        ], 201);
-    }
-
-    /**
-     * Créer plusieurs présences en masse
-     */
-    public function bulkStore(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'attendance' => 'required|array',
-            'attendance.*.eleve_id' => 'required|exists:eleves,id',
-            'attendance.*.date' => 'required|date',
-            'attendance.*.statut' => 'required|in:present,absent,late',
-            'attendance.*.justifie' => 'boolean',
-            'attendance.*.motif' => 'nullable|string|max:500',
-        ]);
-
-        $presences = [];
-        foreach ($validated['attendance'] as $attendanceData) {
-            $presences[] = Presence::create($attendanceData);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => count($presences) . ' présence(s) enregistrée(s) avec succès',
-            'data' => $presences
-        ], 201);
-    }
-
-    /**
-     * Scanner QR Code
-     */
-    public function qrScan(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'qr_code' => 'required|string',
-            'date' => 'required|date',
-            'classe_id' => 'required|exists:classes,id',
-        ]);
-
-        // TODO: Décoder le QR code pour obtenir l'ID de l'élève
-        // Pour l'instant, on suppose que le QR code contient directement l'ID
-        $eleveId = $validated['qr_code'];
-
-        $presence = Presence::create([
-            'eleve_id' => $eleveId,
-            'date' => $validated['date'],
-            'statut' => 'present',
-            'justifie' => true,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Présence enregistrée via QR code',
-            'data' => $presence->load('eleve')
-        ], 201);
-    }
-
-    /**
-     * Obtenir les alertes d'absences successives
-     */
-    public function getAlerts(Request $request): JsonResponse
-    {
-        $minConsecutive = $request->get('min_consecutive', 3); // Par défaut 3 absences consécutives
+        $classe = Classe::findOrFail($request->classe_id);
         
-        // Récupérer tous les élèves avec leurs absences
-        $eleves = \App\Models\Eleve::with(['presences' => function($query) {
-            $query->where('statut', 'absent')
-                  ->orderBy('date', 'desc');
-        }])->get();
+        $eleves = Eleve::where('classe_id', $request->classe_id)
+                      ->with(['user', 'tuteurs'])
+                      ->get();
         
-        $alerts = [];
+        $existingPresences = Presence::where('classe_id', $request->classe_id)
+                                    ->whereDate('date', $request->date)
+                                    ->get()
+                                    ->keyBy('eleve_id');
         
+        $attendanceList = [];
         foreach ($eleves as $eleve) {
-            $absences = $eleve->presences;
-            if ($absences->count() < $minConsecutive) continue;
+            $existing = $existingPresences[$eleve->id] ?? null;
+            $parent = $eleve->tuteurs->first();
             
-            // Vérifier si les absences sont consécutives
-            $consecutiveCount = 1;
-            $lastDate = null;
-            
-            foreach ($absences as $absence) {
-                if ($lastDate === null) {
-                    $lastDate = $absence->date;
-                    continue;
-                }
+            $attendanceList[] = [
+                'eleve_id' => $eleve->id,
+                'nom' => $eleve->user->name ?? 'Inconnu',
+                'present' => $existing ? (bool)$existing->present : null,
+                'heure' => $existing ? $existing->heure : null,
+                'absences_count' => $eleve->presences()->where('present', false)->count(),
+                'parent_email' => $parent->email ?? null,
+                'parent_phone' => $parent->telephone ?? null
+            ];
+        }
+        
+        return response()->json([
+            'success' => true,
+            'classe' => [
+                'id' => $classe->id,
+                'nom' => $classe->nom
+            ],
+            'date' => $request->date,
+            'eleves' => $attendanceList,
+            'total' => count($eleves)
+        ]);
+    }
+
+    /**
+     * 2. MARQUAGE DE LA PRÉSENCE
+     */
+    public function markAttendance(Request $request)
+    {
+        $request->validate([
+            'eleve_id' => 'required|integer|exists:eleves,id',
+            'classe_id' => 'required|integer|exists:classes,id',
+            'present' => 'required|boolean',
+            'date' => 'required|date',
+            'course_id' => 'nullable|integer|exists:cours,id'
+        ]);
+        
+        $presence = Presence::updateOrCreate(
+            [
+                'eleve_id' => $request->eleve_id,
+                'classe_id' => $request->classe_id,
+                'date' => $request->date,
+                'course_id' => $request->course_id
+            ],
+            [
+                'present' => $request->present,
+                'heure' => now()->format('H:i:s')
+            ]
+        );
+        
+        if (!$request->present) {
+            $this->notifyAbsence($presence);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Présence enregistrée',
+            'presence' => $presence
+        ]);
+    }
+
+    /**
+     * 3. MARQUER TOUTE LA CLASSE
+     */
+    public function markAllAttendance(Request $request)
+    {
+        $request->validate([
+            'classe_id' => 'required|integer|exists:classes,id',
+            'date' => 'required|date',
+            'status' => 'required|in:present,absent',
+            'course_id' => 'nullable|integer|exists:cours,id'
+        ]);
+        
+        $eleves = Eleve::where('classe_id', $request->classe_id)->get();
+        $isPresent = $request->status === 'present';
+        
+        DB::beginTransaction();
+        try {
+            foreach ($eleves as $eleve) {
+                Presence::updateOrCreate(
+                    [
+                        'eleve_id' => $eleve->id,
+                        'classe_id' => $request->classe_id,
+                        'date' => $request->date,
+                        'course_id' => $request->course_id
+                    ],
+                    [
+                        'present' => $isPresent,
+                        'heure' => now()->format('H:i:s')
+                    ]
+                );
                 
-                $daysDiff = $lastDate->diffInDays($absence->date);
-                if ($daysDiff === 1) {
-                    $consecutiveCount++;
-                } else {
-                    $consecutiveCount = 1;
-                }
-                
-                $lastDate = $absence->date;
-                
-                if ($consecutiveCount >= $minConsecutive) {
-                    // Récupérer les informations du parent
-                    $parent = $eleve->user->parentTuteur ?? null;
-                    
-                    $alerts[] = [
-                        'id' => $eleve->id,
-                        'eleve' => [
-                            'nom' => $eleve->nom,
-                            'prenom' => $eleve->prenom,
-                            'classe' => $eleve->classe->nom ?? 'N/A',
-                        ],
-                        'absences_consecutives' => $consecutiveCount,
-                        'derniere_absence' => $absence->date->format('Y-m-d'),
-                        'parent_email' => $parent->email ?? null,
-                        'parent_phone' => $parent->telephone ?? null,
-                    ];
-                    break; // Une seule alerte par élève
+                if (!$isPresent) {
+                    $presence = Presence::where('eleve_id', $eleve->id)
+                                       ->where('date', $request->date)
+                                       ->first();
+                    $this->notifyAbsence($presence);
                 }
             }
+            
+            DB::commit();
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Tous les élèves marqués " . ($isPresent ? 'présents' : 'absents'),
+                'students_updated' => $eleves->count()
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur: ' . $e->getMessage()
+            ], 500);
         }
+    }
+
+    /**
+     * 4. GÉNÉRATION DE RAPPORT PDF
+     */
+    public function generateAttendanceReport(Request $request)
+    {
+        $request->validate([
+            'classe_id' => 'required|integer|exists:classes,id',
+            'date_debut' => 'required|date',
+            'date_fin' => 'nullable|date',
+            'format' => 'nullable|in:pdf,excel'
+        ]);
+        
+        $classe = Classe::findOrFail($request->classe_id);
+        $dateFin = $request->date_fin ?? $request->date_debut;
+        
+        $presences = Presence::where('classe_id', $request->classe_id)
+                            ->whereBetween('date', [$request->date_debut, $dateFin])
+                            ->with(['eleve.user', 'course.matiere'])
+                            ->get()
+                            ->groupBy('date');
+        
+        $stats = [
+            'total_jours' => $presences->count(),
+            'total_presences' => 0,
+            'total_absences' => 0,
+            'taux_presence' => 0
+        ];
+        
+        foreach ($presences as $date => $dayPresences) {
+            $stats['total_presences'] += $dayPresences->where('present', true)->count();
+            $stats['total_absences'] += $dayPresences->where('present', false)->count();
+        }
+        
+        if (($stats['total_presences'] + $stats['total_absences']) > 0) {
+            $stats['taux_presence'] = round(
+                ($stats['total_presences'] / ($stats['total_presences'] + $stats['total_absences'])) * 100, 
+                2
+            );
+        }
+        
+        $data = [
+            'classe' => $classe,
+            'date_debut' => $request->date_debut,
+            'date_fin' => $dateFin,
+            'presences' => $presences,
+            'stats' => $stats,
+            'generated_at' => now()->format('d/m/Y H:i')
+        ];
+        
+        $pdf = Pdf::loadView('reports.attendance', $data);
+        
+        $filename = 'presence_' . $classe->nom . '_' . $request->date_debut . '_' . $dateFin . '.pdf';
+        $path = storage_path('app/public/reports/' . $filename);
+        $pdf->save($path);
         
         return response()->json([
             'success' => true,
-            'data' => $alerts
+            'message' => 'Rapport généré avec succès',
+            'report_url' => url('storage/reports/' . $filename),
+            'download_url' => route('download.report', ['filename' => $filename]),
+            'file_size' => round(filesize($path) / 1024, 2) . ' KB'
         ]);
     }
 
     /**
-     * Mettre à jour une présence
+     * 5. TÉLÉCHARGER LE RAPPORT
      */
-    public function update(Request $request, $id): JsonResponse
+    public function downloadReport($filename)
     {
-        $presence = Presence::findOrFail($id);
+        $path = storage_path('app/public/reports/' . $filename);
+        
+        if (!file_exists($path)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fichier non trouvé'
+            ], 404);
+        }
+        
+        return response()->download($path);
+    }
 
-        $validated = $request->validate([
-            'statut' => 'sometimes|required|in:present,absent,late',
-            'justifie' => 'boolean',
-            'motif' => 'nullable|string|max:500',
+    /**
+     * 6. NOTIFICATION D'ABSENCE (Route API)
+     */
+    public function notify(Request $request)
+    {
+        $request->validate([
+            'eleve_id' => 'required|integer|exists:eleves,id',
+            'date' => 'required|date',
+            'type' => 'required|string|in:absence,permission'
         ]);
 
-        $presence->update($validated);
+        $eleve = Eleve::findOrFail($request->eleve_id);
+        $parent = $eleve->tuteurs->first() ?? null;
+
+        if (!$parent) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucun parent trouvé pour cet élève'
+            ], 404);
+        }
+
+        // Simuler l'envoi
+        \Log::info("Notification {$request->type} envoyée à {$parent->email} pour {$eleve->user->name}");
 
         return response()->json([
             'success' => true,
-            'message' => 'Présence mise à jour avec succès',
-            'data' => $presence->load('eleve')
+            'message' => 'Notification envoyée avec succès'
         ]);
     }
 
     /**
-     * Supprimer une présence
+     * 7. STATISTIQUES DE PRÉSENCE
      */
-    public function destroy($id): JsonResponse
+    public function getAttendanceStats(Request $request)
     {
-        $presence = Presence::findOrFail($id);
-        $presence->delete();
+        $request->validate([
+            'classe_id' => 'nullable|integer|exists:classes,id',
+            'periode' => 'nullable|in:today,week,month'
+        ]);
+        
+        $query = Presence::query();
+        
+        if ($request->classe_id) {
+            $query->where('classe_id', $request->classe_id);
+        }
+        
+        switch ($request->periode) {
+            case 'today':
+                $query->whereDate('date', now()->format('Y-m-d'));
+                break;
+            case 'week':
+                $query->whereBetween('date', [
+                    now()->startOfWeek()->format('Y-m-d'),
+                    now()->endOfWeek()->format('Y-m-d')
+                ]);
+                break;
+            case 'month':
+                $query->whereBetween('date', [
+                    now()->startOfMonth()->format('Y-m-d'),
+                    now()->endOfMonth()->format('Y-m-d')
+                ]);
+                break;
+        }
+        
+        $presences = $query->get();
+        
+        $stats = [
+            'total' => $presences->count(),
+            'presents' => $presences->where('present', true)->count(),
+            'absents' => $presences->where('present', false)->count(),
+            'taux_presence' => $presences->count() > 0 
+                ? round(($presences->where('present', true)->count() / $presences->count()) * 100, 2)
+                : 0
+        ];
+        
+        return response()->json([
+            'success' => true,
+            'periode' => $request->periode ?? 'all',
+            'stats' => $stats
+        ]);
+    }
+    
+    /**
+     * Récupérer les cours d'une classe pour une date spécifique
+     */
+    public function getCoursesOfDay(Request $request)
+    {
+        $request->validate([
+            'classe_id' => 'required|integer|exists:classes,id',
+            'date' => 'required|date'
+        ]);
+
+        // Convertir la date en jour de la semaine (Lundi, Mardi...)
+        $date = \Carbon\Carbon::parse($request->date);
+        $days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+        $dayOfWeek = $days[$date->dayOfWeek];
+
+        $courses = Course::where('classe_id', $request->classe_id)
+                        ->where('jour', $dayOfWeek)
+                        ->get(['id', 'matiere_id', 'heure_debut', 'heure_fin']);
+
+        // Charger la relation matière pour avoir le nom
+        foreach($courses as $course) {
+             $course->subject = $course->matiere->nom ?? 'Cours';
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Présence supprimée avec succès'
+            'courses' => $courses
         ]);
+    }
+
+    /**
+     * PRIVATE: ENVOYER LES NOTIFICATIONS
+     */
+    private function notifyAbsence($presence)
+    {
+        $eleve = $presence->eleve;
+        if (!$eleve) return;
+
+        $tuteur = $eleve->tuteurs->first();
+        if (!$tuteur) return;
+
+        $courseName = $presence->course->matiere->nom ?? 'Cours';
+
+        // Calcul du nombre de TOTAL d'absences (Merge User Logic)
+        $totalAbsences = Presence::where('eleve_id', $eleve->id)
+            ->where('present', false)
+            ->count();
+
+        // 1. Notification d'absence simple (inclut le cumul)
+        $tuteur->notify(new AbsenceNotification($courseName, $totalAbsences));
+
+        // 2. Vérification des absences successives (Alerte si >= 3 en 7 jours)
+        $recentAbsences = Presence::where('eleve_id', $eleve->id)
+            ->where('present', false)
+            ->whereDate('date', '>=', now()->subDays(7))
+            ->count();
+
+        if ($recentAbsences >= 3) {
+            $tuteur->notify(new AbsenceAlertNotification($eleve->user->name, $totalAbsences));
+        }
     }
 }
-

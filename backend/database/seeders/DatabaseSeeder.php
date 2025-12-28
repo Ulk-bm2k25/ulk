@@ -3,146 +3,159 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Eleve;
+use App\Models\Course;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
      * Seed the application's database.
      */
     public function run(): void
     {
+        // 1. Niveaux Scolaires
+        $niveauSeconde = DB::table('niveaux_scolaires')->insertGetId(['nom' => 'Seconde', 'created_at' => now(), 'updated_at' => now()]);
+        $niveauPremiere = DB::table('niveaux_scolaires')->insertGetId(['nom' => 'Première', 'created_at' => now(), 'updated_at' => now()]);
+        $niveauTerminale = DB::table('niveaux_scolaires')->insertGetId(['nom' => 'Terminale', 'created_at' => now(), 'updated_at' => now()]);
+
+        // 2. Année Scolaire
+        $anneeId = DB::table('annee_scolaires')->insertGetId([
+            'annee' => '2024-2025',
+            'date_debut' => '2024-09-01',
+            'date_fin' => '2025-06-30',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // 3. Classes
+        $classes = [
+            ['nom' => 'Seconde A', 'niveau_id' => $niveauSeconde],
+            ['nom' => 'Première A', 'niveau_id' => $niveauPremiere],
+            ['nom' => 'Terminale A', 'niveau_id' => $niveauTerminale],
+            ['nom' => 'Terminale B', 'niveau_id' => $niveauTerminale],
+        ];
+
+        $classeIds = [];
+        foreach ($classes as $classe) {
+            $classeIds[$classe['nom']] = DB::table('classes')->insertGetId([
+                'nom' => $classe['nom'],
+                'niveau_id' => $classe['niveau_id'],
+                'annee_scolaire' => $anneeId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // 4. Matières
+        $matieres = [
+            ['nom' => 'Mathématiques', 'coefficient' => 5],
+            ['nom' => 'Physique-Chimie', 'coefficient' => 4],
+            ['nom' => 'SVT', 'coefficient' => 3],
+            ['nom' => 'Français', 'coefficient' => 3],
+            ['nom' => 'Anglais', 'coefficient' => 2],
+            ['nom' => 'Histoire-Géographie', 'coefficient' => 3],
+        ];
+
+        $matiereIds = [];
+        foreach ($matieres as $m) {
+            $matiereObj = \App\Models\Matiere::create($m);
+            $matiereIds[$m['nom']] = $matiereObj->id;
+        }
+
+        // 5. Enseignants (Users + Enseignant logic)
+        $profMath = User::create([
+            'name' => 'Prof. Martin (Maths)', 
+            'email' => 'math@school.com', 
+            'password' => Hash::make('password'),
+            'email_verified_at' => now()
+        ]);
+        $profPhys = User::create([
+            'name' => 'Prof. Curie (Phys)', 
+            'email' => 'phys@school.com', 
+            'password' => Hash::make('password'),
+            'email_verified_at' => now()
+        ]);
+        $profLettres = User::create([
+            'name' => 'Prof. Molière (Lettres)', 
+            'email' => 'lettres@school.com', 
+            'password' => Hash::make('password'),
+            'email_verified_at' => now()
+        ]);
+
+        $ensMath = \App\Models\Enseignant::create(['user_id' => $profMath->id, 'matiere' => 'Mathématiques']);
+        $ensPhys = \App\Models\Enseignant::create(['user_id' => $profPhys->id, 'matiere' => 'Physique-Chimie']);
+        $ensLettres = \App\Models\Enseignant::create(['user_id' => $profLettres->id, 'matiere' => 'Français']);
+
+        // 6. Élèves (5 par classe)
+        $noms = ['Dupont', 'Durand', 'Martin', 'Bernard', 'Petit', 'Robert', 'Richard', 'Simon', 'Michel', 'Lefebvre'];
+        $prenoms = ['Jean', 'Marie', 'Pierre', 'Sophie', 'Lucas', 'Emma', 'Thomas', 'Léa', 'Nicolas', 'Chloé'];
+
+        $serieId = DB::table('series')->insertGetId(['nom' => 'Générale', 'created_at' => now(), 'updated_at' => now()]);
+
+        foreach ($classeIds as $nomClasse => $cid) {
+            for ($i = 0; $i < 5; $i++) {
+                $nom = $noms[array_rand($noms)];
+                $prenom = $prenoms[array_rand($prenoms)];
+                $email = strtolower($prenom . '.' . $nom . rand(10, 99) . '@student.com');
+                
+                $u = User::create([
+                    'name' => "$prenom $nom",
+                    'email' => $email,
+                    'password' => Hash::make('password'),
+                    'email_verified_at' => now(),
+                ]);
+
+                Eleve::create([
+                    'user_id' => $u->id,
+                    'classe_id' => $cid,
+                    'serie_id' => $serieId,
+                ]);
+            }
+        }
+
+        // 7. Cours (Planning pour Terminale A)
+        // Lundi 8h-10h Maths, 10h-12h Physique
+        $termA = $classeIds['Terminale A'];
         
-        // AnneeScolaires
-        DB::table('annee_scolaires')->insert([
-            'annee' => '2025-2026',
-            'date_debut' => '2025-09-01',
-            'date_fin' => '2026-06-30',
-        ]);
+        // Helper pour créer cours
+        $createCourse = function($classe, $matiereId, $ensId, $jour, $debut, $fin) {
+             Course::create([
+                'classe_id' => $classe,
+                'matiere_id' => $matiereId,
+                'enseignant_id' => $ensId,
+                'jour' => $jour,
+                'heure_debut' => $debut,
+                'heure_fin' => $fin,
+                'salle' => 'Salle ' . rand(101, 105)
+             ]);
+        };
 
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'username' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
-
-        // Users
-        DB::table('users')->insert([
-            ['username' => 'admin', 'password_hash' => Hash::make('password123'), 'email' => 'admin@example.com', 'role' => 'admin'],
-            ['username' => 'parent1', 'password_hash' => Hash::make('password456'), 'email' => 'parent1@example.com', 'role' => 'parent'],
-        ]);
-
-        // ParentsTuteurs
-        DB::table('parents_tuteurs')->insert([
-            'user_id' => 2,
-            'nom' => 'Doe',
-            'prenom' => 'John',
-            'telephone' => '123456789',
-            'email' => 'parent1@example.com',
-            'adresse' => '123 Rue Exemple',
-            'profession' => 'Ingénieur',
-        ]);
-
-        // Eleves
-        DB::table('eleves')->insert([
-            'nom' => 'Smith',
-            'prenom' => 'Alice',
-            'date_naissance' => '2010-05-15',
-            'sexe' => 'F',
-            'matricule' => 'MAT001',
-            'lieu_naissance' => 'Paris',
-        ]);
-
-        // RelationsEleveTuteur
-        DB::table('relations_eleve_tuteur')->insert([
-            'eleve_id' => 1,
-            'tuteur_id' => 1,
-            'relation_type' => 'pere',
-        ]);
-
-        // NiveauxScolaires
-        DB::table('niveaux_scolaires')->insert([
-            'nom' => 'Primaire',
-            'description' => 'Niveau primaire',
-        ]);
-
-        // Cycles
-        DB::table('cycles')->insert([
-            'nom' => 'Cycle 1',
-            'niveau_id' => 1,
-            'description' => 'Premier cycle primaire',
-        ]);
-
-        // Classes
-        DB::table('classes')->insert([
-            'nom' => 'Classe 1A',
-            'capacite' => 25,
-            'cycle_id' => 1,
-            'annee_scolaire_id' => 1,
-        ]);
-
-        // AffectationsClasses
-        DB::table('affectations_classes')->insert([
-            'eleve_id' => 1,
-            'classe_id' => 1,
-            'statut' => 'affecte',
-        ]);
-
-        // Inscriptions
-        DB::table('inscriptions')->insert([
-            'eleve_id' => 1,
-            'annee_scolaire_id' => 1,
-            'statut' => 'inscrit',
-        ]);
-
-        // DocumentsEleves
-        DB::table('documents_eleves')->insert([
-            'eleve_id' => 1,
-            'type' => 'certificat_naissance',
-            'url' => '/docs/certificat.jpg',
-        ]);
-
-        // FichesInscription
-        DB::table('fiches_inscription')->insert([
-            'inscription_id' => 1,
-            'details' => 'Détails de la fiche: signature parent',
-            'url' => '/fiches/fiche1.pdf',
-        ]);
-
-        // CartesScolarite
-        DB::table('cartes_scolarite')->insert([
-            'eleve_id' => 1,
-            'numero_carte' => 'CARD001',
-            'date_expiration' => '2026-06-30',
-            'statut' => 'valide',
-        ]);
-
-        // Notifications
-        DB::table('notifications')->insert([
-            'type' => 'info',
-            'message' => 'Nouvelle inscription confirmée',
-            'destinataire_id' => 2,
-            'lu' => false,
-        ]);
-
-        // PreferencesNotifications
-        DB::table('preferences_notifications')->insert([
-            'user_id' => 2,
-            'notification_type' => 'info',
-            'via_email' => true,
-            'via_sms' => true,
-        ]);
-
-        // LogsActivite
-        DB::table('logs_activite')->insert([
-            ['user_id' => 1, 'action' => 'login', 'details' => 'Admin connecté avec succès'],
-            ['user_id' => 2, 'action' => 'view_inscription', 'details' => 'Parent a vu l\'inscription de l\'élève'],
-        ]);
+        // 7. Cours (Planning complet pour TOUTES les classes)
+        $joursSemaine = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+        
+        foreach ($classeIds as $nomClasse => $classeId) {
+            foreach ($joursSemaine as $jour) {
+                // 08h-10h : Toujours cours
+                $createCourse($classeId, $matiereIds['Mathématiques'], $ensMath->id, $jour, '08:00:00', '10:00:00');
+                
+                // 10h-12h : Toujours cours
+                $createCourse($classeId, $matiereIds['Physique-Chimie'], $ensPhys->id, $jour, '10:00:00', '12:00:00');
+                
+                // Après-midi sauf Samedi
+                if ($jour !== 'Samedi') {
+                    $createCourse($classeId, $matiereIds['Français'], $ensLettres->id, $jour, '14:00:00', '16:00:00');
+                    $createCourse($classeId, $matiereIds['Anglais'], $ensLettres->id, $jour, '16:00:00', '18:00:00');
+                }
+            }
+        }
+        
+        echo "✅ Base de données initialisée avec succès :\n";
+        echo "   - 3 Niveaux, 1 Année, 4 Classes\n";
+        echo "   - 6 Matières, 3 Enseignants\n";
+        echo "   - 20 Élèves répartis\n";
+        echo "   - Planning de cours généré (incluant des cours pour aujourd'hui)\n";
     }
 }

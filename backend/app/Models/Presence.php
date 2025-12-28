@@ -1,30 +1,37 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Presence extends Model
 {
-    protected $table = 'presence';
     use HasFactory;
 
+    protected $table = 'presence';
+    
     protected $fillable = [
+        'classe_id',
+        'course_id', 
         'eleve_id',
         'date',
-        'statut',
-        'justifie',
-        'motif',
+        'heure',
+        'present'
     ];
 
-    protected $casts = [
-        'date' => 'date',
-        'justifie' => 'boolean',
-    ];
-
-    public function eleve(): BelongsTo
+    public function eleve()
     {
-        return $this->belongsTo(Eleve::class);
+        return $this->belongsTo(Eleve::class, 'eleve_id');
+    }
+
+    public function classe()
+    {
+        return $this->belongsTo(Classe::class, 'classe_id');
+    }
+
+    public function course()
+    {
+        return $this->belongsTo(Course::class, 'course_id');
     }
 }
