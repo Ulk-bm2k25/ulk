@@ -3,7 +3,7 @@ import { X, CheckCheck, RefreshCw } from 'lucide-react';
 import { NotificationBell } from './Bell';
 import { NotificationItem } from './NotificationItem';
 import useNotifications from '../../hooks/useNotification';
-import  "/src/projet2/styles/notification.css";;
+import  "/src/projet2/styles/notification.css";
 
 export const NotificationCenter = () => {
   const [isOpen, setIsOpen] = useState(false);
