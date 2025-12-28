@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import Dashboard from "./projet4/Dashboard";
-import Login from "./projet4/Login";
+import Dashboard from "./Dashboard";
+import Login from "./Login";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
