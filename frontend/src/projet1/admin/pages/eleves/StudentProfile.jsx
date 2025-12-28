@@ -23,11 +23,11 @@ const StudentProfile = ({ student, onBack }) => {
             const fetchDetails = async () => {
                 try {
                     setIsLoading(true);
-                    const response = await api.get(`/admin/students/${student.id}`);
-                    setFullData(response.data.student);
-                    setRecentNotes(response.data.recent_notes || []);
-                    setAverage(response.data.average);
-                    setIsLoading(false);
+            const response = await api.get(`/admin/students/${student.id}`);
+            setFullData(response.data);
+            setRecentNotes(response.data.recent_notes || []);
+            setAverage(response.data.average);
+            setIsLoading(false);
                 } catch (error) {
                     console.error("Failed to fetch student details", error);
                     setIsLoading(false);
@@ -63,23 +63,28 @@ const StudentProfile = ({ student, onBack }) => {
     // Helper mapping for display
     const getDisplayData = () => {
         if (!fullData) return student;
+        const studentData = fullData.student || fullData;
         return {
             ...student,
-            dob: fullData.date_naissance || '--/--/----',
-            pob: fullData.lieu_naissance || '--',
-            address: fullData.adresse || '--',
-            email: fullData.user?.email || '--',
-            history: fullData.inscriptions?.map(i => ({
-                year: i.annee_scolaire,
-                class: i.classe_nom || 'N/A',
+            dob: studentData.date_naissance ? new Date(studentData.date_naissance).toLocaleDateString('fr-FR') : '--/--/----',
+            pob: studentData.lieu_naissance || '--',
+            address: studentData.adresse || '--',
+            email: studentData.user?.email || '--',
+            history: fullData.inscriptions_history || studentData.inscriptions?.map(i => ({
+                year: i.anneeScolaire?.annee || i.annee_scolaire || 'N/A',
+                class: studentData.classe?.nom || i.classe_nom || 'N/A',
                 result: i.statut === 'inscrit' ? 'En cours' : 'Terminé'
             })) || [],
-            documents: [],
-            finance: {
+            documents: studentData.documents?.map(doc => ({
+                name: doc.nom_original || doc.type,
+                date: doc.date_upload ? new Date(doc.date_upload).toLocaleDateString('fr-FR') : 'N/A',
+                type: doc.type
+            })) || [],
+            finance: fullData.finance || {
                 reste: '0 FCFA',
                 statut: '--'
             },
-            attendance: {
+            attendance: fullData.attendance || {
                 rate: 0,
                 justified: '0h',
                 absent: '0h'
@@ -303,31 +308,75 @@ const StudentProfile = ({ student, onBack }) => {
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="text-lg font-bold text-slate-800">Dossier Numérique</h3>
                                     <button
-                                        onClick={() => alert('Sélectionnez un fichier PDF ou Image (Max 5Mo)')}
+                                        onClick={async () => {
+                                            const input = document.createElement('input');
+                                            input.type = 'file';
+                                            input.accept = 'image/*,.pdf';
+                                            input.onchange = async (e) => {
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    const formData = new FormData();
+                                                    formData.append('type', 'autre');
+                                                    formData.append('file', file);
+                                                    try {
+                                                        await api.post(`/admin/eleves/${student.id}/documents`, formData, {
+                                                            headers: { 'Content-Type': 'multipart/form-data' }
+                                                        });
+                                                        alert('Document ajouté avec succès');
+                                                        // Refresh
+                                                        const response = await api.get(`/admin/students/${student.id}`);
+                                                        setFullData(response.data);
+                                                    } catch (error) {
+                                                        alert('Erreur lors de l\'upload: ' + (error.response?.data?.message || error.message));
+                                                    }
+                                                }
+                                            };
+                                            input.click();
+                                        }}
                                         className="text-sm text-brand-primary font-medium hover:underline"
                                     >
                                         + Ajouter un document
                                     </button>
                                 </div>
-                                {displayData.documents.map((doc, i) => (
-                                    <div key={i} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <div className="p-3 bg-red-50 text-red-600 rounded-lg">
-                                                <FileText size={20} />
+                                {displayData.documents && displayData.documents.length > 0 ? (
+                                    displayData.documents.map((doc, i) => (
+                                        <div key={i} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                                            <div className="flex items-center gap-4">
+                                                <div className="p-3 bg-red-50 text-red-600 rounded-lg">
+                                                    <FileText size={20} />
+                                                </div>
+                                                <div>
+                                                    <div className="font-medium text-slate-800">{doc.name}</div>
+                                                    <div className="text-xs text-slate-500">{doc.date} • {doc.type}</div>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <div className="font-medium text-slate-800">{doc.name}</div>
-                                                <div className="text-xs text-slate-500">{doc.date}</div>
-                                            </div>
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        const response = await api.get(`/admin/eleves/${student.id}/documents`, { responseType: 'blob' });
+                                                        const url = window.URL.createObjectURL(new Blob([response.data]));
+                                                        const link = document.createElement('a');
+                                                        link.href = url;
+                                                        link.setAttribute('download', doc.name);
+                                                        document.body.appendChild(link);
+                                                        link.click();
+                                                        link.remove();
+                                                    } catch (error) {
+                                                        alert('Erreur lors du téléchargement');
+                                                    }
+                                                }}
+                                                className="p-2 text-slate-400 hover:text-slate-800"
+                                            >
+                                                <Download size={18} />
+                                            </button>
                                         </div>
-                                        <button
-                                            onClick={() => alert(`Téléchargement de : ${doc.name}`)}
-                                            className="p-2 text-slate-400 hover:text-slate-800"
-                                        >
-                                            <Download size={18} />
-                                        </button>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-8 text-slate-400">
+                                        <FileText size={48} className="mx-auto mb-3 opacity-50" />
+                                        <p>Aucun document joint</p>
                                     </div>
-                                ))}
+                                )}
                             </div>
                         )}
 
@@ -345,15 +394,15 @@ const StudentProfile = ({ student, onBack }) => {
                         </h3>
                         <div className="space-y-4">
                             <div className="flex justify-between items-end">
-                                <div className="text-3xl font-bold text-slate-800">{fullData.attendance.rate}%</div>
+                                <div className="text-3xl font-bold text-slate-800">{displayData.attendance?.rate || 0}%</div>
                                 <div className="text-xs text-green-600 font-bold mb-1">Excellent</div>
                             </div>
                             <div className="w-full bg-slate-100 rounded-full h-2">
-                                <div className="bg-green-500 h-2 rounded-full" style={{ width: `${fullData.attendance.rate}%` }}></div>
+                                <div className="bg-green-500 h-2 rounded-full" style={{ width: `${displayData.attendance?.rate || 0}%` }}></div>
                             </div>
                             <div className="text-xs text-slate-500 flex justify-between">
-                                <span>Justifiées: {fullData.attendance.justified}</span>
-                                <span>Absences: {fullData.attendance.absent}</span>
+                                <span>Justifiées: {displayData.attendance?.justified || '0h'}</span>
+                                <span>Absences: {displayData.attendance?.absent || '0h'}</span>
                             </div>
                         </div>
                     </div>
@@ -366,7 +415,7 @@ const StudentProfile = ({ student, onBack }) => {
                         </h3>
                         <div className="p-4 bg-orange-50 rounded-lg border border-orange-100 mb-4">
                             <div className="text-sm text-orange-800 font-medium">Reste à payer</div>
-                            <div className="text-2xl font-bold text-orange-600">{fullData.finance.reste}</div>
+                            <div className="text-2xl font-bold text-orange-600">{displayData.finance?.reste || '0 FCFA'}</div>
                         </div>
                         <button className="w-full py-2 bg-white border border-slate-200 text-slate-600 font-medium rounded-lg text-sm hover:bg-slate-50">
                             Voir détails financiers

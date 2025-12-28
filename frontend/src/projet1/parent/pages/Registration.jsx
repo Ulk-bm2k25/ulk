@@ -47,9 +47,36 @@ const Registration = ({ mode = 'new', initialData = null, onComplete }) => {
     const handleEnrollment = async () => {
         setIsProcessing(true);
         try {
-            await api.post('/parent/enroll-child', formData);
+            // Créer FormData pour envoyer les fichiers
+            const formDataToSend = new FormData();
+            formDataToSend.append('parentName', formData.parentName);
+            formDataToSend.append('parentPhone', formData.parentPhone);
+            formDataToSend.append('parentEmail', formData.parentEmail || '');
+            formDataToSend.append('parentProfession', formData.parentProfession || '');
+            formDataToSend.append('parentAddress', formData.parentAddress || '');
+            formDataToSend.append('childName', formData.childName);
+            formDataToSend.append('childBirthDate', formData.childBirthDate);
+            formDataToSend.append('childGender', formData.childGender);
+            formDataToSend.append('childGrade', formData.childGrade);
+            
+            if (studentPhoto) {
+                formDataToSend.append('childPhoto', studentPhoto);
+            }
+            if (birthCertificate) {
+                formDataToSend.append('birthCertificate', birthCertificate);
+            }
+
+            const response = await api.post('/parent/enroll-child', formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            
             setIsProcessing(false);
             setStep(3); // Now step 3 is success
+            if (onComplete) {
+                setTimeout(() => onComplete(), 2000);
+            }
         } catch (error) {
             setIsProcessing(false);
             const message = error.response?.data?.message || "Une erreur est survenue lors de l'inscription.";

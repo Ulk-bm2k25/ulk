@@ -15,6 +15,9 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminStudentController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ScolariteController;
+use App\Http\Controllers\AcademicStructureController;
+use App\Http\Controllers\AffectationController;
+use App\Http\Controllers\Api\NotificationController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -23,6 +26,14 @@ Route::get('/user', function (Request $request) {
 Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/login', [LoginController::class, 'login']);
 
+// Mot de passe oublié (public)
+Route::post('/password/forgot', [\App\Http\Controllers\Api\PasswordResetController::class, 'sendResetLink']);
+Route::post('/password/verify-token', [\App\Http\Controllers\Api\PasswordResetController::class, 'verifyToken']);
+Route::post('/password/reset', [\App\Http\Controllers\Api\PasswordResetController::class, 'resetPassword']);
+
+// Inscription complète (publique)
+Route::post('/inscription/complete', [InscriptionController::class, 'completeInscription']);
+
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -30,8 +41,48 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [LoginController::class, 'user']);
     
     Route::prefix('admin')->group(function () {
+        // ========== INSCRIPTIONS ==========
         Route::get('/inscriptions', [InscriptionController::class, 'index']);
+        Route::get('/inscriptions/{id}', [InscriptionController::class, 'show']);
         Route::patch('/inscriptions/{id}/status', [InscriptionController::class, 'updateStatus']);
+        
+        // Documents élèves
+        Route::get('/eleves/{eleveId}/documents', [InscriptionController::class, 'getEleveDocuments']);
+        Route::post('/eleves/{eleveId}/documents', [InscriptionController::class, 'addDocument']);
+        
+        // ========== STRUCTURE ACADÉMIQUE ==========
+        // Niveaux scolaires
+        Route::get('/academic/niveaux', [AcademicStructureController::class, 'indexNiveaux']);
+        Route::post('/academic/niveaux', [AcademicStructureController::class, 'storeNiveau']);
+        Route::put('/academic/niveaux/{id}', [AcademicStructureController::class, 'updateNiveau']);
+        Route::delete('/academic/niveaux/{id}', [AcademicStructureController::class, 'destroyNiveau']);
+        
+        // Cycles
+        Route::get('/academic/cycles', [AcademicStructureController::class, 'indexCycles']);
+        Route::post('/academic/cycles', [AcademicStructureController::class, 'storeCycle']);
+        Route::put('/academic/cycles/{id}', [AcademicStructureController::class, 'updateCycle']);
+        Route::delete('/academic/cycles/{id}', [AcademicStructureController::class, 'destroyCycle']);
+        
+        // Séries
+        Route::get('/academic/series', [AcademicStructureController::class, 'indexSeries']);
+        Route::post('/academic/series', [AcademicStructureController::class, 'storeSerie']);
+        Route::put('/academic/series/{id}', [AcademicStructureController::class, 'updateSerie']);
+        Route::delete('/academic/series/{id}', [AcademicStructureController::class, 'destroySerie']);
+        
+        // Années scolaires
+        Route::get('/academic/annees-scolaires', [AcademicStructureController::class, 'indexAnneeScolaires']);
+        Route::get('/academic/annee-scolaire/active', [AcademicStructureController::class, 'getActiveAnneeScolaire']);
+        Route::post('/academic/annees-scolaires', [AcademicStructureController::class, 'storeAnneeScolaire']);
+        Route::put('/academic/annees-scolaires/{id}', [AcademicStructureController::class, 'updateAnneeScolaire']);
+        Route::delete('/academic/annees-scolaires/{id}', [AcademicStructureController::class, 'destroyAnneeScolaire']);
+        
+        // ========== AFFECTATIONS ==========
+        Route::get('/affectations', [AffectationController::class, 'index']);
+        Route::post('/affectations', [AffectationController::class, 'store']);
+        Route::post('/affectations/{id}/transfer', [AffectationController::class, 'transfer']);
+        Route::delete('/affectations/{id}/unassign', [AffectationController::class, 'unassign']);
+        Route::get('/affectations/eleve/{eleveId}', [AffectationController::class, 'getByEleve']);
+        Route::get('/affectations/classe/{classeId}', [AffectationController::class, 'getByClasse']);
         
         // Grades & Bulletins
         Route::get('/grades/class/{classId}', [NoteController::class, 'getGradesByClass']);
@@ -55,6 +106,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/students/{id}', [AdminStudentController::class, 'getStudentDetails']);
         Route::put('/students/{id}', [AdminStudentController::class, 'updateStudent']);
         Route::post('/students/{id}/transfer', [AdminStudentController::class, 'transferStudent']);
+        Route::post('/students/{id}/exclude', [AdminStudentController::class, 'excludeStudent']);
+        Route::post('/students/{id}/reactivate', [AdminStudentController::class, 'reactivateStudent']);
+        Route::delete('/students/{id}', [AdminStudentController::class, 'deleteStudent']);
         Route::get('/teachers', [AdminController::class, 'getTeachers']);
         Route::get('/notifications/history', [AdminController::class, 'getNotificationsHistory']);
         Route::post('/notifications/send', [AdminController::class, 'sendNotification']);
@@ -62,10 +116,35 @@ Route::middleware('auth:sanctum')->group(function () {
         // Settings
         Route::get('/settings', [SettingController::class, 'index']);
         Route::post('/settings', [SettingController::class, 'store']);
+        
+        // Admin Settings (Profil, Mot de passe, Créer Admin)
+        Route::get('/settings/profile', [\App\Http\Controllers\AdminSettingsController::class, 'getProfile']);
+        Route::put('/settings/profile', [\App\Http\Controllers\AdminSettingsController::class, 'updateProfile']);
+        Route::post('/settings/password', [\App\Http\Controllers\AdminSettingsController::class, 'changePassword']);
+        Route::post('/settings/create-admin', [\App\Http\Controllers\AdminSettingsController::class, 'createAdmin']);
+        Route::get('/settings/admins', [\App\Http\Controllers\AdminSettingsController::class, 'listAdmins']);
 
         // Scolarité
         Route::get('/scolarite/documents', [ScolariteController::class, 'getDocumentsHistory']);
         Route::get('/eleves/{id}/carte', [ScolariteController::class, 'generateIDCard']);
+        
+        // ========== PDFs ==========
+        Route::get('/pdf/fiche-inscription/{inscriptionId}', [PdfController::class, 'ficheInscription']);
+        Route::get('/pdf/carte-scolarite/{eleveId}', [PdfController::class, 'carteScolarite']);
+        Route::get('/pdf/fiche-inscription/{inscriptionId}/preview', [PdfController::class, 'previewFicheInscription']);
+        Route::get('/pdf/carte-scolarite/{eleveId}/preview', [PdfController::class, 'previewCarteScolarite']);
+        
+        // ========== NOTIFICATIONS ==========
+        Route::prefix('notifications')->group(function () {
+            Route::get('/', [NotificationController::class, 'index']);
+            Route::get('/templates', [NotificationController::class, 'templates']);
+            Route::post('/payment-reminder', [NotificationController::class, 'sendPaymentReminder']);
+            Route::post('/urgent', [NotificationController::class, 'sendUrgentNotification']);
+            Route::post('/general', [NotificationController::class, 'sendGeneralNotification']);
+            Route::post('/class', [NotificationController::class, 'sendToClass']);
+            Route::get('/{id}', [NotificationController::class, 'show']);
+            Route::post('/{id}/retry', [NotificationController::class, 'retry']);
+        });
     });
 
 
@@ -78,7 +157,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/children/{id}/grades', [NoteController::class, 'getStudentGrades']);
         Route::get('/children/{id}/bulletin', [NoteController::class, 'downloadBulletin']);
         Route::get('/children/{id}/carte', [ScolariteController::class, 'generateIDCard']);
-        Route::get('/notifications', [ParentPortalController::class, 'getNotifications']);
+        Route::get('/children/{id}/documents', [InscriptionController::class, 'getEleveDocuments']);
+        Route::post('/children/{id}/documents', [InscriptionController::class, 'addDocument']);
+        Route::get('/notifications', [NotificationController::class, 'myNotifications']);
         Route::patch('/notifications/{id}/read', [ParentPortalController::class, 'markNotificationAsRead']);
         Route::post('/notifications/read-all', [ParentPortalController::class, 'markAllAsRead']);
         Route::post('/enroll-child', [ParentPortalController::class, 'enrollChild']);

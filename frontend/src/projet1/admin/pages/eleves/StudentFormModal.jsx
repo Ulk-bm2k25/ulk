@@ -51,19 +51,30 @@ const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, avail
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Trouver la classe_id correspondante
+    const selectedClassObj = availableClasses.find(c => c.nom === formData.class);
+    
     const studentPayload = {
-      id: formData.matricule || `MAT-${Math.floor(Math.random() * 10000)}`,
+      id: formData.matricule || initialData?.id,
       firstName: formData.firstName,
       lastName: formData.lastName,
       gender: formData.gender,
       class: formData.class,
+      classe_id: selectedClassObj?.id || null,
       birthDate: formData.dob,
       pob: formData.pob,
+      address: formData.address,
       parent: formData.parentName,
       phone: formData.parentPhone,
       email: formData.parentEmail,
-      address: formData.address,
-      status: 'active'
+      status: 'active',
+      // Données pour le backend
+      nom: formData.lastName,
+      prenom: formData.firstName,
+      sexe: formData.gender,
+      date_naissance: formData.dob,
+      lieu_naissance: formData.pob,
+      adresse: formData.address,
     };
 
     onSubmit(studentPayload);
