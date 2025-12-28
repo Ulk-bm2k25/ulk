@@ -1,265 +1,232 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { UserPlus, GraduationCap, ClipboardList, Calendar } from 'lucide-react';
 
-// --- LAYOUTS & GLOBAL ---
-// Note : Je garde vos chemins d'imports "shared/admin" tels que vous les avez définis
-import MainLayout from './shared/admin/layouts/MainLayout';
-import GlobalDashboard from './shared/admin/pages/GlobalDashboard';
-import ForgotPassword from './shared/admin/pages/auth/ForgotPassword';
-import LoginPage from './shared/admin/pages/auth/LoginPage';
+const App = () => {
+  const navigate = useNavigate();
+  const [hoveredPortal, setHoveredPortal] = useState(null);
 
-// --- PROJET 1 (Admin & Scolarité) ---
-import InscriptionsList from './projet1/admin/pages/inscriptions/InscriptionsList';
-import InscriptionDetail from './projet1/admin/pages/inscriptions/InscriptionDetail';
-import StudentsList from './projet1/admin/pages/eleves/StudentsList';
-import StudentProfile from './projet1/admin/pages/eleves/StudentProfile';
-import StudentCardsPage from './projet1/admin/pages/eleves/StudentCardsPage';
-import StudentFormModal from './projet1/admin/pages/eleves/StudentFormModal';
-import ClassesList from './projet1/admin/pages/classes/ClassesList';
-import ClassDetail from './projet1/admin/pages/classes/ClassDetail';
-import ClassFormModal from './projet1/admin/pages/classes/ClassFormModal';
-import AffectationsManager from './projet1/admin/pages/classes/AffectationsManager';
-import SystemSettings from './projet1/admin/pages/SystemSettings';
-import DocumentsHistory from './projet1/admin/pages/documents/DocumentsHistory';
-
-// --- PROJET 2 (Finance) ---
-import FinancialDashboard from './projet2/admin/FinancialDashboard';
-// --- PROJET 3 (Pédagogie) ---
-import NotesManager from './projet3/admin/NotesManager';
-// --- PROJET 4 (Vie Scolaire) ---
-import PresenceManager from './projet4/admin/PresenceManager';
-
-// --- PAGE D'ACCUEIL (Landing Page) ---
-const Home = () => (
-  <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-[#1a2035] text-white font-sans">
-    <div className="max-w-md w-full p-10 text-center space-y-8 bg-white/5 backdrop-blur-lg rounded-3xl border border-white/10 shadow-2xl">
-      <div className="w-20 h-20 bg-[#eb8e3a] rounded-2xl flex items-center justify-center mx-auto text-[#1a2035] shadow-lg shadow-orange-500/20">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-          <path d="M6 12v5c3 3 9 3 12 0v-5" />
-        </svg>
-      </div>
-      
-      <div>
-        <h1 className="text-4xl font-black tracking-tight mb-2">School<span className="text-[#eb8e3a]">Hub</span></h1>
-        <p className="text-white/40 font-medium">Plateforme de gestion scolaire unifiée.</p>
-      </div>
-
-      <div className="space-y-4 pt-4">
-        {/* Lien vers l'espace Parent (Futur) */}
-        <Link
-          to="/parent" 
-          className="block w-full py-4 px-6 bg-[#eb8e3a] text-[#1a2035] font-bold rounded-2xl hover:bg-[#d67e2a] hover:scale-[1.02] transition-all shadow-lg shadow-orange-950/20"
-        >
-          Accéder à l'Espace Parent
-        </Link>
-        
-        {/* Lien vers l'espace Admin */}
-        <Link
-          to="/admin"
-          className="block w-full py-4 px-6 bg-white/5 text-white font-bold rounded-2xl hover:bg-white/10 hover:scale-[1.02] transition-all border border-white/10"
-        >
-          Portail Administration
-        </Link>
-      </div>
-      
-      <div className="pt-8 text-xs text-white/20">
-        © 2025 SchoolHub Inc. v1.0
-      </div>
-    </div>
-  </div>
-);
-
-// --- PROTECTED ROUTE COMPONENT ---
-const ProtectedRoute = ({ isAuthenticated, children }) => {
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  return children;
-};
-
-function App() {
-  // --- ÉTAT GLOBAL (AUTH) ---
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('token') !== null || sessionStorage.getItem('token') !== null;
-  });
-
-  const handleLogin = (token, rememberMe) => {
-    setIsAuthenticated(true);
-    if (rememberMe) localStorage.setItem('token', token);
-    else sessionStorage.setItem('token', token);
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('token');
-    sessionStorage.removeItem('token');
-  };
-
-  // --- ÉTAT GLOBAL (DONNÉES MÉTIER) ---
-  const [inscriptions, setInscriptions] = useState([
-    { id: 'INS-2025-042', firstName: 'Jean', lastName: 'Dupont', class: '2nde C', date: '19 Déc 2025', status: 'pending', payment: 'partial', docs: 'complete', email: 'p.dupont@email.com' },
-    { id: 'INS-2025-041', firstName: 'Amina', lastName: 'Kone', class: 'Terminale D', date: '18 Déc 2025', status: 'validated', payment: 'paid', docs: 'complete', email: 'kone.famille@email.com' },
-    { id: 'INS-2025-039', firstName: 'Lucas', lastName: 'Martin', class: '1ère A', date: '15 Déc 2025', status: 'rejected', payment: 'unpaid', docs: 'missing', email: 'lucas.m@email.com' },
-  ]);
-
-  const [studentsData, setStudentsData] = useState([
-    { id: 'MAT-25-041', firstName: 'Amina', lastName: 'Kone', class: 'Terminale D', gender: 'F', parent: 'Mme Kone', phone: '96554433', status: 'active', level: 'Lycée', birthDate: '03/08/2009' },
-    { id: 'MAT-25-035', firstName: 'Marc', lastName: 'Evan', class: '3ème A', gender: 'M', parent: 'Luc Evan', phone: '94778899', status: 'active', level: 'Collège', birthDate: '20/01/2013' },
-  ]);
-
-  const [classesData, setClassesData] = useState([
-    { id: 1, name: '6ème A', level: 'Collège', root: '6ème', series: null, studentCount: 45, capacity: 50, mainTeacher: 'M. Kpoton' },
-    { id: 2, name: '3ème A', level: 'Collège', root: '3ème', series: 'A', studentCount: 38, capacity: 40, mainTeacher: 'M. Mensah' },
-    { id: 3, name: 'Tle D', level: 'Lycée', root: 'Terminale', series: 'D', studentCount: 30, capacity: 35, mainTeacher: 'Mme. Dupont' },
-  ]);
-
-  // --- MODALS GLOBAUX ---
-  const [modalState, setModalState] = useState({ type: null, data: null });
-  
-  const openStudentModal = (student = null) => setModalState({ type: 'student', data: student });
-  const openClassModal = (cls = null) => setModalState({ type: 'class', data: cls });
-  const closeModal = () => setModalState({ type: null, data: null });
-
-  // --- HANDLERS MÉTIER ---
-  const handleSaveClass = (classForm) => {
-    let baseName = `${classForm.root} ${classForm.series || ''}`.trim();
-    let finalName = baseName;
-    let counter = 2;
-    const otherClasses = modalState.data 
-        ? classesData.filter(c => c.id !== modalState.data.id) 
-        : classesData;
-
-    while (otherClasses.some(c => c.name === finalName)) {
-        finalName = `${baseName}${counter}`;
-        counter++;
+  const portals = [
+    {
+      id: 1,
+      title: "Inscription & Réinscription",
+      description: "Gestion des inscriptions et réinscriptions des élèves",
+      icon: UserPlus,
+      path: "/admin",
+      features: ["Nouveaux élèves", "Réinscriptions", "Dossiers"]
+    },
+    {
+      id: 2,
+      title: "Gestion de la Scolarité",
+      description: "Administration de la scolarité et des programmes",
+      icon: GraduationCap,
+      path: "/finance",
+      features: ["Classes", "Emplois du temps", "Paiements"]
+    },
+    {
+      id: 3,
+      title: "Gestion des Notes",
+      description: "Évaluation et suivi des performances académiques",
+      icon: ClipboardList,
+      path: "/notes",
+      features: ["Saisie notes", "Bulletins", "Statistiques"]
+    },
+    {
+      id: 4,
+      title: "Gestion des Présences",
+      description: "Suivi et contrôle de l'assiduité des élèves",
+      icon: Calendar,
+      path: "/vie-scolaire",
+      features: ["Pointage", "Absences", "Rapports"]
     }
-
-    const finalClassData = { ...classForm, name: finalName, series: classForm.series || null };
-
-    if (modalState.data) {
-      setClassesData(prev => prev.map(c => c.id === modalState.data.id ? { ...finalClassData, id: modalState.data.id, studentCount: c.studentCount } : c));
-    } else {
-      setClassesData(prev => [...prev, { ...finalClassData, id: Date.now(), studentCount: 0 }]);
-    }
-    closeModal();
-  };
-
-  const handleSaveStudent = (studentForm) => {
-    if (modalState.data) {
-      setStudentsData(prev => prev.map(s => s.id === modalState.data.id ? studentForm : s));
-    } else {
-      setStudentsData(prev => [studentForm, ...prev]);
-    }
-    closeModal();
-  };
-
-  const handleValidateInscription = (id) => {
-    const inscription = inscriptions.find(i => i.id === id);
-    if (!inscription) return;
-
-    setInscriptions(prev => prev.map(item => item.id === id ? { ...item, status: 'validated' } : item));
-    
-    setStudentsData(prev => [...prev, {
-      id: `MAT-25-${id.split('-')[2]}`, 
-      firstName: inscription.firstName,
-      lastName: inscription.lastName,
-      class: inscription.class, 
-      gender: 'M',
-      parent: 'Parent Inconnu',
-      phone: '00000000',
-      status: 'active',
-      birthDate: '--/--/----'
-    }]);
-  };
+  ];
 
   return (
-    <BrowserRouter>
-      <Routes>
-        
-        {/* === ROUTE PUBLIQUE : ACCUEIL === */}
-        <Route path="/" element={<Home />} />
-
-        {/* AUTHENTIFICATION */}
-        <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-
-        {/* === ESPACE ADMIN (PROTÉGÉ) === */}
-        <Route path="/admin" element={
-          <ProtectedRoute isAuthenticated={isAuthenticated}>
-            <MainLayout onLogout={handleLogout}>
-              <Outlet />
-            </MainLayout>
-          </ProtectedRoute>
-        }>
-          
-          <Route index element={<GlobalDashboard />} />
-
-          <Route path="inscriptions" element={
-            <InscriptionsList 
-              inscriptions={inscriptions} 
-              onQuickValidate={handleValidateInscription}
-              onViewDetails={(item) => console.log("Voir détail", item)}
-            />
-          } />
-
-          <Route path="eleves" element={
-            <StudentsList 
-              students={studentsData} 
-              classes={classesData}
-              onAddStudent={() => openStudentModal(null)}
-              onEditStudent={(s) => openStudentModal(s)}
-              onViewProfile={(s) => console.log("Profil", s)}
-            />
-          } />
-          <Route path="cartes" element={<StudentCardsPage students={studentsData} />} />
-
-          <Route path="classes" element={
-            <ClassesList 
-              classes={classesData}
-              onAddClass={() => openClassModal(null)}
-              onViewDetails={(cls) => console.log("Voir classe", cls.id)}
-            />
-          } />
-          <Route path="affectations" element={<AffectationsManager onBack={() => window.history.back()} />} />
-
-          <Route path="documents" element={<DocumentsHistory />} />
-          <Route path="parametres" element={<SystemSettings />} />
-
-          {/* Placeholders pour les modules futurs */}
-          <Route path="finance" element={<FinancialDashboard />} />
-          <Route path="notes/*" element={<NotesManager />} />
-          <Route path="vie-scolaire/*" element={<PresenceManager />} />
-
-        </Route>
-
-        {/* === ESPACE PARENT (FUTUR) === */}
-        <Route path="/parent/*" element={
-          <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-600">
-            Interface Parent en construction...
-          </div>
-        } />
-
-      </Routes>
-
-      {/* MODALS GLOBAUX (ADMIN) */}
-      <ClassFormModal 
-        isOpen={modalState.type === 'class'} 
-        onClose={closeModal} 
-        initialData={modalState.data} 
-        onSubmit={handleSaveClass} 
-      />
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #2d3250 0%, #363b5c 50%, #2d3250 100%)',
+      padding: '3rem 1.5rem',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
       
-      <StudentFormModal 
-        isOpen={modalState.type === 'student'} 
-        onClose={closeModal} 
-        initialData={modalState.data} 
-        availableClasses={classesData} 
-        onSubmit={handleSaveStudent} 
-      />
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: '4rem', position: 'relative', zIndex: 10 }}>
+        <div style={{
+          display: 'inline-block',
+          background: 'linear-gradient(135deg, #f8b179 0%, #ff9a56 100%)',
+          color: 'white',
+          borderRadius: '1rem',
+          padding: '1rem 2rem',
+          marginBottom: '1.5rem',
+          boxShadow: '0 20px 60px rgba(248, 177, 121, 0.3)'
+        }}>
+          <h1 style={{ 
+            fontSize: '3rem', 
+            fontWeight: 'bold', 
+            margin: 0,
+            letterSpacing: '-0.02em'
+          }}>
+            School-Hub
+          </h1>
+        </div>
+        <p style={{ 
+          color: '#cbd5e1', 
+          fontSize: '1.25rem',
+          margin: '0.5rem 0'
+        }}>
+          Système de gestion scolaire intégré
+        </p>
+        <p style={{ 
+          color: '#94a3b8', 
+          fontSize: '0.875rem',
+          margin: '0.5rem 0'
+        }}>
+          Sélectionnez un portail pour commencer
+        </p>
+      </div>
 
-    </BrowserRouter>
+      {/* Grille des portails */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '2rem',
+        maxWidth: '1200px',
+        margin: '0 auto',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        {portals.map((portal) => {
+          const Icon = portal.icon;
+          const isHovered = hoveredPortal === portal.id;
+          
+          return (
+            <div
+              key={portal.id}
+              onMouseEnter={() => setHoveredPortal(portal.id)}
+              onMouseLeave={() => setHoveredPortal(null)}
+            >
+              <button
+                onClick={() => navigate(portal.path)}
+                style={{
+                  width: '100%',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '1rem',
+                  padding: '2rem',
+                  border: isHovered ? '1px solid rgba(248, 177, 121, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.3s ease',
+                  transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+                  boxShadow: isHovered ? '0 20px 60px rgba(248, 177, 121, 0.2)' : 'none'
+                }}
+              >
+                {/* Icône et titre */}
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'flex-start' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #f8b179 0%, #ff9a56 100%)',
+                    padding: '1rem',
+                    borderRadius: '0.75rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transform: isHovered ? 'scale(1.1) rotate(3deg)' : 'scale(1)',
+                    transition: 'transform 0.3s ease'
+                  }}>
+                    <Icon style={{ width: '2rem', height: '2rem', color: 'white' }} strokeWidth={2.5} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ 
+                      fontSize: '1.25rem', 
+                      fontWeight: 'bold', 
+                      color: isHovered ? '#f8b179' : 'white',
+                      marginBottom: '0.5rem',
+                      transition: 'color 0.3s ease'
+                    }}>
+                      {portal.title}
+                    </h3>
+                    <p style={{ 
+                      fontSize: '0.875rem', 
+                      color: '#94a3b8',
+                      lineHeight: '1.5'
+                    }}>
+                      {portal.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Fonctionnalités */}
+                <div style={{ marginBottom: '1.5rem' }}>
+                  {portal.features.map((feature, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <div style={{ 
+                        width: '6px', 
+                        height: '6px', 
+                        background: '#f8b179', 
+                        borderRadius: '50%' 
+                      }}></div>
+                      <span style={{ fontSize: '0.875rem', color: '#cbd5e1' }}>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Bouton d'action */}
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  paddingTop: '1rem',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.05)'
+                }}>
+                  <span style={{ 
+                    color: '#f8b179', 
+                    fontWeight: '600', 
+                    fontSize: '0.875rem',
+                    transform: isHovered ? 'translateX(4px)' : 'translateX(0)',
+                    transition: 'transform 0.3s ease'
+                  }}>
+                    Accéder au portail
+                  </span>
+                  <svg
+                    style={{
+                      width: '1.25rem',
+                      height: '1.25rem',
+                      color: '#f8b179',
+                      transform: isHovered ? 'translateX(8px)' : 'translateX(0)',
+                      transition: 'transform 0.3s ease'
+                    }}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
+                  </svg>
+                </div>
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer */}
+      <div style={{ 
+        textAlign: 'center', 
+        marginTop: '4rem',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        <p style={{ fontSize: '0.875rem', color: '#64748b' }}>
+          © 2025 School-Hub Management System. Tous droits réservés.
+        </p>
+      </div>
+    </div>
   );
-}
+};
 
 export default App;

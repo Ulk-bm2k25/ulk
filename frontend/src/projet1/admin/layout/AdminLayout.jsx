@@ -41,6 +41,14 @@ const AdminLayout = ({ children, currentPage, onNavigate, onLogout }) => {
             )}
           </button>
         ))}
+
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-slate-600 hover:text-[#f8b179] transition-colors"
+        >
+          <Home size={20} />
+          <span className="text-sm">Portails</span>
+        </button>
       </nav>
 
       {/* Logout */}
