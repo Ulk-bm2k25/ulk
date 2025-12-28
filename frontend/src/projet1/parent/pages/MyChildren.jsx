@@ -1,11 +1,12 @@
-import React from 'react';
-import { User, GraduationCap, Calendar, ChevronRight, Download, FileText, UserPlus } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { User, GraduationCap, Calendar, ChevronRight, Download, FileText, UserPlus, Loader2 } from 'lucide-react';
+import api from '@/api';
 import '../styles/theme.css';
 
-const MyChildren = ({ onNavigate }) => {
-    const children = [];
+const MyChildren = ({ onNavigate, children = [] }) => {
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleDownload = (type, childName, event) => {
+    const handleDownload = async (type, child, event) => {
         const docName = type === 'card' ? 'Carte Scolaire' : 'Fiche d\'inscription';
         const btn = event.currentTarget;
         const originalContent = btn.innerHTML;
@@ -14,13 +15,38 @@ const MyChildren = ({ onNavigate }) => {
         btn.style.opacity = "0.7";
         btn.disabled = true;
 
-        setTimeout(() => {
+        try {
+            if (type === 'card') {
+                const response = await api.get(`/parent/children/${child.id}/carte`, { responseType: 'blob' });
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `Carte_${child.matricule}.pdf`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            } else {
+                // Simulate for other docs for now or alert
+                alert(`Le document "${docName}" pour ${child.user.prenom} est en cours de préparation.`);
+            }
+        } catch (error) {
+            console.error("Download failed", error);
+            alert("Erreur lors du téléchargement.");
+        } finally {
             btn.innerHTML = originalContent;
             btn.style.opacity = "1";
             btn.disabled = false;
-            alert(`Le document "${docName}" pour ${childName} a été généré et téléchargé avec succès.`);
-        }, 1500);
+        }
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <Loader2 className="animate-spin text-[#eb8e3a] mb-4" size={48} />
+                <p className="text-white/40">Chargement de vos enfants...</p>
+            </div>
+        );
+    }
 
     const ActionButton = ({ icon: Icon, label, onClick, primary = false, disabled = false, badge = null }) => (
         <button
@@ -58,21 +84,31 @@ const MyChildren = ({ onNavigate }) => {
                     <div key={child.id} className="bg-white/5 rounded-3xl p-8 border border-white/5 flex flex-col gap-6 group hover:bg-white/10 transition-all cursor-pointer">
                         <div className="flex items-start justify-between">
                             <div className="flex gap-6">
-                                <img src={child.avatar} alt={child.name} className="w-20 h-20 rounded-2xl ring-4 ring-white/5 object-cover" />
+                                <div className="w-20 h-20 rounded-2xl ring-4 ring-white/5 overflow-hidden flex items-center justify-center bg-white/5 text-2xl font-black text-[#eb8e3a]">
+                                    {child.photo ? (
+                                        <img src={`http://localhost:8000/${child.photo}`} alt="Photo enfant" className="w-full h-full object-cover" />
+                                    ) : (
+                                        `${child.user?.prenom?.[0] || '?'}${child.user?.nom?.[0] || '?'}`
+                                    )}
+                                </div>
                                 <div className="space-y-3">
-                                    <h3 className="text-xl font-bold text-white">{child.name}</h3>
+                                    <h3 className="text-xl font-bold text-white">{child.user?.prenom} {child.user?.nom}</h3>
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-2 text-white/60 text-sm">
                                             <GraduationCap size={16} />
-                                            <span>Classe: {child.grade}</span>
+                                            <span>Classe: {child.classe?.nom || 'Non assigné'}</span>
                                         </div>
                                         <div className="flex items-center gap-2 text-white/60 text-sm">
                                             <Calendar size={16} />
-                                            <span>Né le: {child.birthDate}</span>
+                                            <span>Inscrit en: {child.inscriptions?.[0]?.annee_scolaire?.annee || 'N/A'}</span>
                                         </div>
                                         <div className="flex items-center gap-2 text-white/60 text-sm">
                                             <User size={16} />
-                                            <span>Genre: {child.gender}</span>
+                                            <span>Matricule: {child.matricule || 'N/A'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-white/60 text-sm">
+                                            <User size={16} />
+                                            <span>Statut: {child.inscriptions?.[0]?.statut || 'En attente'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -92,14 +128,14 @@ const MyChildren = ({ onNavigate }) => {
                             <ActionButton
                                 icon={Download}
                                 label="Carte Scolaire"
-                                disabled={!child.cardDelivered}
-                                onClick={(e) => handleDownload('card', child.name, e)}
+                                disabled={false}
+                                onClick={(e) => handleDownload('card', child, e)}
                             />
                             <ActionButton
                                 icon={FileText}
                                 label="Fiche d'inscription"
-                                disabled={!child.registrationValidated}
-                                onClick={(e) => handleDownload('doc', child.name, e)}
+                                disabled={child.inscriptions?.[0]?.statut !== 'inscrit'}
+                                onClick={(e) => handleDownload('doc', child, e)}
                             />
                         </div>
                     </div>

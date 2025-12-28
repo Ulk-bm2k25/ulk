@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '@/api';
 import ParentLayout from './layout/ParentLayout';
 import ParentLogin from './pages/ParentLogin';
 import ParentRegister from './pages/ParentRegister';
+import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import Registration from './pages/Registration';
 import Notifications from './pages/Notifications';
 import MyChildren from './pages/MyChildren';
-import Payments from './pages/Payments';
 import Grades from './pages/Grades';
 import Attendance from './pages/Attendance';
-import { Settings, ClipboardCheck, CreditCard, Bell } from 'lucide-react';
+import { Settings, Bell } from 'lucide-react';
 import SettingsPage from './pages/Settings';
 import './styles/theme.css';
 
@@ -30,27 +31,52 @@ const ParentManager = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(() => {
         return localStorage.getItem('token') !== null || sessionStorage.getItem('token') !== null;
     });
-    const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+    const [user, setUser] = useState(() => {
+        const savedUser = localStorage.getItem('user');
+        return savedUser ? JSON.parse(savedUser) : null;
+    });
+    const [authMode, setAuthMode] = useState('login'); // 'login', 'register' or 'forgot-password'
     const [currentPage, setCurrentPage] = useState('dashboard');
     const [registrationParams, setRegistrationParams] = useState({ mode: 'new', childData: null });
 
-    // Centralized children data (Empty for Backend integration)
-    const [children] = useState([]);
-
+    // Centralized children data
+    const [children, setChildren] = useState([]);
     const [selectedChildId, setSelectedChildId] = useState(null);
 
-    const handleLogin = (token) => {
+    const fetchChildren = async () => {
+        if (!isAuthenticated) return;
+        try {
+            const response = await api.get('/parent/children');
+            setChildren(response.data.children || []);
+            // If no child selected and we have children, select the first one
+            if (!selectedChildId && response.data.children?.length > 0) {
+                setSelectedChildId(response.data.children[0].id);
+            }
+        } catch (error) {
+            console.error("Failed to fetch children in manager", error);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchChildren();
+    }, [isAuthenticated]);
+
+    const handleLogin = (token, userData) => {
         setIsAuthenticated(true);
+        setUser(userData);
         localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(userData));
     };
     const handleLogout = () => {
         setIsAuthenticated(false);
+        setUser(null);
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         sessionStorage.removeItem('token');
         setAuthMode('login');
         setCurrentPage('dashboard');
         setRegistrationParams({ mode: 'new', childData: null });
-        setSelectedChildId(children[0]?.id || null);
+        setSelectedChildId(null);
     };
 
     const handleNavigate = (page, params = { mode: 'new', childData: null }) => {
@@ -72,8 +98,6 @@ const ParentManager = () => {
                 return <Dashboard {...commonProps} onNavigate={handleNavigate} />;
             case 'children':
                 return <MyChildren children={children} onNavigate={handleNavigate} />;
-            case 'payments':
-                return <Payments {...commonProps} />;
             case 'grades':
                 return <Grades {...commonProps} />;
             case 'attendance':
@@ -84,7 +108,10 @@ const ParentManager = () => {
                 return <Registration
                     mode={registrationParams.mode}
                     initialData={registrationParams.childData}
-                    onComplete={() => handleNavigate('children')}
+                    onComplete={() => {
+                        fetchChildren();
+                        handleNavigate('children');
+                    }}
                 />;
             case 'settings':
                 return <SettingsPage onLogout={handleLogout} />;
@@ -94,9 +121,17 @@ const ParentManager = () => {
     };
 
     if (!isAuthenticated) {
-        return authMode === 'login'
-            ? <ParentLogin onLogin={handleLogin} onNavigateToRegister={() => setAuthMode('register')} />
-            : <ParentRegister onRegister={handleLogin} onNavigateToLogin={() => setAuthMode('login')} />;
+        if (authMode === 'register') {
+            return <ParentRegister onRegister={handleLogin} onNavigateToLogin={() => setAuthMode('login')} />;
+        }
+        if (authMode === 'forgot-password') {
+            return <ForgotPassword onNavigateToLogin={() => setAuthMode('login')} />;
+        }
+        return <ParentLogin
+            onLogin={handleLogin}
+            onNavigateToRegister={() => setAuthMode('register')}
+            onNavigateToForgotPassword={() => setAuthMode('forgot-password')}
+        />;
     }
 
     return (
@@ -104,6 +139,7 @@ const ParentManager = () => {
             currentPage={currentPage}
             onNavigate={(page) => handleNavigate(page)}
             onLogout={handleLogout}
+            user={user}
         >
             {renderPage()}
         </ParentLayout>

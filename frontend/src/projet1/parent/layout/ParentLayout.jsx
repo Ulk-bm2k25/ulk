@@ -2,7 +2,6 @@ import React from 'react';
 import {
   LayoutGrid,
   Users,
-  CreditCard,
   Star,
   CalendarCheck,
   Bell,
@@ -13,12 +12,11 @@ import {
 } from 'lucide-react';
 import '../styles/theme.css';
 
-const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
+const ParentLayout = ({ children, currentPage, onNavigate, onLogout, user }) => {
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const menuItems = [
     { id: 'dashboard', label: 'Tableau de bord', icon: LayoutGrid },
     { id: 'children', label: 'Mes Enfants', icon: Users },
-    { id: 'payments', label: 'Paiements & Frais', icon: CreditCard },
     { id: 'grades', label: 'Notes & Bulletins', icon: Star },
     { id: 'attendance', label: 'Présence', icon: CalendarCheck },
     { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -26,9 +24,9 @@ const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
 
 
   return (
-    <div className="parent-portal">
+    <div className="parent-portal bg-parent-portal">
       {/* Sidebar */}
-      <aside className="w-72 border-r border-white/5 p-6 flex flex-col bg-[#1a2035]">
+      <aside className="w-72 border-r border-white/5 p-6 flex flex-col bg-black/20 backdrop-blur-xl">
         {/* Logo */}
         <div className="mb-10 px-2">
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
@@ -48,11 +46,11 @@ const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
               className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all group ${currentPage === item.id
                 ? 'bg-[#eb8e3a] text-white shadow-lg shadow-orange-950/20'
                 : 'text-white/50 hover:bg-white/5 hover:text-white'
-                }`}
+                } `}
             >
               <div className="flex items-center gap-4">
                 <item.icon size={22} strokeWidth={currentPage === item.id ? 2.5 : 2} />
-                <span className={`text-[15px] ${currentPage === item.id ? 'font-black' : 'font-bold'}`}>
+                <span className={`text-[15px] ${currentPage === item.id ? 'font-black' : 'font-bold'} `}>
                   {item.label}
                 </span>
               </div>
@@ -73,17 +71,16 @@ const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${currentPage === 'settings'
                 ? 'bg-[#eb8e3a] text-white shadow-lg shadow-orange-950/20'
                 : 'text-white/50 hover:bg-white/5 hover:text-white'
-                }`}
+                } `}
             >
               <div className="flex items-center gap-4">
                 <Settings size={22} strokeWidth={currentPage === 'settings' ? 2.5 : 2} />
                 <span className="text-[15px] font-bold">Paramètres</span>
               </div>
-              <ChevronDown size={16} className={`transition-transform duration-300 ${settingsOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown size={16} className={`transition-transform duration-300 ${settingsOpen ? 'rotate-180' : ''} `} />
             </button>
 
-            {/* Settings Sub-menus */}
-            <div className={`overflow-hidden transition-all duration-300 ${settingsOpen ? 'max-h-32 opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
+            <div className={`overflow-hidden transition-all duration-300 ${settingsOpen ? 'max-h-32 opacity-100 mt-1' : 'max-h-0 opacity-0'} `}>
               <div className="pl-12 space-y-1">
                 <button
                   onClick={() => onNavigate('settings')}
@@ -102,11 +99,25 @@ const ParentLayout = ({ children, currentPage, onNavigate, onLogout }) => {
             </div>
           </div>
 
+          {/* User Profile Card */}
+          <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#eb8e3a]/20 flex items-center justify-center text-[#eb8e3a] font-black">
+              {user ? `${user.prenom[0]}${user.nom[0]} ` : '??'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white truncate">
+                {user ? `${user.prenom} ${user.nom} ` : 'Utilisateur'}
+              </p>
+              <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">
+                Parent
+              </p>
+            </div>
+          </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-[#1a2035]">
+      <main className="flex-1 overflow-y-auto bg-transparent">
         <div className="p-10 max-w-7xl mx-auto">
           {children}
         </div>

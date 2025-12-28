@@ -1,25 +1,96 @@
-import React, { useState } from 'react';
-import { Star, TrendingUp, BookOpen, AlertCircle, Download, FileText, Calendar, LayoutGrid, TrendingDown, Minus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Star, TrendingUp, BookOpen, AlertCircle, Download, FileText, Calendar, LayoutGrid, TrendingDown, Minus, Loader2 } from 'lucide-react';
+import api from '@/api';
 
 import ChildSelector from '../components/ChildSelector';
 import TrimesterSelector from '../components/TrimesterSelector';
 
 const Grades = ({ children, selectedChildId, setSelectedChildId }) => {
-    const [selectedTrimesterId, setSelectedTrimesterId] = useState(1);
+    const [selectedTrimesterId, setSelectedTrimesterId] = useState(null);
+    const [availableSemesters, setAvailableSemesters] = useState([]);
+    const [studentGrades, setStudentGrades] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Data map (Empty for Backend integration)
-    const childrenGradesMap = {};
+    // Fetch Semesters
+    useEffect(() => {
+        const fetchSemesters = async () => {
+            try {
+                const response = await api.get('/parent/semestres');
+                setAvailableSemesters(response.data);
+                if (response.data.length > 0) setSelectedTrimesterId(response.data[0].id);
+            } catch (err) {
+                console.error("Failed to fetch semesters", err);
+            }
+        };
+        fetchSemesters();
+    }, []);
 
-    const currentChild = childrenGradesMap[selectedChildId] || {
-        name: 'Élève',
-        matièresCount: 0,
-        progression: 0,
-        trimesters: [{ id: 1, title: '1er Trimestre', average: '--', subjects: [] }]
-    };
-    const currentTrimester = currentChild.trimesters.find(t => t.id === selectedTrimesterId) || currentChild.trimesters[0];
+    // Fetch Grades for selected child
+    useEffect(() => {
+        if (selectedChildId) {
+            const fetchGrades = async () => {
+                setIsLoading(true);
+                try {
+                    const response = await api.get(`/parent/children/${selectedChildId}/grades`);
+                    setStudentGrades(response.data);
+                } catch (err) {
+                    console.error("Failed to fetch grades", err);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+            fetchGrades();
+        }
+    }, [selectedChildId]);
 
-    const handleDownloadBulletin = () => {
-        alert(`Téléchargement du bulletin de ${currentChild.name} (${currentTrimester.title}) en cours...`);
+    const currentChildData = children.find(c => c.id === selectedChildId);
+
+    // Map data for UI
+    const filteredGrades = studentGrades.filter(g => g.semestre_id === selectedTrimesterId);
+    const currentTrimester = availableSemesters.find(s => s.id === selectedTrimesterId) || { nom: 'Trimestre' };
+
+    const subjectsUI = filteredGrades.map(g => {
+        const note = parseFloat(g.note || 0);
+        let trend = 'minus';
+        if (note >= 12) trend = 'up';
+        else if (note < 10) trend = 'down';
+
+        return {
+            name: g.matiere?.nom || 'Matière',
+            coef: g.coefficient || g.matiere?.coefficient || 1,
+            interros: ['--', '--', '--'],
+            devoir: '--',
+            composition: '--',
+            moyenne: note,
+            trend: trend,
+            appreciation: g.appreciation
+        };
+    });
+
+    const globalAverage = subjectsUI.length > 0
+        ? (subjectsUI.reduce((acc, s) => acc + (parseFloat(s.moyenne) * s.coef), 0) / subjectsUI.reduce((acc, s) => acc + s.coef, 0)).toFixed(2)
+        : '--';
+
+    const handleDownloadBulletin = async () => {
+        if (!selectedChildId) return;
+
+        try {
+            const response = await api.get(`/parent/children/${selectedChildId}/bulletin`, {
+                responseType: 'blob',
+                params: { semestre_id: selectedTrimesterId }
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Bulletin_${currentChildData?.firstName || 'Eleve'}_${currentTrimester.nom}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            console.error("Bulletin download failed", error);
+            alert("Erreur lors du téléchargement du bulletin. Vérifiez que des notes sont disponibles.");
+        }
     };
 
     const getTrendIcon = (trend) => {
@@ -54,7 +125,7 @@ const Grades = ({ children, selectedChildId, setSelectedChildId }) => {
                         onSelect={setSelectedChildId}
                     />
                     <TrimesterSelector
-                        trimesters={currentChild.trimesters}
+                        trimesters={availableSemesters.map(s => ({ id: s.id, title: s.nom }))}
                         selectedTrimesterId={selectedTrimesterId}
                         onSelect={setSelectedTrimesterId}
                     />
@@ -75,22 +146,22 @@ const Grades = ({ children, selectedChildId, setSelectedChildId }) => {
                     <div className="space-y-1">
                         <span className="text-white/40 font-bold uppercase tracking-widest text-[11px]">Moyenne Générale</span>
                         <div className="flex items-baseline gap-2">
-                            <span className="text-6xl font-black text-blue-400">{currentTrimester.average}</span>
+                            <span className="text-6xl font-black text-blue-400">{globalAverage}</span>
                             <span className="text-2xl font-bold text-blue-400/40">/20</span>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-12">
                         <div className="text-center md:text-right">
-                            <div className="text-3xl font-black">{currentChild.matièresCount}</div>
+                            <div className="text-3xl font-black">{subjectsUI.length}</div>
                             <div className="text-white/40 text-[12px] font-bold uppercase tracking-wider">Matières</div>
                         </div>
                         <div className="text-center md:text-right">
                             <div className="text-3xl font-black text-green-500 flex items-center justify-center md:justify-end gap-2">
-                                {currentChild.progression}
+                                100%
                                 <TrendingUp size={24} />
                             </div>
-                            <div className="text-white/40 text-[12px] font-bold uppercase tracking-wider">En progression</div>
+                            <div className="text-white/40 text-[12px] font-bold uppercase tracking-wider">Taux de réussite</div>
                         </div>
                     </div>
                 </div>
@@ -118,8 +189,8 @@ const Grades = ({ children, selectedChildId, setSelectedChildId }) => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {currentTrimester.subjects.length > 0 ? (
-                                currentTrimester.subjects.map((subject, idx) => (
+                            {subjectsUI.length > 0 ? (
+                                subjectsUI.map((subject, idx) => (
                                     <tr key={idx} className="hover:bg-white/[0.02] transition-colors group">
                                         <td className="px-8 py-6">
                                             <div className="font-bold group-hover:text-[#eb8e3a] transition-colors">{subject.name}</div>
@@ -129,23 +200,13 @@ const Grades = ({ children, selectedChildId, setSelectedChildId }) => {
                                                 {subject.coef}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-6 text-center text-white/50 font-medium">
-                                            {subject.interros[0] !== '--' ? `${subject.interros[0]}/20` : '--'}
-                                        </td>
-                                        <td className="px-4 py-6 text-center text-white/50 font-medium">
-                                            {subject.interros[1] !== '--' ? `${subject.interros[1]}/20` : '--'}
-                                        </td>
-                                        <td className="px-4 py-6 text-center text-white/50 font-medium">
-                                            {subject.interros[2] !== '--' ? `${subject.interros[2]}/20` : '--'}
-                                        </td>
-                                        <td className="px-4 py-6 text-center text-white/50 font-medium">
-                                            {subject.devoir !== '--' ? `${subject.devoir}/20` : '--'}
-                                        </td>
-                                        <td className="px-4 py-6 text-center text-white/50 font-medium">
-                                            {subject.composition !== '--' ? `${subject.composition}/20` : '--'}
-                                        </td>
+                                        <td className="px-4 py-6 text-center text-white/50 font-medium">--</td>
+                                        <td className="px-4 py-6 text-center text-white/50 font-medium">--</td>
+                                        <td className="px-4 py-6 text-center text-white/50 font-medium">--</td>
+                                        <td className="px-4 py-6 text-center text-white/50 font-medium">--</td>
+                                        <td className="px-4 py-6 text-center text-white/50 font-medium">--</td>
                                         <td className={`px-4 py-6 text-center font-black text-lg ${getMoyenneColor(subject.moyenne)}`}>
-                                            {subject.moyenne !== '--' ? subject.moyenne : '--'}
+                                            {subject.moyenne}
                                         </td>
                                         <td className="px-4 py-6 text-center">
                                             <div className="flex justify-center">
@@ -158,8 +219,8 @@ const Grades = ({ children, selectedChildId, setSelectedChildId }) => {
                                 <tr>
                                     <td colSpan="9" className="px-8 py-20 text-center text-white/20 italic font-medium">
                                         <div className="flex flex-col items-center gap-4">
-                                            <Star size={48} strokeWidth={1} />
-                                            <p>Aucune donnée disponible pour ce trimestre.</p>
+                                            {isLoading ? <Loader2 size={48} className="animate-spin" /> : <Star size={48} strokeWidth={1} />}
+                                            <p>{isLoading ? 'Chargement des notes...' : 'Aucune donnée disponible pour ce trimestre.'}</p>
                                         </div>
                                     </td>
                                 </tr>

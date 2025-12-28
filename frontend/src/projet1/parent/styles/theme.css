@@ -5,16 +5,16 @@
   --parent-bg-light: #676f9d;
   --parent-accent: #f9b17a;
   --parent-white: #ffffff;
-  
+
   /* Glassmorphism effects */
   --parent-glass: rgba(255, 255, 255, 0.05);
   --parent-glass-border: rgba(255, 255, 255, 0.1);
-  
+
   /* Typography */
   --parent-font: 'Times New Roman', Times, serif;
 }
 
-body {
+body.parent-body {
   margin: 0;
   font-family: var(--parent-font);
   background-color: var(--parent-bg-dark);
@@ -26,43 +26,85 @@ body {
 .parent-portal {
   min-height: 100vh;
   display: flex;
-  background: radial-gradient(circle at top right, var(--parent-bg-medium), var(--parent-bg-dark));
+}
+
+.bg-parent-portal {
+  background: radial-gradient(circle at 0% 0%, #424769 0%, #2d3250 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-parent-portal::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 50% 50%, rgba(249, 177, 122, 0.05) 0%, transparent 50%);
+  animation: slow-rotate 30s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes slow-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .glass-card {
-  background: var(--parent-glass);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid var(--parent-glass-border);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border-radius: 24px;
 }
 
 .parent-btn-primary {
-  background-color: var(--parent-accent);
-  color: var(--parent-bg-dark);
-  font-weight: 600;
-  padding: 10px 24px;
-  border-radius: 8px;
+  background: linear-gradient(135deg, #f9b17a 0%, #eb8e3a 100%);
+  color: #1a2035;
+  font-weight: 800;
+  padding: 12px 28px;
+  border-radius: 12px;
   border: none;
   cursor: pointer;
-  transition: transform 0.2s, opacity 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 10px 15px -3px rgba(249, 177, 122, 0.3);
 }
 
 .parent-btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(249, 177, 122, 0.4);
+  filter: brightness(1.1);
 }
 
 .parent-input {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 12px 16px;
-  color: white;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 14px 20px;
+  color: #000000 !important;
+  /* Black text as requested */
   width: 100%;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.parent-input::placeholder {
+  color: #4b5563;
+  /* Darker placeholder for contrast */
 }
 
 .parent-input:focus {
   outline: none;
+  background: #ffffff;
   border-color: var(--parent-accent);
+  box-shadow: 0 0 0 4px rgba(249, 177, 122, 0.2);
 }

@@ -15,9 +15,11 @@ import AffectationsManager from './pages/classes/AffectationsManager';
 import SendNotification from './pages/SendNotification';
 import SystemSettings from './pages/SystemSettings';
 import DocumentsHistory from './pages/documents/DocumentsHistory';
+import api from '@/api';
 import { FileText, Users, School, FileCheck, Bell, Settings } from 'lucide-react';
 
 const AdminManager = () => {
+  // 1. INITIALISATION INTELLIGENTE
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('token') !== null || sessionStorage.getItem('token') !== null;
   });
@@ -32,39 +34,92 @@ const AdminManager = () => {
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null)
 
-  const [inscriptions, setInscriptions] = useState([
-    { id: 'INS-2025-042', firstName: 'Jean', lastName: 'Dupont', class: '2nde C', date: '19 Déc 2025', status: 'pending', payment: 'partial', docs: 'complete', email: 'p.dupont@email.com' },
-    { id: 'INS-2025-041', firstName: 'Amina', lastName: 'Kone', class: 'Terminale D', date: '18 Déc 2025', status: 'pending', payment: 'paid', docs: 'complete', email: 'kone.famille@email.com' },
-    { id: 'INS-2025-039', firstName: 'Lucas', lastName: 'Martin', class: '1ère A', date: '15 Déc 2025', status: 'rejected', payment: 'unpaid', docs: 'missing', email: 'lucas.m@email.com' },
-    { id: 'INS-2025-038', firstName: 'Sarah', lastName: 'Bensoussan', class: '4ème E', date: '14 Déc 2025', status: 'pending', payment: 'paid', docs: 'missing', email: 's.bensoussan@email.com' },
-    { id: 'INS-2025-035', firstName: 'Marc', lastName: 'Evan', class: '3ème A', date: '10 Déc 2025', status: 'pending', payment: 'paid', docs: 'complete', email: 'marc.e@email.com' },
-  ]);
+  // Données initiales (Vides pour l'intégration Backend)
+  const [inscriptions, setInscriptions] = useState([]);
+  const [classesData, setClassesData] = useState([]);
+  const [studentsData, setStudentsData] = useState([]);
+  const [teachersData, setTeachersData] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [studentsData, setStudentsData] = useState([
-    { id: 'MAT-25-041', firstName: 'Amina', lastName: 'Kone', class: 'Terminale D', gender: 'F', parent: 'Mme Kone', phone: '96554433', status: 'active', level: 'Lycée', birthDate: '03/08/2009' },
-    { id: 'MAT-25-035', firstName: 'Marc', lastName: 'Evan', class: '3ème A', gender: 'M', parent: 'Luc Evan', phone: '94778899', status: 'active', level: 'Collège', birthDate: '20/01/2013' },
-    { id: 'MAT-25-028', firstName: 'Lina', lastName: 'Sow', class: '2nde B', gender: 'F', parent: 'M. Sow', phone: '91234567', status: 'excluded', level: 'Lycée', birthDate: '11/11/2008' },
-  ]);
+  // CHECK ROLE & FETCH DATA FROM API
+  useEffect(() => {
+    if (!isAuthenticated) return;
 
-  const [classesData, setClassesData] = useState([
-    { id: 1, name: '4ème E', level: 'Collège', root: '4ème', series: 'E', studentCount: 45, capacity: 50, mainTeacher: 'M. Kpoton' },
-    { id: 2, name: '4ème E2', level: 'Collège', root: '4ème', series: 'E', studentCount: 22, capacity: 50, mainTeacher: 'Mme. Bio' },
-    { id: 3, name: '3ème A', level: 'Collège', root: '3ème', series: 'A', studentCount: 38, capacity: 40, mainTeacher: 'M. Mensah' },
-    { id: 4, name: '2nde C', level: 'Lycée', root: '2nde', series: 'C', studentCount: 32, capacity: 35, mainTeacher: 'M. Sossa' },
-    { id: 5, name: '1ère D', level: 'Lycée', root: '1ère', series: 'D', studentCount: 28, capacity: 35, mainTeacher: 'Mme. Agbo' },
-    { id: 6, name: 'Tle C', level: 'Lycée', root: 'Terminale', series: 'C', studentCount: 36, capacity: 35, mainTeacher: 'Pr. Zinsou' },
-  ]);
+    // Check if user is actually admin
+    const storedUser = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user'));
+    if (storedUser && storedUser.role !== 'RESPONSABLE' && storedUser.role !== 'ADMIN') {
+      alert("Accès refusé. Vous êtes connecté en tant que " + storedUser.role + ". Veuillez vous connecter avec un compte Administrateur.");
+      handleLogout();
+      return;
+    }
 
-  const handleLogin = (token, rememberMe = false) => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const [inscResponse, classResponse, teachResponse, studResponse, statsResponse] = await Promise.all([
+          api.get('/admin/inscriptions'),
+          api.get('/classes'),
+          api.get('/admin/teachers'),
+          api.get('/admin/students'),
+          api.get('/admin/dashboard/stats')
+        ]);
+        setInscriptions(inscResponse.data.inscriptions);
+        setClassesData(classResponse.data);
+        setTeachersData((teachResponse.data.teachers || []).map(t => ({
+          ...t,
+          nom: t.user?.nom || t.nom || 'Sans nom',
+          prenom: t.user?.prenom || t.prenom || '',
+          fullName: `${t.user?.nom || t.nom || ''} ${t.user?.prenom || t.prenom || ''}`
+        })));
+        const studentList = studResponse.data.data || studResponse.data.students || [];
+        setStudentsData(studentList.map(s => ({
+          ...s,
+          lastName: s.user?.nom || '',
+          firstName: s.user?.prenom || '',
+          class: s.classe?.nom || 'N/A',
+          gender: s.sexe || '?',
+          parent: s.tuteurs && s.tuteurs.length > 0 ? `${s.tuteurs[0].user?.nom} ${s.tuteurs[0].user?.prenom}` : 'N/A',
+          phone: s.tuteurs && s.tuteurs.length > 0 ? s.tuteurs[0].telephone : 'N/A',
+          status: 'active'
+        })));
+        setDashboardStats(statsResponse.data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch admin data", error);
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          alert("Session expirée ou non autorisée. Veuillez vous reconnecter.");
+          handleLogout();
+        }
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [isAuthenticated]);
+
+  // 2. MODIFICATION DE LA FONCTION LOGIN
+  const handleLogin = (token, user, rememberMe = false) => {
     setIsAuthenticated(true);
-    if (rememberMe) localStorage.setItem('token', token);
-    else sessionStorage.setItem('token', token);
+
+    const storage = rememberMe ? localStorage : sessionStorage;
+    storage.setItem('token', token);
+    storage.setItem('user', JSON.stringify(user));
+
+    // Clear other storage to avoid conflicts
+    const otherStorage = rememberMe ? sessionStorage : localStorage;
+    otherStorage.removeItem('token');
+    otherStorage.removeItem('user');
   };
 
+  // 3. MODIFICATION DU LOGOUT
+  // On nettoie tout
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     setCurrentPage('dashboard');
     setSelectedInscription(null);
     setSelectedStudent(null);
@@ -81,127 +136,310 @@ const AdminManager = () => {
   };
 
   const handleViewInscriptionDetails = (inscriptionData) => {
+    // On s'assure de passer l'objet le plus à jour venant du state
     const freshData = inscriptions.find(i => i.id === inscriptionData.id) || inscriptionData;
     setSelectedInscription(freshData);
   };
 
-  const handleValidateInscription = (id) => {
-    const inscription = inscriptions.find(i => i.id === id);
-    if (!inscription) return;
-
-    setInscriptions(prev => prev.map(item =>
-      item.id === id ? { ...item, status: 'validated' } : item
-    ));
-
-    const newStudent = {
-      id: `MAT-25-${id.split('-')[2]}`,
-      firstName: inscription.firstName,
-      lastName: inscription.lastName,
-      class: inscription.class,
-      gender: 'M',
-      parent: inscription.lastName + ' Parent',
-      phone: '0102030405',
-      status: 'active',
-      level: inscription.class.includes('ème') || inscription.class.includes('CM') ? 'Collège' : 'Lycée',
-      birthDate: '01/01/2010'
-    };
-
-    setStudentsData(prev => [...prev, newStudent]);
+  const handleBackToInscriptionsList = () => {
     setSelectedInscription(null);
   };
 
-  const handleRejectInscription = (id) => {
-    setInscriptions(prev => prev.map(item =>
-      item.id === id ? { ...item, status: 'rejected' } : item
-    ));
-    setSelectedInscription(null);
+  // --- NOUVEAU : Logique de validation réelle ---
+  /* --- NOUVEAU : Logique de validation réelle --- */
+  const handleValidateInscription = async (id) => {
+    try {
+      const response = await api.patch(`/admin/inscriptions/${id}/status`, { statut: 'inscrit' });
+      setInscriptions(prev => prev.map(item =>
+        item.id === id ? response.data.inscription : item
+      ));
+
+      // Post-validation: Prompt for Class Assignment
+      if (window.confirm("Inscription validée avec succès ! Voulez-vous affecter l'élève à une classe définitive maintenant ?")) {
+        const inscription = inscriptions.find(i => i.id === id);
+        if (inscription && inscription.eleve) {
+          // Open the Student Modal in Edit Mode (which allows class change)
+          // We need to fetch the student first or construct a partial object
+          const student = {
+            ...inscription.eleve,
+            lastName: inscription.eleve.user?.nom,
+            firstName: inscription.eleve.user?.prenom,
+            class: inscription.eleve.classe?.nom,
+            classe_id: inscription.eleve.classe_id, // Ensure this exists
+            gender: inscription.eleve.sexe,
+            birthDate: inscription.eleve.date_naissance, // Check exact field name
+            pob: inscription.eleve.lieu_naissance,
+            address: inscription.eleve.adresse
+          };
+          setEditingStudent(student);
+          setIsStudentModalOpen(true);
+        }
+      } else {
+        setSelectedInscription(null);
+      }
+
+    } catch (error) {
+      console.error(error);
+      alert("Erreur lors de la validation");
+    }
+  };
+
+  const handleRejectInscription = async (id) => {
+    if (!window.confirm("Voulez-vous vraiment rejeter cette inscription ?")) return;
+    try {
+      const response = await api.patch(`/admin/inscriptions/${id}/status`, { statut: 'rejete' });
+      setInscriptions(prev => prev.map(item =>
+        item.id === id ? response.data.inscription : item
+      ));
+      alert("Inscription rejetée.");
+      setSelectedInscription(null);
+    } catch (error) {
+      alert("Erreur lors du rejet");
+    }
   };
 
   const handleDeleteInscription = (id) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cette demande d'inscription ?")) {
       setInscriptions(prev => prev.filter(item => item.id !== id));
-      alert("Inscription supprimée.");
+      alert("Inscription supprimée avec succès.");
     }
   };
 
+  //FONCTION DE RELANCE (Simulation)
   const handleRelanceInscription = (inscription) => {
-    alert(`Relance envoyée à ${inscription.email}.`);
+    alert(`Un email de relance a été envoyé à ${inscription.email} pour compléter son dossier.`);
   };
 
-  // Logique Classes
-  const handleSaveClass = (classForm) => {
-    let baseName = `${classForm.root} ${classForm.series || ''}`.trim();
-    let finalName = baseName;
-    let counter = 2;
-    const otherClasses = editingClass ? classesData.filter(c => c.id !== editingClass.id) : classesData;
 
-    while (otherClasses.some(c => c.name === finalName)) {
-      finalName = `${baseName}${counter}`;
-      counter++;
+  // --- LOGIQUE CLASSES REELLE ---
+  const handleSaveClass = async (classForm) => {
+    try {
+      let response;
+      if (editingClass) {
+        response = await api.patch(`/classes/${editingClass.id}`, classForm);
+        setClassesData(prev => prev.map(c => c.id === editingClass.id ? response.data : c));
+        alert("Classe mise à jour avec succès !");
+      } else {
+        response = await api.post('/classes', classForm);
+        setClassesData(prev => [...prev, response.data]);
+        alert("Nouvelle classe créée !");
+      }
+      setIsClassModalOpen(false);
+    } catch (error) {
+      alert("Erreur lors de l'enregistrement de la classe");
     }
-
-    const finalClassData = { ...classForm, name: finalName, series: classForm.series || null };
-
-    if (editingClass) {
-      setClassesData(prev => prev.map(c => c.id === editingClass.id ? { ...finalClassData, id: editingClass.id, studentCount: c.studentCount } : c));
-      alert(`Classe mise à jour : ${finalName}`);
-    } else {
-      const newClass = { ...finalClassData, id: Date.now(), studentCount: 0 };
-      setClassesData(prev => [...prev, newClass]);
-      alert(`Classe créée : ${finalName}`);
-    }
-    setIsClassModalOpen(false);
   };
 
-  // Logique Élèves
-  const handleSaveStudent = (studentForm) => {
-    if (editingStudent) {
-      setStudentsData(prev => prev.map(s => s.id === editingStudent.id ? studentForm : s));
-      alert(`Dossier de ${studentForm.firstName} mis à jour !`);
-    } else {
-      setStudentsData(prev => [studentForm, ...prev]);
-      alert(`Nouvel élève inscrit : ${studentForm.firstName}`);
+  const handleDeleteClass = async (id) => {
+    if (!window.confirm("Supprimer cette classe ?")) return;
+    try {
+      await api.delete(`/classes/${id}`);
+      setClassesData(prev => prev.filter(c => c.id !== id));
+      alert("Classe supprimée.");
+    } catch (error) {
+      const message = error.response?.data?.error || "Erreur lors de la suppression";
+      alert(message);
     }
-    setIsStudentModalOpen(false);
+  };
+
+  // --- LOGIQUE ÉLÈVES (CRUD) ---
+  const handleSaveStudent = async (studentForm) => {
+    try {
+      if (editingStudent) {
+        // Find the classe_id from the selected class name
+        const selectedClass = classesData.find(c => c.nom === studentForm.class);
+
+        // Map frontend fields to backend fields
+        const payload = {
+          nom: studentForm.lastName,
+          prenom: studentForm.firstName,
+          sexe: studentForm.gender,
+          date_naissance: studentForm.birthDate,
+          lieu_naissance: studentForm.pob,
+          adresse: studentForm.address,
+          classe_id: selectedClass ? selectedClass.id : null
+        };
+
+        const response = await api.put(`/admin/students/${editingStudent.id}`, payload);
+
+        setStudentsData(prev => prev.map(s => s.id === editingStudent.id ? {
+          ...s,
+          ...studentForm,
+          // Update mapping fields used for display
+          lastName: studentForm.lastName,
+          firstName: studentForm.firstName,
+          class: studentForm.class,
+          gender: studentForm.gender,
+          classe_id: selectedClass ? selectedClass.id : null
+        } : s));
+
+        alert(`Dossier de ${studentForm.firstName} mis à jour avec succès !`);
+      } else {
+        // Mode création (Admission Manuelle) 
+        // Note: L'admission manuelle pourrait nécessiter un endpoint spécifique plus complexe
+        // Pour l'instant on garde la simulation ou on pourrait appeler un futur endpoint /admin/students (POST)
+        alert("La création manuelle d'élève sera bientôt disponible. Pour le moment, utilisez le portail parent pour les inscriptions.");
+      }
+      setIsStudentModalOpen(false);
+    } catch (error) {
+      console.error("Failed to save student", error);
+      alert("Erreur lors de l'enregistrement des modifications.");
+    }
+  };
+
+  const handleTransferStudent = async (studentId, newClassId) => {
+    try {
+      const response = await api.post(`/admin/students/${studentId}/transfer`, { classe_id: newClassId });
+
+      // Update local state for STUDENTS list
+      setStudentsData(prev => prev.map(s =>
+        s.id === studentId ? { ...s, class: response.data.transfer_details.to, classe_id: newClassId } : s
+      ));
+
+      // Refresh classes data to reflect changes in Class Manager
+      const classResponse = await api.get('/classes');
+      setClassesData(classResponse.data);
+
+      alert("Transfert effectué avec succès !");
+      return true;
+    } catch (error) {
+      console.error("Transfer failed", error);
+      alert("Erreur lors du transfert.");
+      return false;
+    }
+  };
+
+  const handleExcludeStudent = async (studentId) => {
+    if (!window.confirm("Êtes-vous sûr de vouloir exclure cet élève ?")) return;
+    try {
+      await api.post(`/admin/students/${studentId}/exclude`);
+      setStudentsData(prev => prev.map(s => 
+        s.id === studentId ? { ...s, status: 'excluded', est_actif: false } : s
+      ));
+      alert("Élève exclu avec succès.");
+    } catch (error) {
+      alert(error.response?.data?.message || "Erreur lors de l'exclusion.");
+    }
+  };
+
+  const handleReactivateStudent = async (studentId) => {
+    try {
+      await api.post(`/admin/students/${studentId}/reactivate`);
+      setStudentsData(prev => prev.map(s => 
+        s.id === studentId ? { ...s, status: 'active', est_actif: true } : s
+      ));
+      alert("Élève réactivé avec succès.");
+    } catch (error) {
+      alert(error.response?.data?.message || "Erreur lors de la réactivation.");
+    }
+  };
+
+  const handleDeleteStudent = async (studentId) => {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer définitivement cet élève ? Cette action est irréversible.")) return;
+    try {
+      await api.delete(`/admin/students/${studentId}`);
+      setStudentsData(prev => prev.filter(s => s.id !== studentId));
+      alert("Élève supprimé avec succès.");
+    } catch (error) {
+      alert(error.response?.data?.error || error.response?.data?.message || "Erreur lors de la suppression.");
+    }
   };
 
   const renderPage = () => {
     switch (currentPage) {
-      case 'dashboard': return <DashboardPage onNavigate={handleNavigate} />;
+      case 'dashboard':
+        return <DashboardPage onNavigate={handleNavigate} inscriptions={inscriptions} stats={dashboardStats} />;
 
       case 'inscriptions':
         if (selectedInscription) {
+          // On s'assure de passer l'objet le plus à jour
           const currentInscription = inscriptions.find(i => i.id === selectedInscription.id);
-          return <InscriptionDetail data={currentInscription} onBack={() => setSelectedInscription(null)} onValidate={handleValidateInscription} onReject={handleRejectInscription} onNavigate={handleNavigate} />;
+          return (
+            <InscriptionDetail
+              data={currentInscription}
+              onBack={handleBackToInscriptionsList}
+              onValidate={handleValidateInscription}
+              onReject={handleRejectInscription}
+              onNavigate={handleNavigate}
+            />
+          );
         }
-        return <InscriptionsList inscriptions={inscriptions} onViewDetails={handleViewInscriptionDetails} onQuickValidate={handleValidateInscription} onDelete={handleDeleteInscription} onRelance={handleRelanceInscription} />;
+        return (
+          <InscriptionsList
+            inscriptions={inscriptions}
+            onViewDetails={handleViewInscriptionDetails}
+            onQuickValidate={handleValidateInscription}
+            onDelete={handleDeleteInscription}
+            onRelance={handleRelanceInscription}
+          />
+        );
 
       case 'eleves':
-        if (selectedStudent) return <StudentProfile student={selectedStudent} onBack={() => setSelectedStudent(null)} />;
-        return <StudentsList
-          students={studentsData}
-          classes={classesData} // Passage essentiel pour MoveStudentModal
-          onViewProfile={setSelectedStudent}
-          onNavigate={handleNavigate}
-          onAddStudent={() => { setEditingStudent(null); setIsStudentModalOpen(true); }}
-          onEditStudent={(s) => { setEditingStudent(s); setIsStudentModalOpen(true); }}
-          onDelete={(id) => setStudentsData(prev => prev.filter(s => s.id !== id))}
-        />;
+        if (selectedStudent) {
+          return <StudentProfile student={selectedStudent} onBack={() => setSelectedStudent(null)} />;
+        }
+        return (
+          <StudentsList
+            students={studentsData}
+            availableClasses={classesData}
+            onViewProfile={(student) => setSelectedStudent(student)}
+            onNavigate={handleNavigate}
+            onTransfer={handleTransferStudent}
+            onExclude={handleExcludeStudent}
+            onReactivate={handleReactivateStudent}
+            onDelete={handleDeleteStudent}
+            onAddStudent={() => {
+              setEditingStudent(null);
+              setIsStudentModalOpen(true);
+            }}
+            onEditStudent={(student) => {
+              setEditingStudent(student);
+              setIsStudentModalOpen(true);
+            }}
+          />
+        );
 
       case 'classes':
         if (isAffectationMode) return <AffectationsManager onBack={() => setIsAffectationMode(false)} />;
-        if (selectedClass) return <ClassDetail classData={selectedClass} students={studentsData} onBack={() => setSelectedClass(null)} onEdit={(cls) => { setEditingClass(cls); setIsClassModalOpen(true); }} />;
-        return <ClassesList classes={classesData} onViewDetails={setSelectedClass} onManageAffectations={() => setIsAffectationMode(true)} onAddClass={() => { setEditingClass(null); setIsClassModalOpen(true); }} />;
+        if (selectedClass) {
+          return (
+            <ClassDetail
+              classData={selectedClass}
+              onBack={() => setSelectedClass(null)}
+              onEdit={(cls) => {
+                setEditingClass(cls);
+                setIsClassModalOpen(true);
+              }}
+            />
+          );
+        }
+        return (
+          <ClassesList
+            classes={classesData}
+            onViewDetails={(cls) => setSelectedClass(cls)}
+            onManageAffectations={() => setIsAffectationMode(true)}
+            onAddClass={() => {
+              setEditingClass(null);
+              setIsClassModalOpen(true);
+            }}
+            onEditClass={(cls) => {
+              setEditingClass(cls);
+              setIsClassModalOpen(true);
+            }}
+            onDeleteClass={handleDeleteClass}
+          />
+        );
 
-      case 'cartes': return <StudentCardsPage students={studentsData} />;
-
-      case 'documents': return <DocumentsHistory />;
-
-      case 'notifications': return <SendNotification availableClasses={classesData} />;
-
-      case 'parametres': return <SystemSettings />;
-      
-      default: return <DashboardPage />;
+      case 'cartes':
+        return <StudentCardsPage students={studentsData} />;
+      case 'documents':
+        return <DocumentsHistory />;
+      case 'notifications':
+        return <SendNotification classes={classesData} students={studentsData} />;
+      case 'parametres':
+        return <SystemSettings />;
+      default:
+        return <DashboardPage />;
     }
   };
 
@@ -209,11 +447,30 @@ const AdminManager = () => {
 
   return (
     <>
-      <AdminLayout currentPage={currentPage} onNavigate={handleNavigate} onLogout={handleLogout}>
+      <AdminLayout
+        currentPage={currentPage}
+        onNavigate={handleNavigate}
+        onLogout={handleLogout}
+      >
         {renderPage()}
       </AdminLayout>
-      <ClassFormModal isOpen={isClassModalOpen} onClose={() => setIsClassModalOpen(false)} initialData={editingClass} onSubmit={handleSaveClass} />
-      <StudentFormModal isOpen={isStudentModalOpen} onClose={() => setIsStudentModalOpen(false)} initialData={editingStudent} availableClasses={classesData} onSubmit={handleSaveStudent} />
+
+      {/* MODAL CLASSE */}
+      <ClassFormModal
+        isOpen={isClassModalOpen}
+        onClose={() => setIsClassModalOpen(false)}
+        initialData={editingClass}
+        onSubmit={handleSaveClass} // On branche la fonction CRUD
+      />
+
+      {/* MODAL ÉLÈVE (NOUVEAU) */}
+      <StudentFormModal
+        isOpen={isStudentModalOpen}
+        onClose={() => setIsStudentModalOpen(false)}
+        initialData={editingStudent}
+        availableClasses={classesData}
+        onSubmit={handleSaveStudent} // On branche la fonction CRUD
+      />
     </>
   );
 };

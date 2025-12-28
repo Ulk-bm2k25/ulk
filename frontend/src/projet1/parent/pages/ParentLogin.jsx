@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
-import api from '../../../api';
+import api from '@/api';
 import '../styles/theme.css';
 import smilingChildren from '../assets/smiling_children.png';
 
-const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
+const ParentLogin = ({ onLogin, onNavigateToRegister, onNavigateToForgotPassword }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -16,23 +16,24 @@ const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            // Simulation d'appel API - À décommenter lors de l'intégration réelle
-            // const response = await api.post('/login', { email, password });
-            // onLogin(response.data.token);
+            const response = await api.post('/login', { email, password });
 
-            // Pour l'instant, on simule une réussite avec un faux token
-            setTimeout(() => {
-                onLogin("mock-token-parent");
-                setIsLoading(false);
-            }, 1000);
+            // Check if it's a parent role (optional but good for safety)
+            if (response.data.user && response.data.user.role !== 'PARENT') {
+                throw new Error("Accès non autorisé. Réservé aux parents.");
+            }
+
+            onLogin(response.data.token, response.data.user);
+            setIsLoading(false);
         } catch (error) {
             setIsLoading(false);
-            alert("Erreur de connexion. Veuillez vérifier vos identifiants.");
+            const message = error.response?.data?.message || error.message || "Erreur de connexion. Veuillez vérifier vos identifiants.";
+            alert(message);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-parent-bg-dark text-white relative">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-parent-portal text-white relative">
             {/* Bouton Retour à l'accueil */}
             <Link
                 to="/"
@@ -67,7 +68,13 @@ const ParentLogin = ({ onLogin, onNavigateToRegister }) => {
                         <div>
                             <div className="flex justify-between mb-2">
                                 <label className="block text-sm font-semibold text-white/60">Mot de passe</label>
-                                <a href="#" className="text-xs text-orange-400 hover:underline">Mot de passe oublié ?</a>
+                                <button
+                                    type="button"
+                                    onClick={onNavigateToForgotPassword}
+                                    className="text-xs text-orange-400 hover:underline bg-transparent border-none p-0"
+                                >
+                                    Mot de passe oublié ?
+                                </button>
                             </div>
                             <div className="relative group">
                                 <input

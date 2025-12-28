@@ -11,7 +11,7 @@ const StudentCardPreview = ({ student, onClose }) => {
 
   const cardData = {
     ...student,
-    year: '2025 - 2026',
+    year: '2025 - 2026', // Mis à jour selon le design
     blood: 'O+', 
     emergency: student.parent?.phone || '+229 97 00 00 00', 
     matricule: student.id || 'MAT-PENDING'
@@ -24,10 +24,9 @@ const StudentCardPreview = ({ student, onClose }) => {
     if (!element) { setIsGenerating(false); return; }
 
     try {
-        // Capture haute résolution
         const canvas = await html2canvas(element, {
             scale: 2, 
-            useCORS: true, // Important pour l'image QR Code externe
+            useCORS: true, 
             backgroundColor: '#ffffff',
             logging: false,
             width: 1050, 
@@ -35,30 +34,27 @@ const StudentCardPreview = ({ student, onClose }) => {
         });
 
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('l', 'mm', 'a4'); // Paysage, mm, A4
-        
+        const pdf = new jsPDF('l', 'mm', 'a4'); 
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
-        
         const imgProps = pdf.getImageProperties(imgData);
-        const imgWidth = pdfWidth - 20; // Marge 10mm
+        const imgWidth = pdfWidth - 20; 
         const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-        
         const x = 10;
-        const y = (pdfHeight - imgHeight) / 2; // Centré verticalement
+        const y = (pdfHeight - imgHeight) / 2;
 
         pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
         pdf.save(`Carte_${cardData.matricule}.pdf`);
 
     } catch (error) {
         console.error("Erreur PDF:", error);
-        alert("Erreur lors de la création du PDF. Vérifiez la console.");
+        alert("Erreur lors de la création du PDF.");
     } finally {
         setIsGenerating(false);
     }
   };
 
-  // --- STYLES INLINE (Template Caché pour le rendu PDF) ---
+  // --- STYLES INLINE (Pour le PDF - Réplique exacte du design Premium) ---
   const styles = {
     offScreenContainer: {
         position: 'fixed', left: '-5000px', top: 0,
@@ -72,7 +68,7 @@ const StudentCardPreview = ({ student, onClose }) => {
         overflow: 'hidden', position: 'relative', display: 'flex', flexDirection: 'column',
         boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
     },
-    // RECTO
+    // RECTO PREMIUM
     recto: { backgroundColor: '#2A2D3E', color: 'white' },
     headerRecto: {
         padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)',
@@ -82,7 +78,7 @@ const StudentCardPreview = ({ student, onClose }) => {
     photoBox: {
         width: '90px', height: '110px', backgroundColor: '#374151', borderRadius: '10px',
         border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        overflow: 'hidden', fontSize: '30px', fontWeight: 'bold', color: 'rgba(255,255,255,0.2)'
+        overflow: 'hidden'
     },
     footerRecto: {
         backgroundColor: '#F59E0B', padding: '10px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
@@ -94,7 +90,7 @@ const StudentCardPreview = ({ student, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       
-      {/* 1. MODAL VISIBLE (Tailwind - UI Utilisateur) */}
+      {/* 1. MODAL VISIBLE (Tailwind - Design Premium identique à la page) */}
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}
@@ -108,22 +104,26 @@ const StudentCardPreview = ({ student, onClose }) => {
 
         {/* Prévisualisation Écran */}
         <div className="flex-1 overflow-y-auto p-8 bg-slate-100 flex flex-col items-center justify-center gap-8">
+            
             <div className="flex flex-col md:flex-row gap-8 items-center justify-center">
                 
-                {/* RECTO VISUEL */}
+                {/* --- RECTO VISUEL (Tailwind) --- */}
                 <div className="relative w-[340px] h-[215px] rounded-xl overflow-hidden bg-[#2A2D3E] text-white shadow-xl flex flex-col shrink-0 select-none">
+                    {/* Fond stylisé */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#F59E0B] rounded-full -mr-16 -mt-16 opacity-10 blur-2xl"></div>
                     <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500 rounded-full -ml-12 -mb-12 opacity-10 blur-xl"></div>
 
+                    {/* Header */}
                     <div className="p-3 border-b border-white/10 flex justify-between items-center bg-white/5 backdrop-blur-sm z-10">
                         <div className="text-[10px] font-black tracking-tighter uppercase italic">SchoolHub Academy</div>
                         <div className="text-[8px] opacity-70">{cardData.year}</div>
                     </div>
 
+                    {/* Corps */}
                     <div className="flex-1 p-4 flex gap-4 z-10">
                         <div className="w-20 h-24 bg-slate-700 rounded-lg border border-white/20 flex items-center justify-center overflow-hidden shrink-0">
                             <div className="text-2xl font-bold text-white/20">
-                                {(cardData.firstName?.[0] || '')}{(cardData.lastName?.[0] || '')}
+                                {cardData.firstName?.[0]}{cardData.lastName?.[0]}
                             </div>
                         </div>
                         <div className="space-y-2 flex-1 min-w-0">
@@ -145,6 +145,7 @@ const StudentCardPreview = ({ student, onClose }) => {
                         </div>
                     </div>
 
+                    {/* Footer */}
                     <div className="p-2 bg-[#F59E0B] flex justify-between items-center px-4 z-10 mt-auto">
                         <div className="text-[10px] font-bold text-white">CARTE SCOLAIRE</div>
                         <div className="flex gap-1">
@@ -154,7 +155,7 @@ const StudentCardPreview = ({ student, onClose }) => {
                     </div>
                 </div>
 
-                {/* VERSO VISUEL */}
+                {/* --- VERSO VISUEL (Tailwind) --- */}
                 <div className="w-[340px] h-[215px] bg-white rounded-xl relative overflow-hidden shadow-lg border border-slate-200 p-4 flex flex-col">
                     <div className="flex justify-between items-start mb-2">
                         <div className="text-xs space-y-2">
@@ -168,12 +169,7 @@ const StudentCardPreview = ({ student, onClose }) => {
                             </div>
                         </div>
                         <div className="bg-white p-1 border border-slate-100 rounded">
-                             <img 
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${cardData.matricule}`} 
-                                alt="QR" 
-                                className="w-16 h-16" 
-                                crossOrigin="anonymous"
-                             />
+                             <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${cardData.matricule}`} alt="QR" className="w-16 h-16" />
                         </div>
                     </div>
                     <div className="mt-auto space-y-2">
@@ -209,15 +205,17 @@ const StudentCardPreview = ({ student, onClose }) => {
 
 
       {/* ======================================================= */}
-      {/* 2. TEMPLATE PDF CACHÉ (STYLE FIXE POUR HTML2CANVAS)     */}
+      {/* 2. TEMPLATE PDF (STYLE FIXE POUR HTML2CANVAS)           */}
       {/* ======================================================= */}
       <div ref={printTemplateRef} style={styles.offScreenContainer}>
         
         {/* RECTO PDF */}
         <div style={{...styles.card, ...styles.recto}}>
+            {/* Background elements (Cercles) */}
             <div style={{position: 'absolute', top: '-40px', right: '-40px', width: '150px', height: '150px', borderRadius: '50%', backgroundColor: '#F59E0B', opacity: 0.1}}></div>
             <div style={{position: 'absolute', bottom: '-40px', left: '-40px', width: '120px', height: '120px', borderRadius: '50%', backgroundColor: '#3B82F6', opacity: 0.1}}></div>
 
+            {/* Header */}
             <div style={styles.headerRecto}>
                 <div>
                     <div style={{fontStyle: 'italic', fontWeight: '900', fontSize: '14px', textTransform: 'uppercase'}}>SchoolHub Academy</div>
@@ -225,9 +223,12 @@ const StudentCardPreview = ({ student, onClose }) => {
                 <div style={{fontSize: '11px', opacity: 0.8}}>{cardData.year}</div>
             </div>
 
+            {/* Body */}
             <div style={styles.bodyRecto}>
                 <div style={styles.photoBox}>
-                    {(cardData.firstName?.[0] || '')}{(cardData.lastName?.[0] || '')}
+                    <span style={{fontSize: '30px', fontWeight: 'bold', color: 'rgba(255,255,255,0.2)'}}>
+                        {cardData.firstName?.[0]}{cardData.lastName?.[0]}
+                    </span>
                 </div>
                 <div style={{flex: 1}}>
                     <div style={{fontSize: '10px', color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 'bold', marginBottom: '2px'}}>Nom & Prénoms</div>
@@ -247,6 +248,7 @@ const StudentCardPreview = ({ student, onClose }) => {
                 </div>
             </div>
 
+            {/* Footer */}
             <div style={{marginTop: 'auto', ...styles.footerRecto}}>
                 <div style={{fontSize: '12px', fontWeight: 'bold', color: 'white'}}>CARTE SCOLAIRE</div>
                 <div style={{display: 'flex', gap: '5px'}}>

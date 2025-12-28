@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Send, Mail, Users, User, CheckCircle, AlertCircle, Search, School, Eye, Clock, Trash2, Smartphone } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Send, Mail, MessageSquare, Users, User, CheckCircle, AlertCircle, Search, School, Eye, Clock, Trash2, Smartphone } from 'lucide-react';
+import api from '@/api';
 
-// Modification : Ajout de la prop availableClasses pour la cohérence
-const SendNotification = ({ availableClasses = [] }) => {
+const SendNotification = ({ classes = [], students = [] }) => {
+    const [step, setStep] = useState(1);
     const [sending, setSending] = useState(false);
     const [success, setSuccess] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
@@ -19,30 +20,52 @@ const SendNotification = ({ availableClasses = [] }) => {
     });
 
     // Historique des notifications
-    const [sentNotifications, setSentNotifications] = useState([
-        {
-            id: 1,
-            date: '24 Déc 2025, 10:30',
-            target: '6ème A',
-            subject: 'Réunion des parents',
-            message: 'Bonjour chers parents, une réunion est prévue ce vendredi à 16h...',
-            channels: ['email', 'whatsapp'],
-            status: 'sent'
-        }
-    ]);
+    const [sentNotifications, setSentNotifications] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // LOGIQUE DE LISTE DES CLASSES :
-    // 1. Si AdminManager nous passe des classes réelles (availableClasses), on utilise leurs noms.
-    // 2. Sinon, on utilise une liste par défaut (Fallback) pour éviter un écran vide.
-    const defaultClasses = [
+    // List of classes and students for selection
+    const [availableClasses, setAvailableClasses] = useState([]);
+    const [availableStudents, setAvailableStudents] = useState([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setIsLoading(true);
+                const [histRes, classesRes, studentsRes] = await Promise.all([
+                    api.get('/admin/notifications/history'),
+                    api.get('/classes'),
+                    api.get('/admin/students')
+                ]);
+
+                // Format history for display
+                const history = histRes.data.map(n => ({
+                    id: n.id,
+                    date: new Date(n.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                    target: n.recipient ? (n.recipient.nom + ' ' + n.recipient.prenom) : 'Inconnu',
+                    subject: n.message.split(': ')[0] || 'Note',
+                    message: n.message.split(': ').slice(1).join(': ') || n.message,
+                    channels: ['email'],
+                    status: 'sent'
+                }));
+
+                setSentNotifications(history);
+                setAvailableClasses(classesRes.data);
+                setAvailableStudents(studentsRes.data.data || studentsRes.data);
+                setIsLoading(false);
+            } catch (error) {
+                console.error("Failed to fetch notification data", error);
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    const classesList = availableClasses.length > 0 ? availableClasses.map(c => c.nom) : [
         'Maternelle', 'CI', 'CP', 'CE1', 'CE2', 'CM1', 'CM2',
         '6ème', '5ème', '4ème', '3ème',
-        '2nde', '1ère', 'Terminale'
+        '2nde A', '2nde B', '2nde C', '2nde D', 'Terminale D'
     ];
-
-    const classOptions = availableClasses.length > 0 
-        ? availableClasses.map(c => c.name).sort() 
-        : defaultClasses;
 
     const templates = [
         { id: 'custom', label: 'Message Personnalisé', subject: '', message: '' },
@@ -73,12 +96,13 @@ const SendNotification = ({ availableClasses = [] }) => {
         }));
     };
 
-    const handleSend = () => {
+    const handleSend = async () => {
         if (!formData.message || (!formData.channels.email && !formData.channels.whatsapp)) return;
 
         setSending(true);
-        // Simulation d'envoi API
-        setTimeout(() => {
+        try {
+            await api.post('/admin/notifications/send', formData);
+
             const newNotif = {
                 id: Date.now(),
                 date: new Date().toLocaleString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
@@ -105,7 +129,11 @@ const SendNotification = ({ availableClasses = [] }) => {
                     channels: { email: true, whatsapp: false }
                 });
             }, 3000);
-        }, 1500);
+        } catch (error) {
+            console.error("Failed to send notification", error);
+            setSending(false);
+            alert("Erreur lors de l'envoi de la notification");
+        }
     };
 
     const deleteFromHistory = (id) => {
@@ -183,7 +211,7 @@ const SendNotification = ({ availableClasses = [] }) => {
                                     value={formData.targetId}
                                 >
                                     <option value="" className="text-slate-400">-- Choisir une classe --</option>
-                                    {classOptions.map(cls => <option key={cls} value={cls} className="text-slate-800">{cls}</option>)}
+                                    {classesList.map(cls => <option key={cls} value={cls} className="text-slate-800">{cls}</option>)}
                                 </select>
                             </div>
                         )}
@@ -196,29 +224,33 @@ const SendNotification = ({ availableClasses = [] }) => {
                                     <input
                                         type="text"
                                         placeholder="Commencez à taper le nom de l'élève..."
-                                        value={formData.targetId}
+                                        value={formData.targetId && !availableStudents.some(s => s.user_id === formData.targetId) ? formData.targetId : (availableStudents.find(s => s.user_id === formData.targetId)?.user?.nom + ' ' + availableStudents.find(s => s.user_id === formData.targetId)?.user?.prenom || '')}
                                         onChange={(e) => setFormData({ ...formData, targetId: e.target.value })}
                                         className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-primary/20 font-medium transition-all text-slate-800 placeholder:text-slate-400"
                                     />
                                 </div>
-                                {formData.targetId.length > 2 && (
+                                {formData.targetId && !availableStudents.find(s => s.user_id === formData.targetId) && (
                                     <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg p-2 flex flex-col gap-1 overflow-hidden animate-in fade-in duration-200">
-                                        <button
-                                            onClick={() => setFormData({ ...formData, targetId: 'KOUE Jean-Baptiste (6ème)' })}
-                                            className="p-2 hover:bg-slate-50 rounded-lg text-left text-sm font-medium flex justify-between items-center group text-slate-700 hover:text-slate-900"
-                                        >
-                                            <span>KOUE Jean-Baptiste <span className="text-slate-400 font-normal ml-2">6ème</span></span>
-                                            <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">Sélectionner</span>
-                                        </button>
-                                        <button
-                                            onClick={() => setFormData({ ...formData, targetId: 'KADI Aminata (Terminale D)' })}
-                                            className="p-2 hover:bg-slate-50 rounded-lg text-left text-sm font-medium flex justify-between items-center group text-slate-700 hover:text-slate-900"
-                                        >
-                                            <span>KADI Aminata <span className="text-slate-400 font-normal ml-2">Terminale D</span></span>
-                                            <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">Sélectionner</span>
-                                        </button>
+                                        {availableStudents
+                                            .filter(s => (s.user?.nom + " " + s.user?.prenom).toLowerCase().includes(formData.targetId.toLowerCase()))
+                                            .slice(0, 5)
+                                            .map(s => (
+                                                <button
+                                                    key={s.id}
+                                                    onClick={() => setFormData({ ...formData, targetId: s.user_id })}
+                                                    className="p-2 hover:bg-slate-50 rounded-lg text-left text-sm font-medium flex justify-between items-center group text-slate-700 hover:text-slate-900"
+                                                >
+                                                    <span>{s.user?.nom} {s.user?.prenom} <span className="text-slate-400 font-normal ml-2">{s.classe?.nom}</span></span>
+                                                    <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">Sélectionner</span>
+                                                </button>
+                                            ))
+                                        }
+                                        {availableStudents.filter(s => (s.user?.nom + " " + s.user?.prenom).toLowerCase().includes(formData.targetId.toLowerCase())).length === 0 && (
+                                            <div className="p-2 text-xs text-slate-400">Aucun élève trouvé</div>
+                                        )}
                                     </div>
                                 )}
+
                             </div>
                         )}
                     </div>
@@ -452,3 +484,4 @@ const SendNotification = ({ availableClasses = [] }) => {
 };
 
 export default SendNotification;
+

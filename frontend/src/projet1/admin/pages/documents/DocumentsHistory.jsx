@@ -1,18 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     FileText, Download, Eye, Search, Filter,
     Calendar, User, CheckCircle, Clock
 } from 'lucide-react';
+import api from '@/api';
 
 const DocumentsHistory = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [docType, setDocType] = useState('all');
+    const [documents, setDocuments] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const [documents] = useState([]);
+    useEffect(() => {
+        const fetchDocs = async () => {
+            try {
+                setIsLoading(true);
+                const response = await api.get('/admin/scolarite/documents');
+                setDocuments(response.data);
+                setIsLoading(false);
+            } catch (error) {
+                console.error("Failed to fetch documents history", error);
+                setIsLoading(false);
+            }
+        };
+        fetchDocs();
+    }, []);
 
     const filteredDocs = documents.filter(doc => {
-        const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            doc.student.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = (doc.name && doc.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (doc.student && doc.student.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchesType = docType === 'all' || doc.type === docType;
         return matchesSearch && matchesType;
     });
@@ -118,14 +134,18 @@ const DocumentsHistory = () => {
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <button
-                                                onClick={() => alert(`Ouverture de l'aperçu sécurisé pour le document : ${doc.name}`)}
+                                                onClick={() => alert(`Aperçu non disponible pour ce type de document. Veuillez le télécharger.`)}
                                                 className="p-2 text-slate-400 hover:text-brand-primary hover:bg-orange-50 rounded-lg transition-colors border border-transparent hover:border-orange-100"
                                                 title="Aperçu"
                                             >
                                                 <Eye size={18} />
                                             </button>
                                             <button
-                                                onClick={() => alert(`Le document "${doc.name}" est en cours de téléchargement...`)}
+                                                onClick={() => {
+                                                    // In a real app, this would link to the actual file URL
+                                                    // For now we simulate with a message or direct download link if possible
+                                                    alert(`Téléchargement de "${doc.name}"...`);
+                                                }}
                                                 className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-transparent hover:border-green-100"
                                                 title="Télécharger"
                                             >

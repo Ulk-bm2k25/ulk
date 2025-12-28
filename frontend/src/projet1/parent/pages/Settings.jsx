@@ -1,16 +1,22 @@
-import React, { useState } from 'react';
-import { User, Lock, Bell, Moon, Sun, Globe, LogOut, CheckCircle, Smartphone, Mail } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Lock, Bell, Moon, Sun, Globe, LogOut, CheckCircle, Smartphone, Mail, Loader2, GraduationCap } from 'lucide-react';
+import api from '@/api';
 import '../styles/theme.css';
 
 const Settings = ({ onLogout }) => {
     const [activeTab, setActiveTab] = useState('profile');
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
 
     const [profile, setProfile] = useState({
-        name: 'Prénom Nom',
-        email: 'votre.email@exemple.com',
-        phone: '+229 00 00 00 00',
-        occupation: 'Votre profession'
+        nom: '',
+        prenom: '',
+        email: '',
+        phone: '',
+        occupation: ''
     });
+    const [myChildren, setMyChildren] = useState([]);
+
 
     const [password, setPassword] = useState({
         current: '',
@@ -32,6 +38,34 @@ const Settings = ({ onLogout }) => {
         language: 'fr'
     });
 
+    useEffect(() => {
+        const fetchProfile = async () => {
+            setIsLoading(true);
+            try {
+                const [profRes, childRes] = await Promise.all([
+                    api.get('/parent/profile'),
+                    api.get('/parent/children')
+                ]);
+
+                const { user, parent } = profRes.data;
+                setProfile({
+                    nom: user.nom || '',
+                    prenom: user.prenom || '',
+                    email: user.email || '',
+                    phone: parent?.telephone || '',
+                    occupation: parent?.profession || ''
+                });
+
+                setMyChildren(childRes.data.children || []);
+            } catch (err) {
+                console.error("Failed to fetch settings data", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchProfile();
+    }, []);
+
     const handleProfileChange = (e) => {
         setProfile({ ...profile, [e.target.name]: e.target.value });
     };
@@ -40,9 +74,36 @@ const Settings = ({ onLogout }) => {
         setNotifications({ ...notifications, [key]: !notifications[key] });
     };
 
-    const handleSave = () => {
-        alert('Paramètres sauvegardés avec succès !');
-        // Ici, on appellerait l'API pour sauvegarder
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            if (activeTab === 'profile') {
+                await api.post('/parent/profile/update', {
+                    nom: profile.nom,
+                    prenom: profile.prenom,
+                    email: profile.email,
+                    telephone: profile.phone,
+                    profession: profile.occupation
+                });
+            } else if (activeTab === 'security') {
+                if (password.new !== password.confirm) {
+                    alert("Les mots de passe ne correspondent pas.");
+                    return;
+                }
+                await api.post('/parent/profile/password', {
+                    current_password: password.current,
+                    new_password: password.new,
+                    new_password_confirmation: password.confirm
+                });
+                setPassword({ current: '', new: '', confirm: '' });
+            }
+            alert('Paramètres sauvegardés avec succès !');
+        } catch (err) {
+            console.error("Save failed", err);
+            alert(err.response?.data?.message || 'Erreur lors de la sauvegarde.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -57,6 +118,7 @@ const Settings = ({ onLogout }) => {
                 <div className="w-full md:w-64 flex flex-col gap-2">
                     {[
                         { id: 'profile', label: 'Profil Personnel', icon: User },
+                        { id: 'children', label: 'Gestion des Enfants', icon: GraduationCap },
                         { id: 'security', label: 'Sécurité', icon: Lock },
                         { id: 'notifications', label: 'Notifications', icon: Bell },
                         { id: 'preferences', label: 'Préférences', icon: Globe },
@@ -94,7 +156,7 @@ const Settings = ({ onLogout }) => {
                             <h2 className="text-2xl font-bold mb-6">Informations Personnelles</h2>
                             <div className="flex items-center gap-6 mb-8">
                                 <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center text-4xl font-bold border-4 border-[#eb8e3a]">
-                                    PN
+                                    {(profile.prenom || '')[0]}{(profile.nom || '')[0]}
                                 </div>
                                 <div>
                                     <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors">
@@ -105,8 +167,12 @@ const Settings = ({ onLogout }) => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm text-white/60">Nom complet</label>
-                                    <input name="name" type="text" className="parent-input" value={profile.name} onChange={handleProfileChange} />
+                                    <label className="text-sm text-white/60">Nom</label>
+                                    <input name="nom" type="text" className="parent-input" value={profile.nom} onChange={handleProfileChange} />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm text-white/60">Prénom</label>
+                                    <input name="prenom" type="text" className="parent-input" value={profile.prenom} onChange={handleProfileChange} />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm text-white/60">Email</label>
@@ -124,6 +190,72 @@ const Settings = ({ onLogout }) => {
                         </div>
                     )}
 
+                    {/* --- GESTION DES ENFANTS --- */}
+                    {activeTab === 'children' && (
+                        <div className="space-y-6">
+                            <h2 className="text-2xl font-bold mb-6">Gestion des Enfants</h2>
+                            <p className="text-white/40 mb-8">Uploadez les photos d'identité pour les cartes scolaires de vos enfants.</p>
+
+                            <div className="space-y-4">
+                                {myChildren.map((child) => (
+                                    <div key={child.id} className="p-6 bg-white/5 rounded-2xl border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-16 h-16 rounded-xl bg-white/10 overflow-hidden flex items-center justify-center border-2 border-white/5">
+                                                {child.photo ? (
+                                                    <img src={`http://localhost:8000/${child.photo}`} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span className="text-white/20 font-bold">{child.user?.prenom?.[0]}</span>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold">{child.user?.prenom} {child.user?.nom}</div>
+                                                <div className="text-xs text-white/40">{child.matricule || 'Sans matricule'}</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="file"
+                                                id={`photo-${child.id}`}
+                                                className="hidden"
+                                                accept="image/*"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+
+                                                    const formData = new FormData();
+                                                    formData.append('photo', file);
+
+                                                    try {
+                                                        const res = await api.post(`/parent/children/${child.id}/update-photo`, formData, {
+                                                            headers: { 'Content-Type': 'multipart/form-data' }
+                                                        });
+                                                        alert("Photo mise à jour !");
+                                                        setMyChildren(prev => prev.map(c => c.id === child.id ? { ...c, photo: res.data.photo_url.replace('http://localhost:8000/', '') } : c));
+                                                    } catch (err) {
+                                                        console.error("Upload failed", err);
+                                                        alert("Erreur lors de l'upload.");
+                                                    }
+                                                }}
+                                            />
+                                            <label
+                                                htmlFor={`photo-${child.id}`}
+                                                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold transition-all cursor-pointer border border-white/10"
+                                            >
+                                                Mettre à jour la photo
+                                            </label>
+                                        </div>
+                                    </div>
+                                ))}
+                                {myChildren.length === 0 && (
+                                    <div className="text-center py-12 text-white/20 italic">
+                                        Aucun enfant trouvé.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* --- SÉCURITÉ --- */}
                     {activeTab === 'security' && (
                         <div className="space-y-6">
@@ -131,15 +263,33 @@ const Settings = ({ onLogout }) => {
                             <div className="max-w-md space-y-4">
                                 <div className="space-y-2">
                                     <label className="text-sm text-white/60">Mot de passe actuel</label>
-                                    <input type="password" className="parent-input" placeholder="••••••••" />
+                                    <input
+                                        type="password"
+                                        className="parent-input"
+                                        placeholder="••••••••"
+                                        value={password.current}
+                                        onChange={(e) => setPassword({ ...password, current: e.target.value })}
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm text-white/60">Nouveau mot de passe</label>
-                                    <input type="password" className="parent-input" placeholder="••••••••" />
+                                    <input
+                                        type="password"
+                                        className="parent-input"
+                                        placeholder="••••••••"
+                                        value={password.new}
+                                        onChange={(e) => setPassword({ ...password, new: e.target.value })}
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm text-white/60">Confirmer le nouveau mot de passe</label>
-                                    <input type="password" className="parent-input" placeholder="••••••••" />
+                                    <input
+                                        type="password"
+                                        className="parent-input"
+                                        placeholder="••••••••"
+                                        value={password.confirm}
+                                        onChange={(e) => setPassword({ ...password, confirm: e.target.value })}
+                                    />
                                 </div>
                             </div>
                             <div className="pt-4 border-t border-white/5">
@@ -283,10 +433,11 @@ const Settings = ({ onLogout }) => {
                         </button>
                         <button
                             onClick={handleSave}
-                            className="px-6 py-2.5 rounded-xl bg-[#eb8e3a] hover:bg-[#d47d2f] text-white font-bold shadow-lg shadow-orange-900/20 transition-all active:scale-95 flex items-center gap-2"
+                            disabled={isSaving}
+                            className={`px-6 py-2.5 rounded-xl bg-[#eb8e3a] hover:bg-[#d47d2f] text-white font-bold shadow-lg shadow-orange-900/20 transition-all active:scale-95 flex items-center gap-2 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            <CheckCircle size={18} />
-                            Enregistrer
+                            {isSaving ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />}
+                            {isSaving ? 'Enregistrement...' : 'Enregistrer'}
                         </button>
                     </div>
 

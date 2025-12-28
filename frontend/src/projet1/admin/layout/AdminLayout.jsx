@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, FileText, Users, School, FileCheck, Bell, Settings, LogOut, Menu, X, ChevronRight, IdCard } from 'lucide-react';
+import { Home, FileText, Users, School, FileCheck, Bell, Settings, LogOut, Menu, X, Search, ChevronRight, IdCard } from 'lucide-react';
 
 const AdminLayout = ({ children, currentPage, onNavigate, onLogout }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -12,7 +12,7 @@ const AdminLayout = ({ children, currentPage, onNavigate, onLogout }) => {
     { id: 'classes', label: 'Classes', icon: School, available: true },
     { id: 'documents', label: 'Documents', icon: FileCheck, available: true },
     { id: 'cartes', label: 'Cartes Scolaires', icon: IdCard, available: true },
-    // "Notifications" retiré d'ici pour être mis dans le header
+    { id: 'notifications', label: 'Notifications', icon: Bell, available: true },
     { id: 'parametres', label: 'Paramètres', icon: Settings, available: true }
   ];
 
@@ -41,14 +41,6 @@ const AdminLayout = ({ children, currentPage, onNavigate, onLogout }) => {
             )}
           </button>
         ))}
-
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-slate-600 hover:text-[#f8b179] transition-colors"
-        >
-          <Home size={20} />
-          <span className="text-sm">Portails</span>
-        </button>
       </nav>
 
       {/* Logout */}
@@ -91,7 +83,7 @@ const AdminLayout = ({ children, currentPage, onNavigate, onLogout }) => {
       <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 bg-brand-bg ${isSidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
 
         {/* Header (Top bar) */}
-        <header className="bg-white sticky top-0 z-20 px-6 py-4 flex items-center justify-between shadow-sm/50">
+        <header className="bg-white sticky top-0 z-20 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden text-slate-600">
               <Menu size={24} />
@@ -106,26 +98,19 @@ const AdminLayout = ({ children, currentPage, onNavigate, onLogout }) => {
               <ChevronRight size={14} />
               <span>Admin</span>
               <ChevronRight size={14} />
-              <span className="font-medium text-slate-800 capitalize">{currentPage}</span>
+              <span className="font-medium text-slate-800">{currentPage}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-6">
-            
-            {/* Barre de recherche supprimée ici comme demandé */}
+            <div className="relative hidden md:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input type="text" placeholder="Rechercher..." className="pl-10 pr-4 py-2 bg-slate-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-64 text-slate-800 placeholder:text-slate-400" />
+            </div>
 
-            {/* Bouton Notifications Activé */}
-            <button 
-                onClick={() => onNavigate('notifications')}
-                className={`relative p-2 rounded-full transition-all duration-200 ${
-                    currentPage === 'notifications' 
-                    ? 'text-brand-primary bg-orange-50 ring-2 ring-orange-100' 
-                    : 'text-slate-500 hover:text-brand-dark hover:bg-slate-100'
-                }`}
-                title="Centre de notifications"
-            >
-              <Bell size={20} fill={currentPage === 'notifications' ? "currentColor" : "none"} />
-              <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+            <button className="relative text-slate-500 hover:text-brand-dark">
+              <Bell size={20} />
+              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
 
             <div className="flex items-center gap-3 pl-6 border-l border-slate-200">
@@ -133,7 +118,7 @@ const AdminLayout = ({ children, currentPage, onNavigate, onLogout }) => {
                 <div className="text-sm font-bold text-slate-800">Admin Principal</div>
                 <div className="text-xs text-slate-500">Direction</div>
               </div>
-              <div className="w-10 h-10 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold shadow-md shadow-orange-500/20 cursor-pointer hover:opacity-90 transition-opacity">
+              <div className="w-10 h-10 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold shadow-md shadow-orange-500/20">
                 AD
               </div>
             </div>

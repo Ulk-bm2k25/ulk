@@ -1,25 +1,32 @@
-import React, { useState } from 'react';
-import { School, Calendar, Bell, Save, Shield, Mail, Database, Clock, Users, FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { School, Calendar, Bell, Save, Shield, Mail, Database, Clock, Users, FileText, User, Lock, UserPlus, Eye, EyeOff } from 'lucide-react';
+import api from '@/api';
 
 const SystemSettings = () => {
-    const [activeTab, setActiveTab] = useState('general');
+    const [activeTab, setActiveTab] = useState('profile');
+    const [isLoadingData, setIsLoadingData] = useState(true);
+    const [profile, setProfile] = useState({ nom: '', prenom: '', email: '', username: '' });
+    const [passwordForm, setPasswordForm] = useState({ current_password: '', new_password: '', new_password_confirmation: '' });
+    const [showPassword, setShowPassword] = useState({ current: false, new: false, confirm: false });
+    const [newAdmin, setNewAdmin] = useState({ nom: '', prenom: '', email: '', username: '', password: '', password_confirmation: '', role: 'ADMIN' });
+    const [admins, setAdmins] = useState([]);
 
     const [settings, setSettings] = useState({
         // Général
-        schoolName: 'Nom de l\'établissement',
-        address: 'Adresse de l\'établissement',
-        phone: '+229 00 00 00 00',
-        email: 'administration@ecole.com',
+        schoolName: '',
+        address: '',
+        phone: '',
+        email: '',
         academicYear: '2025-2026',
 
         // Inscriptions
-        registrationOpen: true,
+        registrationOpen: false,
         allowLateRegistration: false,
         autoValidation: false,
 
         // Notifications
-        notifyParentsOnAbsence: true,
-        notifyParentsOnGrade: true,
+        notifyParentsOnAbsence: false,
+        notifyParentsOnGrade: false,
         reminderDaysBeforePayment: 7,
 
         // Système
@@ -27,6 +34,46 @@ const SystemSettings = () => {
         backupFrequency: 'daily',
         dataRetentionYears: 5
     });
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setIsLoadingData(true);
+                
+                // Fetch profile
+                const profileRes = await api.get('/admin/settings/profile');
+                if (profileRes.data.user) {
+                    setProfile(profileRes.data.user);
+                }
+                
+                // Fetch admins
+                const adminsRes = await api.get('/admin/settings/admins');
+                if (adminsRes.data.admins) {
+                    setAdmins(adminsRes.data.admins);
+                }
+                
+                // Fetch settings
+                const settingsRes = await api.get('/admin/settings');
+                if (settingsRes.data && Object.keys(settingsRes.data).length > 0) {
+                    const merged = { ...settings };
+                    Object.keys(settingsRes.data).forEach(key => {
+                        let value = settingsRes.data[key];
+                        if (value === 'true') value = true;
+                        if (value === 'false') value = false;
+                        merged[key] = value;
+                    });
+                    setSettings(merged);
+                }
+                setIsLoadingData(false);
+            } catch (error) {
+                console.error("Failed to fetch data", error);
+                setIsLoadingData(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
 
     const handleToggle = (key) => {
         setSettings(prev => ({ ...prev, [key]: !prev[key] }));
@@ -37,13 +84,15 @@ const SystemSettings = () => {
         setSettings(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const btn = document.getElementById('save-btn');
         const originalText = btn.innerHTML;
         btn.innerHTML = `<span class="flex items-center gap-2"><div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Sauvegarde...</span>`;
         btn.disabled = true;
 
-        setTimeout(() => {
+        try {
+            await api.post('/admin/settings', { settings });
+
             btn.innerHTML = `<span class="flex items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg> Sauvegardé !</span>`;
             btn.classList.add('bg-green-600', 'border-green-600');
             btn.classList.remove('bg-brand-primary', 'border-brand-primary');
@@ -52,10 +101,20 @@ const SystemSettings = () => {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
                 btn.classList.remove('bg-green-600', 'border-green-600');
-                // Re-add original classes if they were removed or just let them be if they are default
+                btn.classList.add('bg-brand-primary', 'border-brand-primary');
             }, 2000);
-        }, 800);
+        } catch (error) {
+            console.error("Failed to save settings", error);
+            btn.innerHTML = `<span class="flex items-center gap-2">Erreur !</span>`;
+            btn.classList.add('bg-red-600', 'border-red-600');
+            btn.disabled = false;
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('bg-red-600', 'border-red-600');
+            }, 3000);
+        }
     };
+
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -78,6 +137,8 @@ const SystemSettings = () => {
                 {/* Menu Latéral */}
                 <div className="lg:col-span-1 space-y-2">
                     {[
+                        { id: 'profile', label: 'Mon Profil', icon: User },
+                        { id: 'admins', label: 'Administrateurs', icon: UserPlus },
                         { id: 'general', label: 'Établissement', icon: School },
                         { id: 'inscriptions', label: 'Inscriptions', icon: Users },
                         { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -100,6 +161,283 @@ const SystemSettings = () => {
                 {/* Contenu Principal */}
                 <div className="lg:col-span-3">
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 min-h-[500px]">
+
+                        {/* --- PROFIL --- */}
+                        {activeTab === 'profile' && (
+                            <div className="space-y-8 animate-in fade-in duration-300">
+                                <h2 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-4 mb-6">Mes Informations Personnelles</h2>
+
+                                {/* Données Personnelles */}
+                                <div className="space-y-6">
+                                    <h3 className="text-md font-semibold text-slate-700">Données Personnelles</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-slate-700">Nom</label>
+                                            <input
+                                                type="text"
+                                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20 text-slate-800"
+                                                value={profile.nom}
+                                                onChange={(e) => setProfile({...profile, nom: e.target.value})}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-slate-700">Prénom</label>
+                                            <input
+                                                type="text"
+                                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20 text-slate-800"
+                                                value={profile.prenom}
+                                                onChange={(e) => setProfile({...profile, prenom: e.target.value})}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-slate-700">Email</label>
+                                            <input
+                                                type="email"
+                                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20 text-slate-800"
+                                                value={profile.email}
+                                                onChange={(e) => setProfile({...profile, email: e.target.value})}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-slate-700">Nom d'utilisateur</label>
+                                            <input
+                                                type="text"
+                                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20 text-slate-800"
+                                                value={profile.username}
+                                                onChange={(e) => setProfile({...profile, username: e.target.value})}
+                                            />
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await api.put('/admin/settings/profile', profile);
+                                                alert('Profil mis à jour avec succès');
+                                            } catch (error) {
+                                                alert(error.response?.data?.message || 'Erreur lors de la mise à jour');
+                                            }
+                                        }}
+                                        className="px-6 py-2 bg-brand-primary text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
+                                    >
+                                        Enregistrer les modifications
+                                    </button>
+                                </div>
+
+                                {/* Changer Mot de Passe */}
+                                <div className="space-y-6 pt-6 border-t border-slate-200">
+                                    <h3 className="text-md font-semibold text-slate-700">Changer le mot de passe</h3>
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-slate-700">Mot de passe actuel</label>
+                                            <div className="relative">
+                                                <input
+                                                    type={showPassword.current ? "text" : "password"}
+                                                    className="w-full px-4 py-2 pr-10 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20 text-slate-800"
+                                                    value={passwordForm.current_password}
+                                                    onChange={(e) => setPasswordForm({...passwordForm, current_password: e.target.value})}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword({...showPassword, current: !showPassword.current})}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                                >
+                                                    {showPassword.current ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-slate-700">Nouveau mot de passe</label>
+                                            <div className="relative">
+                                                <input
+                                                    type={showPassword.new ? "text" : "password"}
+                                                    className="w-full px-4 py-2 pr-10 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20 text-slate-800"
+                                                    value={passwordForm.new_password}
+                                                    onChange={(e) => setPasswordForm({...passwordForm, new_password: e.target.value})}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword({...showPassword, new: !showPassword.new})}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                                >
+                                                    {showPassword.new ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-slate-700">Confirmer le nouveau mot de passe</label>
+                                            <div className="relative">
+                                                <input
+                                                    type={showPassword.confirm ? "text" : "password"}
+                                                    className="w-full px-4 py-2 pr-10 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20 text-slate-800"
+                                                    value={passwordForm.new_password_confirmation}
+                                                    onChange={(e) => setPasswordForm({...passwordForm, new_password_confirmation: e.target.value})}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword({...showPassword, confirm: !showPassword.confirm})}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                                >
+                                                    {showPassword.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    await api.post('/admin/settings/password', passwordForm);
+                                                    alert('Mot de passe changé avec succès');
+                                                    setPasswordForm({ current_password: '', new_password: '', new_password_confirmation: '' });
+                                                } catch (error) {
+                                                    alert(error.response?.data?.message || 'Erreur lors du changement de mot de passe');
+                                                }
+                                            }}
+                                            className="px-6 py-2 bg-brand-primary text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
+                                        >
+                                            Changer le mot de passe
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* --- ADMINISTRATEURS --- */}
+                        {activeTab === 'admins' && (
+                            <div className="space-y-8 animate-in fade-in duration-300">
+                                <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
+                                    <h2 className="text-lg font-bold text-slate-800">Gestion des Administrateurs</h2>
+                                    <button
+                                        onClick={() => {
+                                            const modal = document.getElementById('create-admin-modal');
+                                            if (modal) modal.showModal();
+                                        }}
+                                        className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
+                                    >
+                                        <UserPlus size={18} />
+                                        Créer un administrateur
+                                    </button>
+                                </div>
+
+                                {/* Liste des admins */}
+                                <div className="space-y-3">
+                                    {admins.map((admin) => (
+                                        <div key={admin.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                                            <div>
+                                                <div className="font-semibold text-slate-800">{admin.prenom} {admin.nom}</div>
+                                                <div className="text-sm text-slate-500">{admin.email} • {admin.username}</div>
+                                                <div className="text-xs text-slate-400 mt-1">Rôle: {admin.role}</div>
+                                            </div>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                                admin.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                                            }`}>
+                                                {admin.role}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Modal Créer Admin */}
+                                <dialog id="create-admin-modal" className="rounded-xl border border-slate-200 shadow-xl p-6 w-full max-w-md">
+                                    <form method="dialog" className="space-y-4">
+                                        <h3 className="text-lg font-bold text-slate-800 mb-4">Créer un nouvel administrateur</h3>
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="text-sm font-medium text-slate-700">Nom</label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                                                    value={newAdmin.nom}
+                                                    onChange={(e) => setNewAdmin({...newAdmin, nom: e.target.value})}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium text-slate-700">Prénom</label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                                                    value={newAdmin.prenom}
+                                                    onChange={(e) => setNewAdmin({...newAdmin, prenom: e.target.value})}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium text-slate-700">Email</label>
+                                                <input
+                                                    type="email"
+                                                    className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                                                    value={newAdmin.email}
+                                                    onChange={(e) => setNewAdmin({...newAdmin, email: e.target.value})}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium text-slate-700">Nom d'utilisateur</label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                                                    value={newAdmin.username}
+                                                    onChange={(e) => setNewAdmin({...newAdmin, username: e.target.value})}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium text-slate-700">Rôle</label>
+                                                <select
+                                                    className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                                                    value={newAdmin.role}
+                                                    onChange={(e) => setNewAdmin({...newAdmin, role: e.target.value})}
+                                                >
+                                                    <option value="ADMIN">Administrateur</option>
+                                                    <option value="RESPONSABLE">Responsable</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium text-slate-700">Mot de passe</label>
+                                                <input
+                                                    type="password"
+                                                    className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                                                    value={newAdmin.password}
+                                                    onChange={(e) => setNewAdmin({...newAdmin, password: e.target.value})}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium text-slate-700">Confirmer le mot de passe</label>
+                                                <input
+                                                    type="password"
+                                                    className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                                                    value={newAdmin.password_confirmation}
+                                                    onChange={(e) => setNewAdmin({...newAdmin, password_confirmation: e.target.value})}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-3 mt-6">
+                                            <button
+                                                type="button"
+                                                onClick={async () => {
+                                                    try {
+                                                        await api.post('/admin/settings/create-admin', newAdmin);
+                                                        alert('Administrateur créé avec succès');
+                                                        setNewAdmin({ nom: '', prenom: '', email: '', username: '', password: '', password_confirmation: '', role: 'ADMIN' });
+                                                        document.getElementById('create-admin-modal').close();
+                                                        // Refresh admins list
+                                                        const res = await api.get('/admin/settings/admins');
+                                                        setAdmins(res.data.admins);
+                                                    } catch (error) {
+                                                        alert(error.response?.data?.message || 'Erreur lors de la création');
+                                                    }
+                                                }}
+                                                className="flex-1 px-4 py-2 bg-brand-primary text-white rounded-lg font-medium hover:bg-orange-600"
+                                            >
+                                                Créer
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => document.getElementById('create-admin-modal').close()}
+                                                className="flex-1 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-300"
+                                            >
+                                                Annuler
+                                            </button>
+                                        </div>
+                                    </form>
+                                </dialog>
+                            </div>
+                        )}
 
                         {/* --- GÉNÉRAL --- */}
                         {activeTab === 'general' && (

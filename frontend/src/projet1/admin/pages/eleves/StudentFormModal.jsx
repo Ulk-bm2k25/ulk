@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, User, MapPin, Phone, Calendar, School, Mail } from 'lucide-react';
 
+// Ajoutez `availableClasses` comme prop
 const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, availableClasses = [] }) => {
-  
-  // 1. Structure initiale (Dynamique selon les classes disponibles)
+  // Structure initiale vide (mise à jour pour utiliser availableClasses)
   const emptyForm = {
     firstName: '',
     lastName: '',
     gender: 'M',
     dob: '',
     pob: '',
-    // Si des classes existent, on prend la première par défaut, sinon vide
-    class: availableClasses.length > 0 ? availableClasses[0].name : '', 
+    class: availableClasses.length > 0 ? availableClasses[0].nom : '', // Première classe disponible par défaut
     matricule: '',
     parentName: '',
     parentPhone: '',
@@ -21,18 +20,18 @@ const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, avail
 
   const [formData, setFormData] = useState(emptyForm);
 
-  // 2. Remplissage si mode Édition ou Réinitialisation
+  // Remplissage si mode Édition ou Réinitialisation à l'ouverture
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
-        // Mode Édition
+        // Adaptez les données reçues au format du formulaire
         setFormData({
           firstName: initialData.firstName || '',
           lastName: initialData.lastName || '',
           gender: initialData.gender || 'M',
           dob: initialData.birthDate || '',
           pob: initialData.pob || '',
-          class: initialData.class || (availableClasses.length > 0 ? availableClasses[0].name : ''),
+          class: initialData.class || (availableClasses.length > 0 ? availableClasses[0].nom : ''),
           matricule: initialData.id || '',
           parentName: typeof initialData.parent === 'object' ? initialData.parent.name : initialData.parent || '',
           parentPhone: typeof initialData.parent === 'object' ? initialData.parent.phone : initialData.phone || '',
@@ -40,11 +39,7 @@ const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, avail
           address: initialData.address || ''
         });
       } else {
-        // Mode Création (Reset)
-        setFormData({
-            ...emptyForm,
-            class: availableClasses.length > 0 ? availableClasses[0].name : ''
-        });
+        setFormData(emptyForm); // Utilise emptyForm qui prend en compte availableClasses
       }
     }
   }, [initialData, isOpen, availableClasses]); // Ajout de availableClasses aux dépendances
@@ -56,25 +51,32 @@ const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, avail
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Trouver la classe_id correspondante
+    const selectedClassObj = availableClasses.find(c => c.nom === formData.class);
     
-    // Construction de l'objet élève
     const studentPayload = {
-      id: formData.matricule || `MAT-${Math.floor(Math.random() * 10000)}`,
+      id: formData.matricule || initialData?.id,
       firstName: formData.firstName,
       lastName: formData.lastName,
       gender: formData.gender,
       class: formData.class,
+      classe_id: selectedClassObj?.id || null,
       birthDate: formData.dob,
       pob: formData.pob,
-      parent: formData.parentName, 
+      address: formData.address,
+      parent: formData.parentName,
       phone: formData.parentPhone,
       email: formData.parentEmail,
-      address: formData.address,
       status: 'active',
-      // Déduction simple du niveau pour l'affichage (optionnel)
-      level: formData.class.startsWith('6') || formData.class.startsWith('5') || formData.class.startsWith('4') || formData.class.startsWith('3') ? 'Collège' : 'Lycée'
+      // Données pour le backend
+      nom: formData.lastName,
+      prenom: formData.firstName,
+      sexe: formData.gender,
+      date_naissance: formData.dob,
+      lieu_naissance: formData.pob,
+      adresse: formData.address,
     };
-    
+
     onSubmit(studentPayload);
     onClose();
   };
@@ -84,8 +86,7 @@ const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, avail
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        
-        {/* Header */}
+
         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
           <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
             <User className="text-brand-primary" size={20} />
@@ -96,14 +97,12 @@ const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, avail
           </button>
         </div>
 
-        {/* Formulaire Scrollable */}
         <div className="overflow-y-auto p-6">
           <form id="student-form" onSubmit={handleSubmit} className="space-y-6">
-            
-            {/* Section 1: L'Élève */}
+
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1">Informations de l'élève</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-sm font-semibold text-slate-700">Nom</label>
@@ -113,7 +112,7 @@ const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, avail
                   <label className="text-sm font-semibold text-slate-700">Prénoms</label>
                   <input required name="firstName" value={formData.firstName} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary/20 outline-none" placeholder="Prénoms complets" />
                 </div>
-                
+
                 <div className="space-y-1">
                   <label className="text-sm font-semibold text-slate-700">Sexe</label>
                   <select name="gender" value={formData.gender} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary/20 outline-none bg-white">
@@ -125,26 +124,12 @@ const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, avail
                 <div className="space-y-1">
                   <label className="text-sm font-semibold text-slate-700">Classe d'affectation</label>
                   <div className="relative">
-                     <School size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
-                     
-                     {/* 3. LISTE DÉROULANTE DYNAMIQUE */}
-                     <select 
-                        name="class" 
-                        value={formData.class} 
-                        onChange={handleChange} 
-                        className="w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary/20 outline-none bg-white font-medium"
-                     >
-                        <option value="">-- Choisir une classe --</option>
-                        {availableClasses && availableClasses.length > 0 ? (
-                            availableClasses.map(cls => (
-                                <option key={cls.id} value={cls.name}>
-                                    {cls.name}
-                                </option>
-                            ))
-                        ) : (
-                            <option disabled>Aucune classe disponible</option>
-                        )}
-                     </select>
+                    <School size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <select name="class" value={formData.class} onChange={handleChange} className="w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary/20 outline-none bg-white font-medium">
+                      {availableClasses.map(cls => ( // Utilisation de availableClasses ici
+                        <option key={cls.id} value={cls.nom}>{cls.nom}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -159,10 +144,9 @@ const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, avail
               </div>
             </div>
 
-            {/* Section 2: Parents / Contact */}
             <div className="space-y-4 pt-2">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1">Responsable Légal</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1 md:col-span-2">
                   <label className="text-sm font-semibold text-slate-700">Nom complet du tuteur</label>
@@ -172,7 +156,7 @@ const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, avail
                 <div className="space-y-1">
                   <label className="text-sm font-semibold text-slate-700">Téléphone</label>
                   <div className="relative">
-                    <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                    <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input required name="parentPhone" value={formData.parentPhone} onChange={handleChange} className="w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary/20 outline-none" placeholder="+229 ..." />
                   </div>
                 </div>
@@ -180,15 +164,15 @@ const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, avail
                 <div className="space-y-1">
                   <label className="text-sm font-semibold text-slate-700">Email (Optionnel)</label>
                   <div className="relative">
-                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input type="email" name="parentEmail" value={formData.parentEmail} onChange={handleChange} className="w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary/20 outline-none" placeholder="parent@gmail.com" />
                   </div>
                 </div>
 
                 <div className="space-y-1 md:col-span-2">
-                   <label className="text-sm font-semibold text-slate-700">Adresse de résidence</label>
-                   <div className="relative">
-                    <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                  <label className="text-sm font-semibold text-slate-700">Adresse de résidence</label>
+                  <div className="relative">
+                    <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input name="address" value={formData.address} onChange={handleChange} className="w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary/20 outline-none" placeholder="Quartier, Maison..." />
                   </div>
                 </div>
@@ -198,23 +182,22 @@ const StudentFormModal = ({ isOpen, onClose, onSubmit, initialData = null, avail
           </form>
         </div>
 
-        {/* Footer Actions */}
         <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-            <button 
-                type="button" 
-                onClick={onClose}
-                className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-medium rounded-lg hover:bg-slate-50 transition-colors"
-            >
-                Annuler
-            </button>
-            <button 
-                type="submit" 
-                form="student-form"
-                className="px-5 py-2.5 bg-brand-primary text-white font-bold rounded-lg hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20 flex items-center gap-2"
-            >
-                <Save size={18} />
-                {initialData ? 'Mettre à jour' : 'Enregistrer'}
-            </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-medium rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            form="student-form"
+            className="px-5 py-2.5 bg-brand-primary text-white font-bold rounded-lg hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20 flex items-center gap-2"
+          >
+            <Save size={18} />
+            {initialData ? 'Mettre à jour' : 'Enregistrer'}
+          </button>
         </div>
 
       </div>
