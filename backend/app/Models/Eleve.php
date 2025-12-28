@@ -67,4 +67,12 @@ class Eleve extends Model
     {
         return $this->hasMany(Inscription::class);
     }
+
+    /**
+     * Relation: Un élève a plusieurs documents
+     */
+    public function documents()
+    {
+        return $this->hasMany(DocumentEleve::class, 'eleve_id');
+    }
 }

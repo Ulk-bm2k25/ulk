@@ -404,5 +404,71 @@ class NotificationController extends Controller
             return response($image, 200)->header('Content-Type', 'image/gif');
         }
     }
+
+    /**
+     * Envoyer une notification à tous les parents d'une classe
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function sendToClass(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'classe_id' => 'required|exists:classes,id',
+                'subject' => 'required|string',
+                'body' => 'required|string',
+                'type' => 'nullable|string|in:payment_reminder,urgent_info,general',
+            ]);
+
+            $classe = \App\Models\Classe::with('eleves.tuteurs.user')->findOrFail($request->classe_id);
+            
+            $notifications = [];
+            $parentsNotified = [];
+
+            foreach ($classe->eleves as $eleve) {
+                foreach ($eleve->tuteurs as $tuteur) {
+                    if ($tuteur->user && !in_array($tuteur->user->id, $parentsNotified)) {
+                        $parentsNotified[] = $tuteur->user->id;
+
+                        $notification = $this->notificationService->sendGeneralNotification(
+                            $tuteur->user,
+                            $request->subject,
+                            $request->body,
+                            [
+                                'classe_id' => $classe->id,
+                                'classe_nom' => $classe->nom,
+                                'type' => $request->type ?? 'general',
+                            ],
+                            $request->user()
+                        );
+
+                        $notifications[] = $notification;
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => count($notifications) . ' notification(s) envoyée(s) aux parents de la classe',
+                'data' => [
+                    'notifications_count' => count($notifications),
+                    'parents_notified' => count($parentsNotified),
+                ],
+            ], 201);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de l\'envoi de notifications à une classe', [
+                'error' => $e->getMessage(),
+                'classe_id' => $request->classe_id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'envoi des notifications',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
 

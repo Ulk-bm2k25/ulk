@@ -56,33 +56,35 @@ class DatabaseSeeder extends Seeder
             'capacity_max' => 30,
         ]);
 
-        // 4. Utilisateurs : ADMIN
-        User::create([
+        // 4. Utilisateurs : ADMIN (Compte Administrateur Principal)
+        $adminUser = User::create([
             'nom' => 'Admin',
             'prenom' => 'Principal',
             'username' => 'admin',
-            'email' => 'admin@schoolhub.com',
-            'password_hash' => Hash::make('password123'), // Default password
-            'role' => 'RESPONSABLE',
+            'email' => 'admin@schoolhub.local',
+            'password_hash' => Hash::make('admin123'),
+            'role' => 'ADMIN',
+            'email_verified_at' => now(),
         ]);
 
-        // 5. Utilisateurs : PARENT DEMO
+        // 5. Utilisateurs : PARENT DEMO (Compte Parent de Démonstration)
         $parentUser = User::create([
             'nom' => 'Dupont',
             'prenom' => 'Jean',
-            'username' => 'parent.demo',
-            'email' => 'parent@demo.com',
-            'password_hash' => Hash::make('password123'),
+            'username' => 'parent',
+            'email' => 'parent@schoolhub.local',
+            'password_hash' => Hash::make('parent123'),
             'role' => 'PARENT',
+            'email_verified_at' => now(),
         ]);
         
-        ParentTuteur::create([
+        $parentProfile = ParentTuteur::create([
             'user_id' => $parentUser->id,
             'nom' => 'Dupont',
             'prenom' => 'Jean',
-            'telephone' => '0102030405',
-            'email' => 'parent@demo.com',
-            'adresse' => '10 Rue de l\'École',
+            'telephone' => '+33123456789',
+            'email' => 'parent@schoolhub.local',
+            'adresse' => '10 Rue de l\'École, 75001 Paris',
             'profession' => 'Comptable',
         ]);
         

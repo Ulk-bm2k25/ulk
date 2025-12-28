@@ -3,19 +3,26 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CarteScolarite extends Model
 {
+    protected $table = 'cartes_scolarite';
+
     protected $fillable = [
         'eleve_id',
-        'numero_carte',
-        'date_emission',
-        'date_expiration',
+        'annee_scolaire',
+        'code_barre',
+        'date_generation',
         'statut'
     ];
 
-    public function eleve()
+    protected $casts = [
+        'date_generation' => 'date',
+    ];
+
+    public function eleve(): BelongsTo
     {
-        return $this->belongsTo(Eleve::class);
+        return $this->belongsTo(Eleve::class, 'eleve_id');
     }
 }
