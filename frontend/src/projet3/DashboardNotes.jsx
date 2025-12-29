@@ -310,9 +310,9 @@ const DashboardNotes = () => {
                 {!isAdmin && <DashboardCard to="/notes" icon="⚡" title="Soumettre Note" desc="Validez vos brouillons." color="#3b82f6" />}
                 {!isAdmin && <DashboardCard to="/notes/matieres" icon="📊" title="Consulter Classe" desc="Analyse des résultats." color="#8b5cf6" />}
 
-                {isAdmin && <DashboardCard to="/bulletins" icon="📜" title="Générer Bulletin" desc="Génération officielle." color="#f59e0b" />}
-                {isAdmin && <DashboardCard to="/stats" icon="📈" title="Consulter Statistiques" desc="Statistiques et tendances." color="#10b981" />}
-                {isAdmin && <DashboardCard to="/deliberation" icon="⚖️" title="Délibération" desc="Décisions de fin de cycle." color="#ef4444" />}
+                {isAdmin && <DashboardCard to="/notes/bulletins" icon="📜" title="Générer Bulletin" desc="Génération officielle." color="#f59e0b" />}
+                {isAdmin && <DashboardCard to="/notes/stats" icon="📈" title="Consulter Statistiques" desc="Statistiques et tendances." color="#10b981" />}
+                {isAdmin && <DashboardCard to="/notes/deliberation" icon="⚖️" title="Délibération" desc="Décisions de fin de cycle." color="#ef4444" />}
             </div>
         </div >
     );

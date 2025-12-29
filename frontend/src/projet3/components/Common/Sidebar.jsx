@@ -56,12 +56,12 @@ const Sidebar = () => {
 
                         {(user?.role === 'RESPONSABLE' || user?.role === 'ADMIN') && (
                             <>
-                                <SidebarLink to="/deliberation" icon="⚖️" label="Délibération" onClick={() => setIsOpen(false)} />
-                                <SidebarLink to="/bulletins" icon="📜" label="Générer Bulletin" onClick={() => setIsOpen(false)} />
-                                <SidebarLink to="/stats" icon="📈" label="Statistiques" onClick={() => setIsOpen(false)} />
-                                <SidebarLink to="/notifications" icon="🔔" label="Notifications" onClick={() => setIsOpen(false)} />
-                                <SidebarLink to="/config" icon="⚙️" label="Paramètres" onClick={() => setIsOpen(false)} />
-                                <SidebarLink to="/config/enseignants" icon="👨‍🏫" label="Enseignants" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/notes/deliberation" icon="⚖️" label="Délibération" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/notes/bulletins" icon="📜" label="Générer Bulletin" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/notes/stats" icon="📈" label="Statistiques" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/notes/notifications" icon="🔔" label="Notifications" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/notes/config" icon="⚙️" label="Paramètres" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/notes/config/enseignants" icon="👨‍🏫" label="Enseignants" onClick={() => setIsOpen(false)} />
                                 <SidebarLink to="/notes/ajouter-eleve" icon="👤" label="Élèves" onClick={() => setIsOpen(false)} />
                             </>
                         )}
@@ -80,7 +80,7 @@ const Sidebar = () => {
                 )}
 
                 <div style={styles.divider}></div>
-                <SidebarLink to="/profil/securite" icon="🔒" label="Sécurité" onClick={() => setIsOpen(false)} />
+                <SidebarLink to="/notes/profil/securite" icon="🔒" label="Sécurité" onClick={() => setIsOpen(false)} />
 
                 <div style={styles.logoutContainer} onClick={handleLogout}>
                     <span style={styles.logoutIcon}>🚪</span>
