@@ -7,26 +7,17 @@ const Sidebar = () => {
     const [isOpen, setIsOpen] = React.useState(false);
 
     React.useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            try {
-                setUser(JSON.parse(storedUser));
-            } catch (e) {
-                console.error("Erreur parsing user", e);
-            }
-        } else {
-            // TEMPORAIRE : Créer un utilisateur fictif pour les tests
-            const mockUser = {
-                id: 1,
-                nom: "Test",
-                prenom: "Admin",
-                email: "admin@test.com",
-                role: "ADMIN",
-                doit_changer_mdp: 0
-            };
-            localStorage.setItem('user', JSON.stringify(mockUser));
-            setUser(mockUser);
-        }
+        // TEMPORAIRE : On force un utilisateur admin valide pour les tests visuels
+        const mockUser = {
+            id: 1,
+            nom: "Test",
+            prenom: "Admin",
+            email: "admin@test.com",
+            role: "ADMIN",
+            doit_changer_mdp: 0
+        };
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        setUser(mockUser);
     }, []);
 
     const handleLogout = () => {
@@ -64,7 +55,7 @@ const Sidebar = () => {
                 </div>
 
                 <nav style={styles.nav}>
-                    {user && parseInt(user.doit_changer_mdp) === 0 ? (
+                    {user && (
                         <>
                             <SidebarLink to="/notes" icon="🏠" label="Tableau de bord" onClick={() => setIsOpen(false)} />
 
@@ -87,10 +78,6 @@ const Sidebar = () => {
                                 </>
                             )}
                         </>
-                    ) : (
-                        <div style={{ padding: '20px', color: 'var(--primary)', fontWeight: '700', fontSize: '0.8rem', textAlign: 'center' }}>
-                            🔒 CHANGEMENT DE MOT DE PASSE REQUIS
-                        </div>
                     )}
 
                     <div style={styles.divider}></div>
@@ -139,7 +126,7 @@ const SidebarLink = ({ to, icon, label, onClick }) => (
 const styles = {
     sidebar: {
         width: '260px',
-        backgroundColor: 'var(--sidebar-bg)',
+        backgroundColor: '#2d3250', // Hardcoded for reliability
         height: '100vh',
         top: 0,
         display: 'flex',
