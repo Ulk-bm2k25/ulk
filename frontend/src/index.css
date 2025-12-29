@@ -1,11 +1,5 @@
 @import "tailwindcss";
 
-@theme {
-  --color-brand-dark: #2A2D3E;
-  --color-brand-primary: #F59E0B;
-  --color-brand-bg: #F3F4F6;
-}
-
 :root {
   /* Elegant Corporate Palette */
   --primary: #f9b17a;
@@ -38,45 +32,43 @@
   --transition-smooth: all 0.3s ease;
 }
 
-@layer base {
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-  body {
-    background: var(--bg-main);
-    color: var(--text-main);
-    font-family: var(--font-body);
-    -webkit-font-smoothing: antialiased;
-    min-height: 100vh;
-  }
+body {
+  background: var(--bg-main);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
 
-  h1,
-  h2,
-  h3,
-  h4 {
-    font-family: var(--font-heading);
-    color: var(--secondary);
-  }
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  color: var(--secondary);
+}
 
-  button,
-  a {
-    cursor: pointer;
-    font-family: inherit;
-  }
+button,
+a {
+  cursor: pointer;
+  font-family: inherit;
+}
 
-  input,
-  textarea,
-  select {
-    color: #1f2937;
-  }
+input,
+textarea,
+select {
+  color: #1f2937;
+}
 
-  input::placeholder,
-  textarea::placeholder {
-    color: #9ca3af;
-  }
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af;
 }
 
 /* Layout */
@@ -201,7 +193,6 @@ td {
     font-size: 1.8rem !important;
   }
 
-  /* Table responsiveness */
   .table-responsive {
     width: 100%;
     overflow-x: auto;
