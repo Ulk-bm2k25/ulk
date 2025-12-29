@@ -14,6 +14,18 @@ const Sidebar = () => {
             } catch (e) {
                 console.error("Erreur parsing user", e);
             }
+        } else {
+            // TEMPORAIRE : Créer un utilisateur fictif pour les tests
+            const mockUser = {
+                id: 1,
+                nom: "Test",
+                prenom: "Admin",
+                email: "admin@test.com",
+                role: "ADMIN",
+                doit_changer_mdp: 0
+            };
+            localStorage.setItem('user', JSON.stringify(mockUser));
+            setUser(mockUser);
         }
     }, []);
 
