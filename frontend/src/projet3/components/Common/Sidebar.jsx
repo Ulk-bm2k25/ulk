@@ -28,55 +28,40 @@ const Sidebar = () => {
     const isMobile = window.innerWidth <= 768;
 
     return (
-        <aside style={{
-            ...styles.sidebar,
-            position: isMobile ? 'fixed' : 'static',
+        <aside className="sidebar-container" style={{
             left: isMobile ? (isOpen ? '0' : '-280px') : '0',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: isMobile && isOpen ? '10px 0 30px rgba(0,0,0,0.3)' : 'none',
+            position: isMobile ? 'fixed' : 'sticky',
         }}>
             {/* Mobile Header (Hidden on Desktop) */}
-            <div style={styles.mobileHeader}>
-                <button onClick={() => setIsOpen(!isOpen)} style={styles.hamburger}>
-                    {isOpen ? '✕' : '☰'}
-                </button>
-                <div style={styles.mobileLogo}>Gestion scolaire</div>
-            </div>
+            {isMobile && (
+                <div style={styles.mobileHeader}>
+                    <button onClick={() => setIsOpen(!isOpen)} style={styles.hamburger}>
+                        {isOpen ? '✕' : '☰'}
+                    </button>
+                    <div style={styles.mobileLogo}>Gestion scolaire</div>
+                </div>
+            )}
 
             {/* Overlay (Mobile Only) */}
             {isMobile && isOpen && (
                 <div onClick={() => setIsOpen(false)} style={styles.overlay} />
             )}
-            <div style={styles.logoContainer}>
-                <h2 style={styles.logoText}>Gestion scolaire<span style={{ color: 'var(--primary)' }}></span></h2>
+
+            <div className="sidebar-logo-section">
+                <h2 style={styles.logoText}>Ecole Plus</h2>
                 <div style={styles.badge}>Gestion des notes</div>
             </div>
 
-            <nav style={styles.nav}>
-                {user && (
-                    <>
-                        <SidebarLink to="/notes" icon="🏠" label="Tableau de bord" onClick={() => setIsOpen(false)} />
+            <nav className="sidebar-nav">
+                <SidebarLink to="/notes" icon="🏠" label="Tableau de bord" onClick={() => setIsOpen(false)} />
 
-                        {(user?.role === 'RESPONSABLE' || user?.role === 'ADMIN') && (
-                            <>
-                                <SidebarLink to="/deliberation" icon="⚖️" label="Délibération" onClick={() => setIsOpen(false)} />
-                                <SidebarLink to="/bulletins" icon="📜" label="Générer Bulletin" onClick={() => setIsOpen(false)} />
-                                <SidebarLink to="/stats" icon="📈" label="Consulter Statistiques" onClick={() => setIsOpen(false)} />
-                                <SidebarLink to="/notifications" icon="🔔" label="Notifications" onClick={() => setIsOpen(false)} />
-                                <SidebarLink to="/config" icon="⚙️" label="Configuration" onClick={() => setIsOpen(false)} />
-                                <SidebarLink to="/config/enseignants" icon="👨‍🏫" label="Gestion Enseignants" onClick={() => setIsOpen(false)} />
-                                <SidebarLink to="/notes/ajouter-eleve" icon="👤" label="Ajouter Élève" onClick={() => setIsOpen(false)} />
-                            </>
-                        )}
-
-                        {user?.role === 'ENSEIGNANT' && (
-                            <>
-                                <SidebarLink to="/notes/saisie" icon="📝" label="Saisir Note" onClick={() => setIsOpen(false)} />
-                                <SidebarLink to="/notes/matieres" icon="📊" label="Consulter Classe" onClick={() => setIsOpen(false)} />
-                            </>
-                        )}
-                    </>
-                )}
+                <SidebarLink to="/deliberation" icon="⚖️" label="Délibération" onClick={() => setIsOpen(false)} />
+                <SidebarLink to="/bulletins" icon="📜" label="Générer Bulletin" onClick={() => setIsOpen(false)} />
+                <SidebarLink to="/stats" icon="📈" label="Statistiques" onClick={() => setIsOpen(false)} />
+                <SidebarLink to="/notifications" icon="🔔" label="Notifications" onClick={() => setIsOpen(false)} />
+                <SidebarLink to="/config" icon="⚙️" label="Paramètres" onClick={() => setIsOpen(false)} />
+                <SidebarLink to="/config/enseignants" icon="👨‍🏫" label="Enseignants" onClick={() => setIsOpen(false)} />
+                <SidebarLink to="/notes/ajouter-eleve" icon="👤" label="Élèves" onClick={() => setIsOpen(false)} />
 
                 <div style={styles.divider}></div>
                 <SidebarLink to="/profil/securite" icon="🔒" label="Sécurité" onClick={() => setIsOpen(false)} />
@@ -87,14 +72,14 @@ const Sidebar = () => {
                 </div>
             </nav>
 
-            <div style={styles.footer}>
+            <div className="sidebar-footer">
                 <div style={styles.userCard}>
                     <div style={styles.avatar}>
                         {user ? user.nom.charAt(0).toUpperCase() : 'A'}
                     </div>
                     <div style={styles.userInfo}>
-                        <div style={styles.userName}>{user ? `${user.prenom} ${user.nom}` : 'Admin'}</div>
-                        <div style={styles.userRole}>{user ? user.role : 'Utilisateur'}</div>
+                        <div style={styles.userName}>{user ? `${user.prenom} ${user.nom}` : 'Admin Test'}</div>
+                        <div style={styles.userRole}>{user ? user.role : 'ADMIN'}</div>
                     </div>
                 </div>
             </div>

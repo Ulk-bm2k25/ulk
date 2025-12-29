@@ -236,13 +236,12 @@ const DashboardNotes = () => {
 
     return (
         <div className="slide-up">
-            <header style={styles.header}>
-                <h1 style={styles.title}>Cockpit Décisionnel</h1>
+            <header className="dashboard-header">
+                <h1 className="dashboard-title">Cockpit Décisionnel</h1>
                 <p style={styles.subtitle}>{isAdmin ? "Pilotez votre établissement avec précision et élégance." : "Gérez vos classes et vos notes simplement."}</p>
             </header>
 
-            {}
-            <div style={styles.widgetRow}>
+            <div className="stats-grid">
                 <div className="glass-card" style={{ ...styles.widget, borderLeft: '4px solid var(--primary)' }}>
                     <span style={styles.widgetValue}>{stats.taux_reussite}%</span>
                     <span style={styles.widgetLabel}>Taux de Réussite Global</span>
@@ -268,7 +267,7 @@ const DashboardNotes = () => {
                     </div>
                     <span style={styles.widgetLabel}>Podium Excellence (Top 3)</span>
 
-                    {}
+                    { }
                     {showPodium && stats.top_eleves.length > 0 && (
                         <div className="glass-card slide-up" style={{
                             position: 'absolute',
@@ -306,7 +305,7 @@ const DashboardNotes = () => {
 
             {isAdmin && <ValidationSection />}
 
-            <div style={styles['dashboard-grid']}>
+            <div className="stats-grid">
                 {!isAdmin && <DashboardCard to="/notes/saisie" icon="📝" title="Saisir Note" desc="Notes par classe & matière." color="#6366f1" />}
                 {!isAdmin && <DashboardCard to="/notes" icon="⚡" title="Soumettre Note" desc="Validez vos brouillons." color="#3b82f6" />}
                 {!isAdmin && <DashboardCard to="/notes/matieres" icon="📊" title="Consulter Classe" desc="Analyse des résultats." color="#8b5cf6" />}
