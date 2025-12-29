@@ -90,7 +90,7 @@ const styles = {
 
 const DashboardCard = ({ to, icon, title, desc, color }) => (
     <Link to={to} className="glass-card" style={styles.card}>
-        <div style={{ ...styles.iconWrapper, backgroundColor: `${color}15` }}>
+        <div style={{ ...styles.iconWrapper, backgroundColor: `${color}15`, boxShadow: `0 8px 16px -4px ${color}30` }}>
             <span style={{ ...styles.icon, color: color }}>{icon}</span>
         </div>
         <div style={styles.content}>
@@ -236,19 +236,19 @@ const DashboardNotes = () => {
 
     return (
         <div className="slide-up">
-            <header className="dashboard-header">
+            <header className="dashboard-header fade-in">
                 <h1 className="dashboard-title">Cockpit Décisionnel</h1>
                 <p style={styles.subtitle}>{isAdmin ? "Pilotez votre établissement avec précision et élégance." : "Gérez vos classes et vos notes simplement."}</p>
             </header>
 
-            <div className="stats-grid">
+            <div className="stats-grid fade-in" style={{ animationDelay: '0.1s' }}>
                 <div className="glass-card" style={{ ...styles.widget, borderLeft: '4px solid var(--primary)' }}>
-                    <span style={styles.widgetValue}>{stats.taux_reussite}%</span>
+                    <span style={styles.widgetValue}>{stats?.taux_reussite || 0}%</span>
                     <span style={styles.widgetLabel}>Taux de Réussite Global</span>
                 </div>
                 {isAdmin && (
                     <div className="glass-card" style={{ ...styles.widget, borderLeft: '4px solid var(--danger)' }}>
-                        <span style={{ ...styles.widgetValue, color: 'var(--danger)' }}>{stats.nb_brouillons}</span>
+                        <span style={{ ...styles.widgetValue, color: 'var(--danger)' }}>{stats?.nb_brouillons || 0}</span>
                         <span style={styles.widgetLabel}>Notes en Attente (Brouillons)</span>
                     </div>
                 )}

@@ -41,9 +41,9 @@ const Login = () => {
 
     return (
         <div style={styles.container}>
-            <div style={styles.card}>
-                <h2 style={styles.title}>Connexion École+</h2>
-                <p style={styles.subtitle}>Accédez à votre espace de gestion</p>
+            <div className="glass-card fade-in" style={styles.card}>
+                <h2 style={styles.title}>École+ Notes</h2>
+                <p style={styles.subtitle}>Espace de gestion académique</p>
 
                 {error && <div style={styles.error}>{error}</div>}
 
@@ -56,7 +56,7 @@ const Login = () => {
                             onChange={(e) => setEmail(e.target.value)}
                             style={styles.input}
                             required
-                            placeholder="votre@email.com"
+                            placeholder="nom@ecole.com"
                         />
                     </div>
 
@@ -72,8 +72,8 @@ const Login = () => {
                         />
                     </div>
 
-                    <button type="submit" style={styles.button}>
-                        Se connecter
+                    <button type="submit" className="btn-premium" style={styles.button}>
+                        Accéder au portail
                     </button>
                 </form>
             </div>
@@ -87,40 +87,42 @@ const styles = {
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
-        backgroundColor: 'var(--bg-main)',
+        background: 'linear-gradient(135deg, #2d3250 0%, #424769 100%)',
+        position: 'relative',
+        overflow: 'hidden',
     },
     card: {
-        backgroundColor: '#fff',
-        padding: '50px',
-        borderRadius: '20px',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
-        width: '100%',
-        maxWidth: '450px',
+        maxWidth: '420px',
+        width: '90%',
         textAlign: 'center',
+        border: '1px solid rgba(255,255,255,0.1)',
     },
     title: {
-        marginBottom: '4px',
-        fontSize: '2.5rem',
-        fontWeight: '900',
+        marginBottom: '8px',
+        fontSize: '2rem',
+        fontWeight: '800',
         color: 'var(--secondary)',
+        letterSpacing: '-0.5px',
     },
     subtitle: {
         marginBottom: '32px',
         color: 'var(--text-dim)',
+        fontSize: '0.95rem',
     },
     error: {
-        backgroundColor: 'var(--danger-bg)',
-        color: '#b91c1c',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        color: '#ef4444',
         padding: '12px',
-        borderRadius: '8px',
-        marginBottom: '20px',
+        borderRadius: '12px',
+        marginBottom: '24px',
         fontSize: '0.9rem',
         fontWeight: '600',
+        border: '1px solid rgba(239, 68, 68, 0.2)',
     },
     form: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '24px',
+        gap: '20px',
     },
     inputGroup: {
         textAlign: 'left',
@@ -128,35 +130,29 @@ const styles = {
     label: {
         display: 'block',
         marginBottom: '8px',
-        fontSize: '0.8rem',
+        fontSize: '0.75rem',
         fontWeight: '700',
-        color: 'var(--secondary)',
+        color: 'var(--text-dim)',
         textTransform: 'uppercase',
         letterSpacing: '1px',
     },
     input: {
         width: '100%',
         padding: '14px 16px',
-        borderRadius: '10px',
-        border: '1px solid #e2e8f0',
-        backgroundColor: '#f8fafc',
+        borderRadius: '12px',
+        border: '2px solid rgba(0,0,0,0.05)',
+        backgroundColor: 'rgba(255,255,255,0.5)',
         color: 'var(--secondary)',
         fontSize: '1rem',
+        fontWeight: '500',
         outline: 'none',
-        boxSizing: 'border-box',
-        transition: 'all 0.2s',
+        transition: 'all 0.2s ease',
     },
     button: {
-        padding: '16px',
-        borderRadius: '10px',
-        border: 'none',
-        backgroundColor: 'var(--primary)',
-        color: 'var(--secondary)',
+        width: '100%',
+        justifyContent: 'center',
+        marginTop: '12px',
         fontSize: '1rem',
-        fontWeight: '900',
-        cursor: 'pointer',
-        transition: 'all 0.3s',
-        marginTop: '10px',
     }
 };
 
