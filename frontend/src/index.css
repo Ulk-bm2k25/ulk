@@ -1,42 +1,16 @@
-<<<<<<< HEAD
 @import "tailwindcss";
 
-
 @theme {
-/* Vos variables de thème existantes */
---color-brand-dark: #2A2D3E;
---color-brand-primary: #F59E0B;
---color-brand-bg: #F3F4F6;
+  --color-brand-dark: #2A2D3E;
+  --color-brand-primary: #F59E0B;
+  --color-brand-bg: #F3F4F6;
 }
-@layer base {
 
-  input,
-  textarea,
-  select {
-    color: #1f2937;
-    /* C'est l'équivalent de text-gray-800 */
-  }
-
-
-  /* Si vous voulez être sûr que le placeholder (texte fantôme) soit visible aussi */
-  input::placeholder,
-  textarea::placeholder {
-    color: #9ca3af;
-    /* gray-400 */
-
-
-  button {
-    background-color: #f9f9f9;
-  }
-}
-=======
 :root {
-  /* Elegant Corporate Palette (Inspired by Screenshot) */
+  /* Elegant Corporate Palette */
   --primary: #f9b17a;
-  /* Orange Active */
   --primary-dark: #e89a61;
   --secondary: #2d3250;
-  /* Sidebar Dark Blue */
   --accent: #424769;
 
   --bg-main: #f8f9fa;
@@ -64,32 +38,45 @@
   --transition-smooth: all 0.3s ease;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-body {
-  background: var(--bg-main);
-  color: var(--text-main);
-  font-family: var(--font-body);
-  -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
-}
+  body {
+    background: var(--bg-main);
+    color: var(--text-main);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
 
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-heading);
-  color: var(--secondary);
-}
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    color: var(--secondary);
+  }
 
-button,
-a {
-  cursor: pointer;
-  font-family: inherit;
+  button,
+  a {
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  input,
+  textarea,
+  select {
+    color: #1f2937;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #9ca3af;
+  }
 }
 
 /* Layout */
@@ -104,7 +91,7 @@ a {
   background: var(--bg-main);
 }
 
-/* Standard Cards (Replacement for Glass) */
+/* Standard Cards */
 .glass-card {
   background: var(--bg-white);
   border: none;
@@ -117,12 +104,6 @@ a {
 .glass-card:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
-}
-
-/* Typography Gradient */
-.text-gradient {
-  color: var(--secondary);
-  font-weight: 800;
 }
 
 /* Buttons */
@@ -145,6 +126,42 @@ a {
   transform: scale(1.02);
 }
 
+/* Badges */
+.badge-success {
+  background: var(--success-bg);
+  color: #166534;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge-danger {
+  background: var(--danger-bg);
+  color: #991b1b;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Utilities */
+.slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Common Table Styles */
 table {
   width: 100%;
@@ -164,25 +181,6 @@ th {
 td {
   padding: 16px;
   border-bottom: 1px solid #f0f0f0;
-}
-
-/* Badges */
-.badge-success {
-  background: var(--success-bg);
-  color: #166534;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.badge-danger {
-  background: var(--danger-bg);
-  color: #991b1b;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
 }
 
 /* Responsive Design */
@@ -216,23 +214,6 @@ td {
   }
 }
 
-/* Utilities */
-.slide-up {
-  animation: slideUp 0.5s ease-out;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -247,4 +228,3 @@ td {
   background: #ccc;
   border-radius: 5px;
 }
->>>>>>> groupe3
