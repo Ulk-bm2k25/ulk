@@ -35,12 +35,10 @@ const Home = () => (
 
 function App() {
     return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/" element={<Home />} />
-                {projet1Routes}
-            </Routes>
-        </BrowserRouter>
+        <Routes>
+            <Route path="/" element={<Home />} />
+            {projet1Routes}
+        </Routes>
     )
 }
 

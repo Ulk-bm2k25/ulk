@@ -7,22 +7,19 @@ const Sidebar = () => {
     const [isOpen, setIsOpen] = React.useState(false);
 
     React.useEffect(() => {
-        // TEMPORAIRE : On force un utilisateur admin valide pour les tests visuels
-        const mockUser = {
-            id: 1,
-            nom: "Test",
-            prenom: "Admin",
-            email: "admin@test.com",
-            role: "ADMIN",
-            doit_changer_mdp: 0
-        };
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        setUser(mockUser);
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                console.error("Erreur parsing user", e);
+            }
+        }
     }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('user');
-        navigate('/login');
+        navigate('/notes/login');
     };
 
     const isMobile = window.innerWidth <= 768;
@@ -48,20 +45,39 @@ const Sidebar = () => {
             )}
 
             <div className="sidebar-logo-section">
-                <h2 style={styles.logoText}>Ecole Plus</h2>
+                <h2 style={styles.logoText}>Gestion scolaire</h2>
                 <div style={styles.badge}>Gestion des notes</div>
             </div>
 
             <nav className="sidebar-nav">
-                <SidebarLink to="/notes" icon="🏠" label="Tableau de bord" onClick={() => setIsOpen(false)} />
+                {user && parseInt(user.doit_changer_mdp) === 0 ? (
+                    <>
+                        <SidebarLink to="/notes" icon="🏠" label="Tableau de bord" onClick={() => setIsOpen(false)} />
 
-                <SidebarLink to="/deliberation" icon="⚖️" label="Délibération" onClick={() => setIsOpen(false)} />
-                <SidebarLink to="/bulletins" icon="📜" label="Générer Bulletin" onClick={() => setIsOpen(false)} />
-                <SidebarLink to="/stats" icon="📈" label="Statistiques" onClick={() => setIsOpen(false)} />
-                <SidebarLink to="/notifications" icon="🔔" label="Notifications" onClick={() => setIsOpen(false)} />
-                <SidebarLink to="/config" icon="⚙️" label="Paramètres" onClick={() => setIsOpen(false)} />
-                <SidebarLink to="/config/enseignants" icon="👨‍🏫" label="Enseignants" onClick={() => setIsOpen(false)} />
-                <SidebarLink to="/notes/ajouter-eleve" icon="👤" label="Élèves" onClick={() => setIsOpen(false)} />
+                        {(user?.role === 'RESPONSABLE' || user?.role === 'ADMIN') && (
+                            <>
+                                <SidebarLink to="/deliberation" icon="⚖️" label="Délibération" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/bulletins" icon="📜" label="Générer Bulletin" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/stats" icon="📈" label="Statistiques" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/notifications" icon="🔔" label="Notifications" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/config" icon="⚙️" label="Paramètres" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/config/enseignants" icon="👨‍🏫" label="Enseignants" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/notes/ajouter-eleve" icon="👤" label="Élèves" onClick={() => setIsOpen(false)} />
+                            </>
+                        )}
+
+                        {user?.role === 'ENSEIGNANT' && (
+                            <>
+                                <SidebarLink to="/notes/saisie" icon="📝" label="Saisir Note" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/notes/matieres" icon="📊" label="Consulter Classe" onClick={() => setIsOpen(false)} />
+                            </>
+                        )}
+                    </>
+                ) : (
+                    <div style={{ padding: '20px', color: 'var(--primary)', fontWeight: '700', fontSize: '0.8rem', textAlign: 'center' }}>
+                        🔒 CHANGEMENT DE MOT DE PASSE REQUIS
+                    </div>
+                )}
 
                 <div style={styles.divider}></div>
                 <SidebarLink to="/profil/securite" icon="🔒" label="Sécurité" onClick={() => setIsOpen(false)} />
@@ -78,8 +94,8 @@ const Sidebar = () => {
                         {user ? user.nom.charAt(0).toUpperCase() : 'A'}
                     </div>
                     <div style={styles.userInfo}>
-                        <div style={styles.userName}>{user ? `${user.prenom} ${user.nom}` : 'Admin Test'}</div>
-                        <div style={styles.userRole}>{user ? user.role : 'ADMIN'}</div>
+                        <div style={styles.userName}>{user ? `${user.prenom} ${user.nom}` : 'Invité'}</div>
+                        <div style={styles.userRole}>{user ? user.role : 'Utilisateur'}</div>
                     </div>
                 </div>
             </div>

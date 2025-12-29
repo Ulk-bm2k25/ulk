@@ -24,14 +24,13 @@ const Projet3App = () => {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     const mustChangePassword = user && parseInt(user.doit_changer_mdp) === 1;
 
-    // TEMPORAIRE : Authentification désactivée pour les tests
-    // if (!user && !isLoginPage) {
-    //     return <Navigate to="/notes/login" replace />;
-    // }
+    if (!user && !isLoginPage) {
+        return <Navigate to="/notes/login" replace />;
+    }
 
-    // if (mustChangePassword && !location.pathname.includes('/profil/securite') && !isLoginPage) {
-    //     return <Navigate to="/notes/profil/securite" replace />;
-    // }
+    if (mustChangePassword && !location.pathname.includes('/profil/securite') && !isLoginPage) {
+        return <Navigate to="/notes/profil/securite" replace />;
+    }
 
     return (
         <div className="app-wrapper">
