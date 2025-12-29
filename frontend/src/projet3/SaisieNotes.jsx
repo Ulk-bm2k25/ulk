@@ -280,7 +280,7 @@ const SaisieNotes = () => {
                 <p style={{ color: 'var(--text-dim)', fontSize: '1.1rem' }}>Interface de saisie rapide pour toute la classe</p>
             </header>
 
-            {}
+            { }
             <div className="glass-card" style={{ marginBottom: '24px', padding: '24px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
                     <div style={styles.field}>
@@ -312,9 +312,9 @@ const SaisieNotes = () => {
                 </div>
             </div>
 
-            {}
+            {/* TABLEAU DE SAISIE */}
             {selectedClasse && selectedMatiere && selectedSemestre && (
-                <div className="glass-card" style={{ padding: '0', overflow: 'auto' }}>
+                <div className="glass-card fade-in" style={{ padding: '0', overflow: 'auto', animationDelay: '0.2s' }}>
                     {loading ? (
                         <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-dim)' }}>
                             Chargement des données...
@@ -325,7 +325,7 @@ const SaisieNotes = () => {
                         </div>
                     ) : (
                         <>
-                            {}
+                            { }
                             <div style={{
                                 padding: '20px 24px',
                                 borderBottom: '2px solid #e2e8f0',
@@ -382,7 +382,7 @@ const SaisieNotes = () => {
                                                     <td style={{ ...styles.td, position: 'sticky', left: 0, backgroundColor: '#fff', fontWeight: '600', zIndex: 1 }}>
                                                         {eleve.prenom} {eleve.nom}
                                                     </td>
-                                                    {}
+                                                    { }
                                                     {[1, 2, 3].map(num => (
                                                         <td key={`I${num}`} style={styles.td}>
                                                             <input
@@ -400,11 +400,11 @@ const SaisieNotes = () => {
                                                             />
                                                         </td>
                                                     ))}
-                                                    {}
+                                                    { }
                                                     <td style={{ ...styles.td, backgroundColor: '#fef3c7', fontWeight: '700', color: '#92400e' }}>
                                                         {calculateMoyenneInterro(eleve.id)}
                                                     </td>
-                                                    {}
+                                                    { }
                                                     {[1, 2].map(num => (
                                                         <td key={`D${num}`} style={styles.td}>
                                                             <input
@@ -422,15 +422,15 @@ const SaisieNotes = () => {
                                                             />
                                                         </td>
                                                     ))}
-                                                    {}
+                                                    { }
                                                     <td style={{ ...styles.td, backgroundColor: 'rgba(99, 102, 241, 0.1)', fontWeight: '700', color: '#6366f1' }}>
                                                         {calculateMoyenne(eleve.id)}
                                                     </td>
-                                                    {}
+                                                    { }
                                                     <td style={{ ...styles.td, backgroundColor: 'rgba(139, 92, 246, 0.1)', fontWeight: '700', color: '#8b5cf6' }}>
                                                         {calculateMoyenneCoef(eleve.id)}
                                                     </td>
-                                                    {}
+                                                    { }
                                                     <td style={styles.td}>
                                                         {validated ? (
                                                             <span style={styles.badgeValidated}>✓ Validé</span>
@@ -445,7 +445,7 @@ const SaisieNotes = () => {
                                 </table>
                             </div>
 
-                            {}
+                            { }
                             <div style={{ padding: '24px', borderTop: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
@@ -488,8 +488,8 @@ const styles = {
         fontSize: '0.95rem'
     },
     table: { width: '100%', borderCollapse: 'collapse', minWidth: '1000px' },
-    headerRow: { backgroundColor: '#1e293b' },
-    subHeaderRow: { backgroundColor: '#334155' },
+    headerRow: { backgroundColor: 'var(--secondary)' },
+    subHeaderRow: { backgroundColor: 'var(--accent)' },
     th: {
         padding: '16px 12px',
         textAlign: 'center',
@@ -497,8 +497,11 @@ const styles = {
         color: '#fff',
         fontWeight: '800',
         textTransform: 'uppercase',
-        borderBottom: '2px solid #334155',
-        letterSpacing: '0.5px'
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        letterSpacing: '0.5px',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10
     },
     subTh: {
         padding: '10px 12px',
@@ -506,37 +509,40 @@ const styles = {
         fontSize: '0.9rem',
         color: '#fff',
         fontWeight: '800',
-        borderBottom: '1px solid #1e293b',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
         letterSpacing: '1.5px',
-        backgroundColor: '#334155'
+        backgroundColor: 'rgba(255,255,255,0.05)'
     },
     row: { borderBottom: '1px solid #e2e8f0', transition: 'background 0.2s' },
     td: { padding: '12px', textAlign: 'center' },
     input: {
         width: '70px',
         padding: '8px',
-        borderRadius: '6px',
+        borderRadius: '8px',
         border: '1px solid #e2e8f0',
         textAlign: 'center',
         fontSize: '0.9rem',
         outline: 'none',
-        transition: 'all 0.2s'
+        transition: 'all 0.2s',
+        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
     },
     badgeValidated: {
-        padding: '4px 12px',
-        backgroundColor: '#d1fae5',
+        padding: '6px 12px',
+        backgroundColor: 'var(--success-bg)',
         color: '#065f46',
-        borderRadius: '6px',
+        borderRadius: '8px',
         fontSize: '0.75rem',
-        fontWeight: '700'
+        fontWeight: '800',
+        letterSpacing: '0.5px'
     },
     badgeDraft: {
-        padding: '4px 12px',
-        backgroundColor: '#fef3c7',
+        padding: '6px 12px',
+        backgroundColor: 'var(--warning-bg)',
         color: '#92400e',
-        borderRadius: '6px',
+        borderRadius: '8px',
         fontSize: '0.75rem',
-        fontWeight: '700'
+        fontWeight: '800',
+        letterSpacing: '0.5px'
     }
 };
 

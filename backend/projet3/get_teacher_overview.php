@@ -55,11 +55,19 @@ try {
 
         
         $targets = [];
-        if ($matiere_nom === "Communication écrite / Lecture") {
-            $targets = [
-                ['nom' => 'Communication écrite', 'suffix' => ' (Comm. Écrite)'],
-                ['nom' => 'Lecture', 'suffix' => ' (Lecture)']
-            ];
+        // Détection plus robuste des matières multiples (avec ou sans espaces, /, et, +)
+        $targets = [];
+        // Supporte "Matiere 1 / Matiere 2", "Matiere 1 et Matiere 2", "Matiere 1, Matiere 2"
+        $subjects = preg_split('/(\s+\/\s+|\s+et\s+|\s*\+\s*|\s*,\s*)/i', $matiere_nom, -1, PREG_SPLIT_NO_EMPTY);
+        
+        if (count($subjects) > 1) {
+            foreach ($subjects as $sub) {
+                $subName = trim($sub);
+                $targets[] = [
+                    'nom' => $subName,
+                    'suffix' => ' (' . $subName . ')'
+                ];
+            }
         } else {
             $targets = [['nom' => $matiere_nom, 'suffix' => '']];
         }
