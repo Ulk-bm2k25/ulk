@@ -54,7 +54,7 @@ const Sidebar = () => {
             <aside style={{
                 ...styles.sidebar,
                 left: isMobile ? (isOpen ? '0' : '-280px') : '0',
-                position: isMobile ? 'fixed' : 'sticky',
+                position: isMobile ? 'fixed' : 'static', // Changed from sticky to static
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 boxShadow: isMobile && isOpen ? '10px 0 30px rgba(0,0,0,0.3)' : 'none'
             }}>
@@ -145,6 +145,7 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         zIndex: 1000,
+        flexShrink: 0, // Prevent sidebar from shrinking
     },
     mobileHeader: {
         display: window.innerWidth <= 768 ? 'flex' : 'none',

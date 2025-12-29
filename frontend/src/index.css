@@ -81,6 +81,8 @@ textarea::placeholder {
   flex: 1;
   padding: 40px;
   background: var(--bg-main);
+  margin-left: 0;
+  /* Sidebar will push content automatically with flex */
 }
 
 /* Standard Cards */
