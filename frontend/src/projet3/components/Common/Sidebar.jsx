@@ -28,8 +28,14 @@ const Sidebar = () => {
     const isMobile = window.innerWidth <= 768;
 
     return (
-        <>
-            {/* Mobile Header */}
+        <aside style={{
+            ...styles.sidebar,
+            position: isMobile ? 'fixed' : 'static',
+            left: isMobile ? (isOpen ? '0' : '-280px') : '0',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: isMobile && isOpen ? '10px 0 30px rgba(0,0,0,0.3)' : 'none',
+        }}>
+            {/* Mobile Header (Hidden on Desktop) */}
             <div style={styles.mobileHeader}>
                 <button onClick={() => setIsOpen(!isOpen)} style={styles.hamburger}>
                     {isOpen ? '✕' : '☰'}
@@ -37,71 +43,62 @@ const Sidebar = () => {
                 <div style={styles.mobileLogo}>Gestion scolaire</div>
             </div>
 
-            {/* Overlay */}
-            {isOpen && (
+            {/* Overlay (Mobile Only) */}
+            {isMobile && isOpen && (
                 <div onClick={() => setIsOpen(false)} style={styles.overlay} />
             )}
+            <div style={styles.logoContainer}>
+                <h2 style={styles.logoText}>Gestion scolaire<span style={{ color: 'var(--primary)' }}></span></h2>
+                <div style={styles.badge}>Gestion des notes</div>
+            </div>
 
-            <aside style={{
-                ...styles.sidebar,
-                left: isMobile ? (isOpen ? '0' : '-280px') : '0',
-                position: isMobile ? 'fixed' : 'static', // Changed from sticky to static
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: isMobile && isOpen ? '10px 0 30px rgba(0,0,0,0.3)' : 'none'
-            }}>
-                <div style={styles.logoContainer}>
-                    <h2 style={styles.logoText}>Gestion scolaire<span style={{ color: 'var(--primary)' }}></span></h2>
-                    <div style={styles.badge}>Gestion des notes</div>
+            <nav style={styles.nav}>
+                {user && (
+                    <>
+                        <SidebarLink to="/notes" icon="🏠" label="Tableau de bord" onClick={() => setIsOpen(false)} />
+
+                        {(user?.role === 'RESPONSABLE' || user?.role === 'ADMIN') && (
+                            <>
+                                <SidebarLink to="/deliberation" icon="⚖️" label="Délibération" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/bulletins" icon="📜" label="Générer Bulletin" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/stats" icon="📈" label="Consulter Statistiques" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/notifications" icon="🔔" label="Notifications" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/config" icon="⚙️" label="Configuration" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/config/enseignants" icon="👨‍🏫" label="Gestion Enseignants" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/notes/ajouter-eleve" icon="👤" label="Ajouter Élève" onClick={() => setIsOpen(false)} />
+                            </>
+                        )}
+
+                        {user?.role === 'ENSEIGNANT' && (
+                            <>
+                                <SidebarLink to="/notes/saisie" icon="📝" label="Saisir Note" onClick={() => setIsOpen(false)} />
+                                <SidebarLink to="/notes/matieres" icon="📊" label="Consulter Classe" onClick={() => setIsOpen(false)} />
+                            </>
+                        )}
+                    </>
+                )}
+
+                <div style={styles.divider}></div>
+                <SidebarLink to="/profil/securite" icon="🔒" label="Sécurité" onClick={() => setIsOpen(false)} />
+
+                <div style={styles.logoutContainer} onClick={handleLogout}>
+                    <span style={styles.logoutIcon}>🚪</span>
+                    <span style={styles.logoutText}>Déconnexion</span>
                 </div>
+            </nav>
 
-                <nav style={styles.nav}>
-                    {user && (
-                        <>
-                            <SidebarLink to="/notes" icon="🏠" label="Tableau de bord" onClick={() => setIsOpen(false)} />
-
-                            {(user?.role === 'RESPONSABLE' || user?.role === 'ADMIN') && (
-                                <>
-                                    <SidebarLink to="/deliberation" icon="⚖️" label="Délibération" onClick={() => setIsOpen(false)} />
-                                    <SidebarLink to="/bulletins" icon="📜" label="Générer Bulletin" onClick={() => setIsOpen(false)} />
-                                    <SidebarLink to="/stats" icon="📈" label="Consulter Statistiques" onClick={() => setIsOpen(false)} />
-                                    <SidebarLink to="/notifications" icon="🔔" label="Notifications" onClick={() => setIsOpen(false)} />
-                                    <SidebarLink to="/config" icon="⚙️" label="Configuration" onClick={() => setIsOpen(false)} />
-                                    <SidebarLink to="/config/enseignants" icon="👨‍🏫" label="Gestion Enseignants" onClick={() => setIsOpen(false)} />
-                                    <SidebarLink to="/notes/ajouter-eleve" icon="👤" label="Ajouter Élève" onClick={() => setIsOpen(false)} />
-                                </>
-                            )}
-
-                            {user?.role === 'ENSEIGNANT' && (
-                                <>
-                                    <SidebarLink to="/notes/saisie" icon="📝" label="Saisir Note" onClick={() => setIsOpen(false)} />
-                                    <SidebarLink to="/notes/matieres" icon="📊" label="Consulter Classe" onClick={() => setIsOpen(false)} />
-                                </>
-                            )}
-                        </>
-                    )}
-
-                    <div style={styles.divider}></div>
-                    <SidebarLink to="/profil/securite" icon="🔒" label="Sécurité" onClick={() => setIsOpen(false)} />
-
-                    <div style={styles.logoutContainer} onClick={handleLogout}>
-                        <span style={styles.logoutIcon}>🚪</span>
-                        <span style={styles.logoutText}>Déconnexion</span>
+            <div style={styles.footer}>
+                <div style={styles.userCard}>
+                    <div style={styles.avatar}>
+                        {user ? user.nom.charAt(0).toUpperCase() : 'A'}
                     </div>
-                </nav>
-
-                <div style={styles.footer}>
-                    <div style={styles.userCard}>
-                        <div style={styles.avatar}>
-                            {user ? user.nom.charAt(0).toUpperCase() : 'A'}
-                        </div>
-                        <div style={styles.userInfo}>
-                            <div style={styles.userName}>{user ? `${user.prenom} ${user.nom}` : 'Admin'}</div>
-                            <div style={styles.userRole}>{user ? user.role : 'Utilisateur'}</div>
-                        </div>
+                    <div style={styles.userInfo}>
+                        <div style={styles.userName}>{user ? `${user.prenom} ${user.nom}` : 'Admin'}</div>
+                        <div style={styles.userRole}>{user ? user.role : 'Utilisateur'}</div>
                     </div>
                 </div>
-            </aside>
-        </>
+            </div>
+        </aside>
     );
 };
 
